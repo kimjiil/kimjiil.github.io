@@ -107,7 +107,7 @@ author:
   name             : "Jiil Kim"
   avatar           : "/assets/images/Myself_Neon.jpg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "I am an ***person***."
-  location         : "Seoul, Republic of Korea "
+  location         : "Republic of Korea"
   email            :
   links:
     - label: "Email"
