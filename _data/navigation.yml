@@ -1,12 +1,32 @@
 # main links
 main:
-  - title: "Quick-Start Guide"
-    url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
-  # - title: "About"
-  #   url: https://mmistakes.github.io/minimal-mistakes/about/
-  # - title: "Sample Posts"
-  #   url: /year-archive/
-  # - title: "Sample Collections"
-  #   url: /collection-archive/
-  # - title: "Sitemap"
-  #   url: /sitemap/
+#  - title: "Quick-Start Guide"
+#    url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
+#  - title: "About"
+#    url: https://mmistakes.github.io/minimal-mistakes/about/
+#  - title: "Sample Posts"
+#    url: /year-archive/
+#  - title: "Sample Collections"
+#    url: /collection-archive/
+#  - title: "Sitemap"
+#    url: /sitemap/
+  - title: "About"
+    url :
+  - title: "Paper Review"
+    sublinks:
+      - title: "Object Detection"
+        url: /papers/object-detection/
+      - title: "Reinforcement Learning"
+        url: /papers/reinforcement-learning/
+  - title: "Study"
+    sublinks:
+      - title: "Math"
+        url: /math/
+  - title: "Project"
+    sublinks:
+      - title: "Object Detection"
+        url: /projects/object-detection/
+      - title: "Reinforcement Learning"
+        url: /projects/reinforcement-learning/
+  - title: "Post Tags"
+    url: /tags/
