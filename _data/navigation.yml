@@ -18,6 +18,8 @@ main:
         url: /papers/object-detection/
       - title: "Reinforcement Learning"
         url: /papers/reinforcement-learning/
+      - title: "Image Generation"
+        url: /papers/image-generation/
   - title: "Study"
     sublinks:
       - title: "Math"
