@@ -22,6 +22,8 @@ main:
     sublinks:
       - title: "Math"
         url: /math/
+      - title: "etc"
+        url: /etc/
   - title: "Project"
     sublinks:
       - title: "Object Detection"
