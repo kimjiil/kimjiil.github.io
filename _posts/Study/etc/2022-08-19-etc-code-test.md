@@ -5,6 +5,7 @@ categories:
 tags:
   - bug
   - math
+date: 2022-08-19-13:27:00
 toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
