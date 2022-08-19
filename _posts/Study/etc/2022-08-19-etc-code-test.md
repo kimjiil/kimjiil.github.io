@@ -8,13 +8,16 @@ tags:
 toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
+use_math: true
 ---
 
 # Test
 
-$$\begin{matrix} a & b \\ c & d \end{matrix}
+$$
+\begin{matrix} a & b \\ c & d \end{matrix}
 \begin{pmatrix} a & b \\ c & d \end{pmatrix}
-\begin{bmatrix} a & b \\ c & d \end{bmatrix}$$
+\begin{bmatrix} a & b \\ c & d \end{bmatrix}
+$$
 
 $$
 \left(\sum_{k=1}^n a_k b_k \right)^2 \leq 
