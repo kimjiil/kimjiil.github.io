@@ -1,0 +1,373 @@
+$window-height: 16px;
+
+.language-r {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "R";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-matlab {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Matlab";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-bash {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Bash";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-markdown {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "MarkDown";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-cs {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "C#";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-cpp {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "C++";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-java {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Java";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-terminal {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Terminal";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-javascript {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Javascript";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-python {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "Python";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-css {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "CSS";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-json {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "JSON";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}

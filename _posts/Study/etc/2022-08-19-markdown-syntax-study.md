@@ -14,6 +14,48 @@ use_math: true
 
 ## 제목
 
+```terminal
+TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~
+TEST~~
+TEST~~TEST~~TEST~~
+TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~
+```
+
+```python
+def fun(**kwargs):
+    pass
+
+class test:
+    def __init__(self):
+        test = 0
+
+```
+
+```cpp
+template <typename T>
+void sort(T start, T end, Compare comp);
+#include<iostream>
+#include<algorithm>
+using namespace std;
+void Print(int *arr)
+{
+    cout << "arr[i] : ";
+}
+
+```
+
+```java
+public static int test(String[] a)
+{
+    int a = 0;
+    System.out.println("test");
+  
+    return a;
+}
+
+```
+
+
 ```markdown 
 Test~~
 function a() {
@@ -23,7 +65,7 @@ function a() {
 
 ```javascript
 fucntion test() {
-  console.log("gg", no);
+    console.log("gg", no);
 }
 ```
 
