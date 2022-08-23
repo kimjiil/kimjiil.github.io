@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-23T16:07:02
+last_modified_at: 2022-08-23T16:10:41
 ---
 
 ## Github io 변경 사항
@@ -246,8 +246,8 @@ sed 명령어를 통해 깃헙 블로그의 정보가 들어가 있는 "---" 사
 last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대체한다.
 
 ```terminal
-> date -u "+%Y-%m-%dT%H:%M:%S"  #GMT+0
+> date -u "+%Y-%m-%dT%H:%M:%S"                #GMT+0
   2022-08-23T15:36:48
-> date -u "+%Y-%m-%dT%H:%M:%S"  #GMT+9 한국 시간
+> date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours"  #GMT+9 한국 시간
   2022-08-24T00:37:13
 ```
