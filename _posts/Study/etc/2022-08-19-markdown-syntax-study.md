@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-23T01:26:06+09:00
+last_modified_at: 2022-08-23T10:30:25
 ---
 
 ## Github io 변경 사항
@@ -171,3 +171,7 @@ defaults:
       share: true
       related: true
 ```
+
+### Post 하단의 last_modified_at 자동 업데이트
+
+파일을 수정할 때 마다 last_modified_at을 일일이 변경하기 힘들어서 자동으로 업데이트 하도록 변경
