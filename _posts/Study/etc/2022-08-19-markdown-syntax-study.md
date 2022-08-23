@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-23T15:40:16
+last_modified_at: 2022-08-23T16:07:02
 ---
 
 ## Github io 변경 사항
@@ -195,7 +195,7 @@ commit전에 자동적으로 실행됨.
 # Replace `last_modified_at` timestamp with current time
 
 git diff --cached --name-status | egrep -i "^(A|M).*\.(md)$" | while read a b; do
-  cat "${b:0:-1}" | sed "^---/,/^---/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/" > tmp
+  cat "${b:0:-1}" | sed "^---.*/,/^---.*/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/" > tmp
   mv tmp "${b:0:-1}"
   git add "${b:0:-1}"
 done
@@ -221,7 +221,7 @@ M       _posts/Study/etc/2022-08-19-markdown-syntax-study.md
 그 파일을 cat $b 명령어로 열어서 text부분에서 sed 명령어를 통해 last_modified_at부분만 수정하면 된다.
 
 ```terminal
-> cat _posts/Study/etc/2022-08-19-markdown-syntax-study.md | sed -n "/^---/,/^---/p"
+> cat _posts/Study/etc/2022-08-19-markdown-syntax-study.md | sed -n "/^---.*/,/^---.*/p"
   ---
   title: "Markdown 작성 방법"
   categories:
@@ -240,7 +240,7 @@ M       _posts/Study/etc/2022-08-19-markdown-syntax-study.md
 sed 명령어를 통해 깃헙 블로그의 정보가 들어가 있는 "---" 사이 부분의 범위만 출력
 
 ```terminal
-> sed "/^---/,/^---/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/"
+> sed "/^---.*/,/^---.*/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/"
 ```
 위 코드를 요약하면 "---" 사이 부분에서 "last_modified_at:"으로 시작하는 행(.*: 뒤에 문자열이 뭐가 오든 상관없음)을
 last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대체한다.
