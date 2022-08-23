@@ -1,10 +1,13 @@
 ---
-title: "Markdown 문법 모음"
+title: "GitHub 블로그 변경 사항"
 categories:
   - etc
 tags:
   - markdown
   - html
+  - scss
+  - git
+  - linux
 date: 2022-08-19-13:40:00
 toc: true
 toc_sticky: true
@@ -14,62 +17,8 @@ last_modified_at: 2022-08-23T16:10:41
 ---
 
 ## Github io 변경 사항
-### markdown code block test
-
-```terminal
-TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~
-TEST~~
-TEST~~TEST~~TEST~~
-TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~TEST~~
-```
-
-```python
-def fun(**kwargs):
-    pass
-
-class test:
-    def __init__(self):
-        test = 0
-
-```
-
-```cpp
-template <typename T>
-void sort(T start, T end, Compare comp);
-#include<iostream>
-#include<algorithm>
-using namespace std;
-void Print(int *arr)
-{
-    cout << "arr[i] : ";
-}
-
-```
-
-```java
-public static int test(String[] a)
-{
-    int a = 0;
-    System.out.println("test");
-  
-    return a;
-}
-
-```
-
-
-```markdown 
-Test~~
-function a() {
-    test();
-}
-```
-
-```javascript
-fucntion test() {
-    console.log("gg", no);
-}
-```
+- Github blog를 만들면서 변경한 점 메모
+---
 
 ### Code Block 라인 줄 표시
 수정 파일 - _config.yml
@@ -104,7 +53,7 @@ kramdown:
     }
 
 ```
-
+---
 ### Code Block Sytle 변경
 수정 파일 - _sass/minimal-mistakes.scss
 하단에 다음 코드 추가
@@ -151,7 +100,7 @@ $window-height: 16px;
   }
 }
 ```
-
+---
 ### Post 하단에 Date 정보 출력
 
 수정 파일 - _config.yml
@@ -173,7 +122,7 @@ defaults:
       related: true
 ```
 
-
+---
 ### Post 하단의 last_modified_at 자동 업데이트
 
 깃헙 블로그의 Post를 관리하는데 최종 수정일을 Post하단 부분에 표시를 남겨두고 싶음.
@@ -199,7 +148,7 @@ git diff --cached --name-status | egrep -i "^(A|M).*\.(md)$" | while read a b; d
   mv tmp "${b:0:-1}"
   git add "${b:0:-1}"
 done
-&#45;
+
 ```
 
 ```terminal
@@ -237,7 +186,9 @@ M       _posts/Study/etc/2022-08-19-markdown-syntax-study.md
   last_modified_at: 2022-08-23T10:30:25
   ---
 ```
+
 sed 명령어를 통해 깃헙 블로그의 정보가 들어가 있는 "---" 사이 부분의 범위만 출력
+
 
 ```terminal
 > sed "/^---.*/,/^---.*/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/"
