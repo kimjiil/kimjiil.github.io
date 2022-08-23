@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-23T10:30:25
+last_modified_at: 2022-08-23T15:40:16
 ---
 
 ## Github io 변경 사항
@@ -155,7 +155,8 @@ $window-height: 16px;
 ### Post 하단에 Date 정보 출력
 
 수정 파일 - _config.yml
-```yaml
+
+```yaml 
 ...
 # Defaults
 defaults:
@@ -172,6 +173,81 @@ defaults:
       related: true
 ```
 
+
 ### Post 하단의 last_modified_at 자동 업데이트
 
-파일을 수정할 때 마다 last_modified_at을 일일이 변경하기 힘들어서 자동으로 업데이트 하도록 변경
+깃헙 블로그의 Post를 관리하는데 최종 수정일을 Post하단 부분에 표시를 남겨두고 싶음.
+매번 post글 부분의 last_modified_at 부분을 수작업으로 수정하기 불편해서 Git의 pre-commit를 사용하여 자동적으로 업데이트하려고함.
+
+#### pre-commit/Git Hook
+Git의 pre-commit은 우리가 작성한 코드를 commit할 때 마다 자동적으로 특정 작업을 commit전에 실행해줌.
+
+#### 사용법
+사용하려는 Git 프로젝트 폴더에 .git/hooks/pre-commit 파일을 추가하고 파일에 실행시킬 코드를 작성하면
+commit전에 자동적으로 실행됨.
+
+이 기능을 사용해서 .md 파일의 last_modified_at을 현재 시간으로 수정해서 파일을 수정하는 방법으로 업데이트 하려고함.
+
+#### pre-commit code (Window 기준)
+```terminal
+#!/bin/sh
+# Contents of .git/hooks/pre-commit
+# Replace `last_modified_at` timestamp with current time
+
+git diff --cached --name-status | egrep -i "^(A|M).*\.(md)$" | while read a b; do
+  cat "${b:0:-1}" | sed "^---/,/^---/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/" > tmp
+  mv tmp "${b:0:-1}"
+  git add "${b:0:-1}"
+done
+&#45;
+```
+
+```terminal
+> git diff --cached --name-status
+M       _posts/Study/etc/2022-08-19-markdown-syntax-study.md
+A       _sass/minimal-mistakes/_code_style.scss
+...
+```
+여기서 게시글만 찾아서 수정하기 위해서 egrep을 사용하여 Git 파일의 상태가 A이거나 M이고 .md으로 끝나는 파일 목록만 출력한다.
+
+```terminal
+> git diff --cached --name-status | egrep -i "^(A|M).*\.(md)$"
+M       _posts/Study/etc/2022-08-19-markdown-syntax-study.md
+...
+```
+
+출력받은 .md 파일 목록으로 while문을 통해 파일마다 last_modified_at 부분만 수정하면 된다.
+이때 while read a b 로 목록을 받게 되면 a에는 git status b에는 파일이름이 들어간다.
+그 파일을 cat $b 명령어로 열어서 text부분에서 sed 명령어를 통해 last_modified_at부분만 수정하면 된다.
+
+```terminal
+> cat _posts/Study/etc/2022-08-19-markdown-syntax-study.md | sed -n "/^---/,/^---/p"
+  ---
+  title: "Markdown 작성 방법"
+  categories:
+    - etc
+  tags:
+    - markdown
+    - html
+  date: 2022-08-19-13:40:00
+  toc: true
+  toc_sticky: true
+  toc_icon: "sticky-note"
+  use_math: true
+  last_modified_at: 2022-08-23T10:30:25
+  ---
+```
+sed 명령어를 통해 깃헙 블로그의 정보가 들어가 있는 "---" 사이 부분의 범위만 출력
+
+```terminal
+> sed "/^---/,/^---/s/^last_modified_at:.*$/last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours")/"
+```
+위 코드를 요약하면 "---" 사이 부분에서 "last_modified_at:"으로 시작하는 행(.*: 뒤에 문자열이 뭐가 오든 상관없음)을
+last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대체한다.
+
+```terminal
+> date -u "+%Y-%m-%dT%H:%M:%S"  #GMT+0
+  2022-08-23T15:36:48
+> date -u "+%Y-%m-%dT%H:%M:%S"  #GMT+9 한국 시간
+  2022-08-24T00:37:13
+```
