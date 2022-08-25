@@ -13,12 +13,13 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-23T16:10:41
+last_modified_at: 2022-08-25T09:26:49
 ---
 
 ## Github io 변경 사항
 - Github blog를 만들면서 변경한 점 메모
----
+
+***
 
 ### Code Block 라인 줄 표시
 수정 파일 - _config.yml
@@ -53,7 +54,7 @@ kramdown:
     }
 
 ```
----
+***
 ### Code Block Sytle 변경
 수정 파일 - _sass/minimal-mistakes.scss
 하단에 다음 코드 추가
@@ -100,7 +101,7 @@ $window-height: 16px;
   }
 }
 ```
----
+***
 ### Post 하단에 Date 정보 출력
 
 수정 파일 - _config.yml
@@ -122,7 +123,7 @@ defaults:
       related: true
 ```
 
----
+***
 ### Post 하단의 last_modified_at 자동 업데이트
 
 깃헙 블로그의 Post를 관리하는데 최종 수정일을 Post하단 부분에 표시를 남겨두고 싶음.

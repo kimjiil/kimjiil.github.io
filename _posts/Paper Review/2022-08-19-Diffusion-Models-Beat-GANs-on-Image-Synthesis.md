@@ -11,7 +11,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-08-23T18:01:01
+last_modified_at: 2022-08-25T09:26:49
 ---
 
 ### [1] Intro
@@ -27,3 +27,5 @@ last_modified_at: 2022-08-23T18:01:01
   - likelihood-based model들은 GAN모델 보다 학습이 쉽고 확장하기도 편하고 더욱 많은 다양성을 갖지만 여전히 GAN보다 visual sample quality가 떨어졌다.
   - 게다가 VAE를 제외하고는 likelihood-based model가 이미지를 생성하는 시간은 GAN보다 느리다.
   - dd
+
+---
