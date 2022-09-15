@@ -20,6 +20,8 @@ main:
         url: /papers/reinforcement-learning/
       - title: "Image Generation"
         url: /papers/image-generation/
+      - title: "Computer Vision"
+        url: /papers/computer-vision/
   - title: "Study"
     sublinks:
       - title: "Math"
