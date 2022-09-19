@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-16T18:00:13
+last_modified_at: 2022-09-19T14:39:24
 ---
 
 ### Uncertainty의 유형
@@ -103,11 +103,103 @@ $$
 - 공유 공분산 $\Sigma$를 가지는 $\mathit{C}$ class-conditional Gaussian distribution$\mathit{(Likelihood)}$을 다음과 같이 정의한다.
 
 $$
-P(f(x)|y=c)= \mathcal{N}(f(x)|\mu_c, \; \Sigma), 
+P(f(x)|y=c)= \mathcal{N}(f(x)\,|\, \mu_c, \; \Sigma)
 $$
 
 - 여기서 $$\mu_c$$는 $$c\in \{1,\cdots,\mathit{C} \}$$의 다변량 가우시안 분포의 평균 벡터이다. 
 - softmax classifier와 GDA사이의 이론적인 연결점을 기반으로 접근한다. 공유 공분산을 가지는 GDA기반의 generative classifier에 의해 정의된 사후 확률 분포(posterior distribution) 추정은 softmax classifier와 동일하다.
+
+---
+
+###### [Supplementary A] 왜 Softmax neural classifier와 class-conditional Gaussian Distribution과 동일한지?
+
+- 보통의 softmax classifier의 posterior는 다음과 같음.
+
+$$
+    P(y=c|x)= \frac{exp( \pmb{\mathbb{w}_c^{\top}} x + b_c )}
+    {\sum_{c'}{exp( \pmb{\mathbb{w}_{c'}^{\top}} x +b_{c'})} }
+$$
+
+- x가 주어졌을때 클래스에 대한 다변량 정규 분포(likelihood)는 다음과 같이 추정 가능.
+
+$$
+    P(x|y=c)=\mathcal{N}(x| \, \mu_c, \, \Sigma_c) = \frac{1}{ {2\pi^{\frac{d}{2}}|\Sigma|^{\frac{1}{2} }} }
+    exp(-\frac{1}{2} (x-\mu_c)^\top \Sigma^{-1} (x-\mu_c))
+$$
+
+- 우리는 x일때 c일 확률인 posterior를 구해야하는데 이는 bayes rule 공식 $ posterior=\frac{likelihood \times prior}{evidence} $
+으로 계산하면 되는데 이때 $evidence$는 전체 확률의 법칙으로 계산하고 $prior$는 전체에서 c의 비율을 계산하면 된다.
+
+$$
+    Posterior \quad P(y=c|x)= \frac{P(x|y=c) \cdotp P(y=c)}{P(x)}
+$$
+
+$$
+    P(x)= \sum_{c'}{P(x|y=c') \cdotp P(y=c')}, \quad P(y=c)= \frac{\beta_c}{\sum_{c'}{\beta_{c'}}}
+$$
+
+$$
+    Posterior \quad P(y=c|x)= \frac{P(x|y=c) \cdotp P(y=c)}{\sum_{c'}{P(x|y=c') \cdotp P(y=c')}}
+$$
+
+- 이제 $P(y=c)$와 
+위의 likelihood $P(x|y=c)$를 
+$Posterior$식에 각각 대입하고 계산한다.
+
+$$
+    posterior \quad P(y=c|x)= \frac{(2\pi)^{-\frac{d}{2}} |\Sigma_{c}|^{-\frac{1}{2}}
+    exp(-\frac{1}{2} (x-\mu_c)^\top \Sigma^{-1}_{c} (x-\mu_c)) \frac{\beta_c}{\sum_{c'}{\beta_{c'}}} }
+    {
+        \sum_{c'}{(2\pi)^{-\frac{d}{2}}} |\Sigma_{c'}|^{-\frac{1}{2}}  
+        exp(-\frac{1}{2} (x-\mu_{c'})^\top \Sigma^{-1}_{c'} (x-\mu_{c'}))
+        \frac{\beta_{c'}}{\sum_{c'}{\beta_{c'}}}
+    }
+$$
+
+- 여기서 classifier는 Linear Discriminant Analysis라고 가정하면 모든 클래스의 공분산은 같다
+
+- 식에 포함된 상수값인
+$\left| \Sigma \right|, \; \sum_{c'}{\beta_{c'}}, \; (2\pi)^{-\frac{d}{2}}$들은 분자 분모 약분 되어 사라지고 식을 전개하면 다음과 같이 된다.
+
+$$
+    P(y=c|x) = \frac{exp(-\frac{1}{2}(x^{\top} \Sigma^{-1} x - \mu_{c}^{\top} \Sigma^{-1} x - x^{\top} \Sigma^{-1} \mu_{c} + \mu_{c}^{\top} \Sigma^{-1} \mu_{c}) + \ln{\beta_{c}})}
+                {\sum_{c'} exp(-\frac{1}{2}(x^{\top} \Sigma^{-1} x - \mu_{c'}^{\top} \Sigma^{-1} x - x^{\top} \Sigma^{-1} \mu_{c'} + \mu_{c'}^{\top} \Sigma^{-1} \mu_{c'}) + \ln{\beta_{c'}})}
+$$
+
+- 여기서 
+$when \; B \; is \; symmetric \;matrix, \; A \cdotp B \cdotp C = C \cdotp B \cdotp A $을 이용하여
+$ x^{\top} \Sigma^{-1} \mu_{c} = \mu_{c}^{\top} \Sigma^{-1} x$ 이므로 식에 대입하면 다음과 같이 정리된다.
+
+$$
+    P(y=c|x) = \frac{exp(-\frac{1}{2}(x^{\top} \Sigma^{-1} x - 2\mu_{c}^{\top} \Sigma^{-1} x -  \mu_{c}^{\top} \Sigma^{-1} \mu_{c}) + \ln{\beta_{c}})}
+                {\sum_{c'} exp(-\frac{1}{2}(x^{\top} \Sigma^{-1} x - 2\mu_{c'}^{\top} \Sigma^{-1} x + \mu_{c'}^{\top} \Sigma^{-1} \mu_{c'}) + \ln{\beta_{c'}})}
+$$
+
+- 위 식에서 공통된 부분인
+$ exp(-\frac{1}{2}(x^{\top} \Sigma^{-1} x) )$ 을 따로 빼내어 다음과 같이 약분할 수 있다.
+
+$$
+    P(y=c|x) = \frac{exp(-\frac{1}{2}x^{\top} \Sigma^{-1} x) \cdotp exp( \mu_{c}^{\top} \Sigma^{-1} x - \frac{1}{2}\mu_{c}^{\top} \Sigma^{-1} \mu_{c} + \ln{\beta_{c}})}
+                {exp(-\frac{1}{2}x^{\top} \Sigma^{-1} x) \cdotp \sum_{c'} exp(  \mu_{c'}^{\top} \Sigma^{-1} x -\frac{1}{2} \mu_{c'}^{\top} \Sigma^{-1} \mu_{c'} + \ln{\beta_{c'}})}
+$$
+
+$$
+    P(y=c|x) = \frac{exp( \mu_{c}^{\top} \Sigma^{-1} x - \frac{1}{2}\mu_{c}^{\top} \Sigma^{-1} \mu_{c} + \ln{\beta_{c}})}
+                {\sum_{c'} exp(  \mu_{c'}^{\top} \Sigma^{-1} x - \frac{1}{2}\mu_{c'}^{\top} \Sigma^{-1} \mu_{c'} + \ln{\beta_{c'}})}
+$$
+
+- 위 식에서 
+$\pmb{\mathbb{w}}\_{c} = \mu_{c}^{\top} \Sigma^{-1} , \; b_c=\frac{1}{2}\mu_{c}^{\top} \Sigma^{-1} \mu_{c} + \ln{\beta_{c}}$ 이라하고 치환하면 다음과 같이 softmax classifier의 형태가 된다.
+
+$$
+    P(y=c|x)=\frac{exp(\pmb{\mathbb{w}}^{\top}_{c}x+b_c)}
+                {\sum_{c'} exp(\pmb{\mathbb{w}}^{\top}_{c'}x+ b_{c'})}
+$$
+
+---
+
+- 
+
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
