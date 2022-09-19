@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-19T14:39:24
+last_modified_at: 2022-09-19T18:05:14
 ---
 
 ### Uncertainty의 유형
@@ -113,6 +113,10 @@ $$
 
 ###### [Supplementary A] 왜 Softmax neural classifier와 class-conditional Gaussian Distribution과 동일한지?
 
+<details>
+<summary> <b>[Supplementary A 내용 펼치기]</b> </summary>
+<div markdown="1">
+
 - 보통의 softmax classifier의 posterior는 다음과 같음.
 
 $$
@@ -196,10 +200,103 @@ $$
                 {\sum_{c'} exp(\pmb{\mathbb{w}}^{\top}_{c'}x+ b_{c'})}
 $$
 
+</div>
+</details>
+
 ---
 
-- 
+- 그러므로 사전 학습된 softmax classifier $f(x)$의 feature도 역시 class-conditional Gaussian distribution을 따른다고 할 수 있다.
 
+- 사전 학습된 softmax neural classifier로 부터 generative classifier의 parameter를 추정하기 위해서, 실험적으로 training samples 
+$\\{(x_1,y_1), \, \cdots, \, (x_N,y_N)\\} $의 공분산과 class mean을 다음과 같이 계산한다.
+
+$$
+    \hat{\mu_{c}} = \frac{1}{\mathit{N}_c} \sum_{i:y_{i}=c} f(x_i)), \;
+    \hat{\Sigma} = \sum_{c} \sum_{i:y_{i}=c} \big[ (f(x_i)-\hat{\mu_{c}})(f(x_i)-\hat{\mu_{c}})^{\top} \big]
+$$
+
+- 여기서 
+$\mathit{N}_c$ 는 class label c를 가지는 training sample의 수이다. 이것은 MLE(최대 우도 추정)에서 training sample에 대해 공유 공분산을 가지는
+class-conditional Gaussian distribution에 fitting하는 것과 동일하다.
+
+###### Mahalanobis distance-based confidence score
+
+- 위에서 유도된 class-conditional Gaussian distribution을 사용하여 sample x와 가장 가까운 class-conditional distribution 사이의 
+**Mahalanobis distance**를 사용한 confidence score $M(x)$를 다음과 같이 정의 한다.
+
+$$
+    M(x) = \max_{c}{-(f(x) - \hat{\mu_{c}})^{\top} \Sigma^{-1} (f(x)-\hat{\mu_{c}}) }
+$$
+
+---
+
+<details>
+<summary> <b>Mahalanobis distance 간단한 설명 펼치기</b> </summary>
+<div markdown="1">
+
+- Mahalanobis distance는 어떤 sample x가 분포의 평균값으로 부터 표준 편차의 몇배 만큼 떨어져 있는 비율을 나타낸다.
+1-d gaussian distribution 일때는 다음과 같다
+
+$$
+    D = \sqrt{\bigg(\frac{x-\mu}{\sigma}\bigg)^2}
+$$
+
+- 이 식은 1차 가우스 분포 함수의 자연 상수의 지수 부분과 같다. $g(x) = \frac{1}{\sigma\sqrt{2\pi}} exp(-\frac{1}{2} \big( \frac{x-\mu}{\sigma} \big)^2 )$
+
+- 이를 일반화한 다변량 가우스 분포 함수의 지수 부분으로 나타내면 Mahalanobis distance가 된다.
+
+$$
+    Multiple \; gaussian \; g(X) = \frac{1}{ (2\pi)^{\frac{d}{2}} |\Sigma|^{-1} } 
+    exp(-\frac{1}{2} (x-\mu)^{\top} \Sigma^{-1} (x-\mu) )
+$$
+
+$$
+    Mahanobis \; distance = \sqrt{(x-\mu)^{\top} \Sigma^{-1} (x-\mu)}
+$$
+
+</div>
+</details>
+
+---
+
+- 이 metric은 test sample의 probabilty의 log값을 측정하는 것과 같다. 여기서 주목해야할 부분은 abnormal sample들은 이상치를 탐지하기 위한
+이전 연구들[[13][13_link], [21][21_link]]에서 사용된 softmax-based posterior distribution의 **"label-overfitted"**된 output space보다
+DNNs의 representation space에서 더 잘 특징화(characterize)할 수 있다는 것이다.
+
+    - softmax classifier는 softmax decision boundary로 부터 멀리 떨어져 있는 abnormal sample에 대해서도 심지어 높은 confidence를 가지는 posterior distribution으로
+        confidence score를 얻었기 때문이다.
+
+    - 이러한 단점을 보안 하기 위해 Softmax classifier를 사용하지 않고 DNN feature를 사용하여 adversarial sample을 탐지하는 Feinman et al.[[7][7_link]]
+        과 Ma et al.[[22][22_link]]의 연구가 있지만 이러한 연구들은 Mahalanobis distance를 사용하지 않고 단순히 Euclidean distance를 사용하였음.
+
+###### Experimental supports for generative classifiers
+
+- 학습된 DNN의 feature가 Gaussian Distriminant Analysis(GDA) estimation에 도움이 된다는 가설을 평가하기 위해 다음과 같은 식으로 classification accuracy를 측정함.
+
+$$
+    \hat{y}(x) = \underset{c}{arg min}(f(x) - \hat{\mu}_{c})^{\top} \hat{\Sigma}^{-1} (f(x) - \hat{\mu_{c}})
+$$
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_01.png"
+height="90%" width="90%"></p>
+
+- 이 식은 uniform class prior를 가진 generative classifier의 posterior distribution을 사용하여 class label을 예측한다는 뜻이다.
+
+  - 흥미롭게도 scratch로 학습한 generative classifier의 성능이 softmax와 같은 discriminative classifier보다 성능이 떨어질것이라는 일반적인 통념과는 다르게
+    **Figure 1(b)**를 보면 Mahalanobis distance classifier의 성능(blue bar)이 거의 softmax classifier의 성능(red bar)와 비슷한 것을 볼 수 있다.
+
+- Figure 1(a)는 CIFAR-10 test sample들을 DNN에 통와시켰을 때 마지막 layer의 feature를 t-SNE[[23][23_link]]으로 임배딩한 것을 보여준다.(점의 색깔은 Object의 class를 나타냄)
+    
+  - embedding space에서 10개의 모든 class가 깔끔하게 분리된 것을 볼 수 있음.
+
+- 추가로, Out-of-distribution sample을 탐지하는데 Mahalanobis distance-based metric이 매우 유용하게 사용될 수 있음을 보여 준다.
+
+- 성능 평가를 위해 test sample x에 대해 Confidence score $M(x)의 값을 계산하고 그 값이 어떤 threshold 이상이면 positive로 판단하는 단순한 detector
+를 사용하여 ROC curve를 그림.
+
+  - 데이터로부터 계산된 class mean만을 이용한 Euclidean distance를 비교로 사용했다. Figure 1(c)를 보면 Mahalanobis distance 기반 방법(blue)이
+    Euclidean 기반 방법(green)과 maximum of the softmax distribution(red)보다 ROC 성능이 높은 것을 볼 수 있다. 
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
