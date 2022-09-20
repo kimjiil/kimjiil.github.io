@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-19T18:05:14
+last_modified_at: 2022-09-20T18:21:29
 ---
 
 ### Uncertainty의 유형
@@ -296,7 +296,134 @@ height="90%" width="90%"></p>
 를 사용하여 ROC curve를 그림.
 
   - 데이터로부터 계산된 class mean만을 이용한 Euclidean distance를 비교로 사용했다. Figure 1(c)를 보면 Mahalanobis distance 기반 방법(blue)이
-    Euclidean 기반 방법(green)과 maximum of the softmax distribution(red)보다 ROC 성능이 높은 것을 볼 수 있다. 
+    Euclidean 기반 방법(green)과 maximum of the softmax distribution(red)보다 ROC 성능이 높은 것을 볼 수 있다.
+
+##### [2.2] Calibration techniques
+
+###### Input pre-processing
+
+- In-of-distribution sample과 Out-of-distribution sample을 더 구분이 잘되게 만들기 위해서, test sample에 제한된 작은 noise를 추가하였다.
+각각의 test sample $x$에 대해 다음과 같은 small perturbation을 추가하여 전처리된 sample $\hat{x}$를 계산했다.
+
+$$
+    \hat{x} = x + \varepsilon sign\big(\nabla_{x}M(x)\big) = x - \varepsilon sign\big(\nabla_{x}(f(x) - \hat{\mu}_{\hat{c}})^{\top}
+            \hat{\Sigma}^{-1} (f(x) - \hat{\mu}_{\hat{c}})\big)
+$$
+
+- 위 식에서 $\varepsilon$은 noise의 정도를 조절하고 $\hat{c}$는 가장 가까운 class를 나타낸다.
+
+- adversarial attacks[[10][10_link]]와는 다르게 제안된 confidence score가 증가할수록 noise는 생성된다.
+
+---
+
+- Fast Gradient Sign Method(FGSM) 방식에서 아이디어를 얻었으며, Back propagation을 통해 loss를 최소화하도록 학습하는 것을 반대로 이용하여, loss를 증가시키는
+방향의 gradient를 계산하여 얻은 극소량의 pertubation을 input에 더해 줌으로써 true label에 대한 softmax score를 낮추어 mis-classification을 유도함
+
+$$
+    FGSM \; Method \quad \hat{x} = x + \varepsilon sign(\nabla_{x} J(\theta,x,y))
+$$
+
+- FGSM과는 반대로 이 논문에서는 pertubation을 gradient방향으로 빼줌으로써 주어진 input에 대한 confidence score를 높여주는 방향으로 in-distribution sample에 대한 예측을 강화하여
+out-of-distribution sample과 더 잘 분리될 수 있도록 도와 주는 역할을 함.
+
+[출저] [hoya12 블로그](https://hoya012.github.io/blog/anomaly-detection-overview-2/)
+
+---    
+
+- 이와 비슷한 방법으로 [[21][21_link]]에서 predict label의 softmax score를 사용한 Noise를 추가함.
+
+###### Feature Ensemble
+
+- 성능을 더 높이기 위해 confidence score를 계산하는데 final feature 뿐만아니라 DNNs의 low-lebel feature들도 추가하는 것을 고려함.
+
+- training data가 주어지면 $\ell$-th hidden feature를 $f_{\ell}(x)$으로 표시하고 그때 들어오는 입력 x에 대하여 class mean과 tied covariance를 각각
+$$\hat{\mu}_{\ell,c} \,$$, $$ \; \hat{\Sigma}_{\ell}$$이라고 표시한다.
+
+- 각각의 test sample x에 대해서 다음의 공식으로 $\ell$-th layer의 confidence score를 계산한다.
+
+$$
+    M_{\ell}(x) = \max_{c} -(f_{\ell}(x) - \hat{\mu}_{\ell,\hat{c}})^{\top} \hat{\Sigma}^{-1} (f_{\ell}(x) - \hat{\mu}_{\ell,\hat{c}})
+$$
+
+- low-feature로 부터 더 많은 상세한 정보를 추출함으로써 confidence score를 더 잘 조정할 수 있는 score를 얻을 수 있다.
+- 각 layer에 대해 confidence score를 구하는 알고리즘은 다음과 같다.
+
+> ---
+> **Algorithm 1** Computing the Mahalanobis distance-based confidence score
+> 
+> ---
+**Input**: Test sample x, weights of logistic regression detector $\alpha_{\ell}$, noise $\varepsilon$ and parameters of Gaussian distribution
+${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
+> 
+> ---
+> Initialize Score vectors: $M(x)=\[M_{\ell} : \forall \ell \]$   
+> **for** each layer $\ell \in 1,...,L$ **do**      
+> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}\_{\ell,c} )^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top} 
+\hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
+> $\quad$Computing confidence score: $M\_{\ell}=\max\_{c} - (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> **end for**   
+> **return** Confidence score for test sample $\sum\_{\ell}\alpha\_{\ell}M\_{\ell}$     
+> 
+> ---
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.png"
+height="100%" width="100%"></p>
+
+
+- Figure 2는 CIFAR-10 dataset에 대해 학습한 DenseNet의 basic block을 변경하면서 confidence score를 계산한 ROC curve이다.
+SVHN[[28][28_link]], LSUN[[32][32_link]], TinyImageNet과 같은 OOD sample과 DeepFool[[26][26_link]]에 의해 생성된 adversarial sample에 대한 성능을 보여준다.
+LSUN, TinyImageNet, DeepFool에서는 final feature와 비교하여 때때로 low-level feature의 성능이 더 나은 경우가 있다.
+그래서 성능 향상을 위해 **Algorithm 1**처럼 모든 layer의 feature를 사용하여 confidence score를 계산하고 각 layer의 score는 weight sum을 통하여 전체적인 confidence score를 계산한다.
+
+- validation sample을 사용한 logistic regression detector를 training하면서 각 layer의 weight ratio $\alpha\_{\ell}$을 선택한다.
+이러한 score weighted averaging은 몇개의 layer로부터 얻은 score가 유효하지 않을 경우 거의 0에 근접한 weight를 주어 전체적인 성능 하락을 방지 한다.
+
+##### [2.3] Class-Incremental learning using Mahalanobis distance-based score
+
+- 더나아가 Mahalanobis distance-based score를 class-incremental learning task[[29][29_link]]에서도 사용될 수 있다.
+  - class-incremental learning은 base class에 대해 사전 학습한 classifier를 new class가 생길때 마다 점진적으로 업데이트하여 new class를 수용함.
+  - 이 task는 제한된 메모리로 catastrophic forgetting[[24][24_link]]를 해결해야하기 때문에 매우 어렵다. 이를 해결하기 위해 최근
+    연구들은 모델 생성과 데이터 샘플링에 관련된 새로운 학습 방법을 개발하는 방향으로 진행되고 있지만 이러한 학습 방법은 비싼 학습 비용을 발생시킨다.
+  - 그래서 제안된 confidence score를 기반으로 복잡한 훈련방법을 사용하지 않는 단순한 classification 방법을 개발했다.
+  - 이 방법을 사용하기 위해서는 첫번째 가정으로 기본 class에 대해 충분히 잘 사전 학습된 모델이 있어야하는데 인터넷상에 큰 데이터세트로 학습된 Resnet과 같은 모델등이 많기 때문에 적용에 큰 어려움은 없다.
+  - 잘 사전학습된 모델을 사용하는 경우 OOD sample을 잘 탐지할 뿐만아니라 base class로 학습한 represetation이 new class를 잘 특징화 할 수 있으므로 new class를 잘 구별할 수 있다.
+
+- 이러한 점을 기반으로 다음의 공식을 기반으로 class mean과 covariance를 단순히 계산하고 업데이트하므로써 new class를 수용하는 Mahalanobis distance-based classifier를 **Algorithm 2**에서 설명한다.
+
+$$
+    \hat{y}(x)=\underset{c}{argmin}\big(f(x) - \hat{\mu}\_{c}  \big)^{\top} \hat{\Sigma}^{-1} \big( f(x) - \hat{\mu}\_{c} \big)
+$$
+
+> ---
+> 
+> **Algorithm 2** Updating Mahalanobis distance-based classifier for class-incremental learning.
+> 
+> ---
+> 
+> **Input**: set of samples from a new class ${x\_i: \forall i = 1,...,N\_{C+1}}$, mean and covariance of observed classes
+${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
+> 
+> ---
+> 
+> Compute the new class mean:  $\hat{\mu}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} f(x\_{i}) $      
+> Compute the covariance of the new class: $ \hat{\Sigma}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} (f(x\_{i}) -  \hat{\mu}\_{C+1} )^{\top} $        
+> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}\_{C+1} $       
+> **return** Mean and covariance of all classes ${ \hat{\mu}\_{c} : \forall\_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
+>
+> ---
+
+#### [4] Conclusion
+
+- 단순하지만 OOD와 adversarial에 대한 abnormal test sample을 잘탐지하는 효과적인 방법을 제안.
+- 본질적으로, main idea는 LDA 추정 기반의 generative classifier로 부터 나왔으며 새로운 confidence score도 이것을 기반으로 함.
+- feature ensemble과 input preprocessing과 같은 calibration technique을 통해 많은 task에 대해 robust한 성능을 가지게함.
+  - OOD sample, adversarial attack, class incremental learning
+- 이 방법은 training data가 noisy, ranodm label, data sample의 개수가 매우 적은 극한 상황에서도 hyper parameter의 설정이 매우 자유로워 robust하다.
+
+
+
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
