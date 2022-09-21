@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-20T18:21:29
+last_modified_at: 2022-09-21T18:19:23
 ---
 
 ### Uncertainty의 유형
@@ -422,6 +422,197 @@ ${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
   - OOD sample, adversarial attack, class incremental learning
 - 이 방법은 training data가 noisy, ranodm label, data sample의 개수가 매우 적은 극한 상황에서도 hyper parameter의 설정이 매우 자유로워 robust하다.
 
+
+---
+
+### 선형 판별 분석(Linear Discriminant Analysis) 
+
+[참고] [ratgo's blog](https://ratsgo.github.io/machine%20learning/2017/03/21/LDA/)
+
+- LDA(Linear Discriminant Analysis)는 특정한 축(axis)에 사영(projection)한 이후 범주(category) 혹은 클래스를 잘 구분하는 직선인 Decision Boundary를 찾는 것이 목표.
+- 2개의 클래스를 잘 구분하기 위해선 클래스들이 사영된 축에서 클래스 사이의 중심(평균)이 서로 멀고 각 클래스의 분산이 작아야 된다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_01.png"
+height="80%" width="80%"> </p>
+
+---
+
+#### 1. LDA에 대한 첫번째 접근
+
+- $p$차원의 입력 $vector \; x$가 $\mathbf{w}$라는 축에 사영된다고 할때 축 위에서 사영된 1차원의 스칼라 값을 $y$라고 하고
+두 클래스 $C\_{1}$과 $C\_{2}$ 각각에 대해 $N\_{1}$, $N\_{2}$개의 데이터가 있다고 하자.
+
+$$
+    y = \mathbf{\overrightarrow{w}} \cdotp \overrightarrow{x} = 
+    \mathbf{\overrightarrow{w}^{\top}} \overrightarrow{x}
+    = \overrightarrow{x}^{\top} \mathbf{\overrightarrow{w}}
+    \;, \quad
+
+    \overrightarrow{x} = \begin{bmatrix}
+    a_{1} \\
+    \vdots \\
+    a_{p}
+    \end{bmatrix}  
+    \quad
+    \mathbf{\overrightarrow{w}} = \begin{bmatrix}
+    w_{1} \\
+    \vdots \\
+    w_{p}
+    \end{bmatrix}
+    \quad 
+    \mathbf{\overrightarrow{w}} \; is \; unit \; vector
+$$
+
+$$
+    C_{1} \; mean : \overrightarrow{m_{1}} = \frac{1}{N_{1}} \sum_{n \in C_{1}} \overrightarrow{x_{n}}
+$$
+
+$$
+    C_{2} \; mean : \overrightarrow{m_{2}} = \frac{1}{N_{2}} \sum_{n \in C_{2}} \overrightarrow{x_{n}}
+$$
+
+- 먼저 사영후 두 클래스의 중심인 평균이 서로 멀어야 된다. 이때 $m\_1$과 $m\_2$를 축에 사영하여 $m\_{1}'$과 $m\_{2}'$를 만들고 그 사이의 거리
+$\overline{m\_{1}' m\_{2}'}$가 최대가 되는 축 $\mathbf{w}$를 찾으면 된다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_02.png"
+width="40%" height="40%">
+</p>
+
+- 여기서 축 $\mathbf{w}$에 사영된 $\overline{m\_{1}' m\_{2}'}$의 길이는 다음과 같다. 
+
+$$
+    \overline{m_{2}' m_{1}'}  = m_{2}'-m_{1}' = \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})
+    = (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top}  \overrightarrow{\mathbf{w}}
+$$
+
+- 다음으로 사영후 두 클래스 각각의 분산이 작아야 된다. 클래스가 넓은 범위에 걸쳐 사영되면 범위가 겹치는 곳이 많아지므로 클래스를 구분하기 어려워지므로 좁은 범위에 사영되게 하기 위해 분산을 작게한다.
+k class의 사영된 값을 $y\_{k}$, 평균 $m\_{k}$, 분산을 $s\_{k}^{2}$ 라고 한다. 이때 분산은 다음과 같이 계산된다.
+
+$$
+    s_{k}^{2} = \sum_{n \in C_{k}} (y_{n} - m_{k}')^2
+$$
+
+- 이제 축에 사영된 중심의 거리는 최대화 하고 분산은 최소화해야 된다. 다음과 같은 함수를 만들고 이를 최대화 하면 된다.(식을 단순화 하기 위해서 두 개의 클래스만 가정)
+
+$$
+    \underset{\mathbf{w}}{Maximize} \; J(\mathbf{w}) = \frac{ (m_{2}'-m_{1}')^{2} }{ s_{2}^2 + s_{1}^2 }
+$$ 
+
+- 여기서 $J(\mathbf{w})$ 함수를 최대화하는 $\mathbf{w}$를 찾아야 하므로$\mathbf{w}$에 대한 함수로 만들기 위해 위의 식들을 대입하여 정리하면 다음과 같다.
+
+$$
+    m_{2}'-m_{1}' = (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top}  \overrightarrow{\mathbf{w}} \\
+    y_{n} = \overrightarrow{x_{n}}^{\top} \overrightarrow{\mathbf{w}} \;, \quad 
+    m_{k}' = \overrightarrow{m_{k}}^{\top} \overrightarrow{\mathbf{w}} \\
+    s^{2}_{k} = \sum_{n \in C_{k}} (\overrightarrow{x_{n}}^{\top} \overrightarrow{\mathbf{w}} - \overrightarrow{m_{k}}^{\top} \overrightarrow{\mathbf{w}})^2
+    = \sum_{n \in C_{k}} (\overrightarrow{x_{n}}^{\top} \overrightarrow{\mathbf{w}} - \overrightarrow{m_{k}}^{\top} \overrightarrow{\mathbf{w}})^{\top}  (\overrightarrow{x_{n}}^{\top} \overrightarrow{\mathbf{w}} - \overrightarrow{m_{k}}^{\top} \overrightarrow{\mathbf{w}}) \\
+    = \sum_{n \in C_{k}} \big( (\overrightarrow{x_{n}}^{\top} - \overrightarrow{m_{k}}^{\top}) \overrightarrow{\mathbf{w}} \big)^{\top} \big( (\overrightarrow{x_{n}}^{\top} - \overrightarrow{m_{k}}^{\top}) \overrightarrow{\mathbf{w}} \big)
+    = \sum_{n \in C_{k}} \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{x_{n}} - \overrightarrow{m_{k}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{k}})^{\top} \overrightarrow{\mathbf{w}}
+$$
+
+$$
+    J(\mathbf{w}) = \frac{ \big( (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top}  \overrightarrow{\mathbf{w}} \big)^{\top} \big((\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top}  \overrightarrow{\mathbf{w}} \big) }
+                        {\sum_{n \in C_{2}} \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{x_{n}} - \overrightarrow{m_{2}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{2}})^{\top} \overrightarrow{\mathbf{w}}
+                        + \sum_{n \in C_{1}} \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{x_{n}} - \overrightarrow{m_{1}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{1}})^{\top} \overrightarrow{\mathbf{w}}} \\
+    
+    = \frac{  \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})  (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top}  \overrightarrow{\mathbf{w}} }
+            {  \overrightarrow{\mathbf{w}}^{\top} \bigg[ \sum_{n \in C_{2}}  (\overrightarrow{x_{n}} - \overrightarrow{m_{2}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{2}})^{\top} 
+            + \sum_{n \in C_{1}} (\overrightarrow{x_{n}} - \overrightarrow{m_{1}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{1}})^{\top} \bigg] \overrightarrow{\mathbf{w}} }
+$$
+
+- 여기서 식을 간단하게 하기 위해 식을 치환한다.
+
+$$
+    S_{W} = \sum_{n \in C_{2}}  (\overrightarrow{x_{n}} - \overrightarrow{m_{2}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{2}})^{\top} 
+            + \sum_{n \in C_{1}} (\overrightarrow{x_{n}} - \overrightarrow{m_{1}}) (\overrightarrow{x_{n}} - \overrightarrow{m_{1}})^{\top} \\
+    
+    S_{B} = (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})  (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})^{\top} \\
+    
+    J(\mathbf{w}) = \frac{\overrightarrow{\mathbf{w}}^{\top} S_{B} \overrightarrow{\mathbf{w}}}
+                        {\overrightarrow{\mathbf{w}}^{\top} S_{W} \overrightarrow{\mathbf{w}}}
+    
+$$
+
+- 이제 $J(w)$의 최대값을 구하기 위해 미분을 하여 $J^{\prime}(w)=0$인 $w$값을 찾으면 된다.
+
+$$
+\require{cancel}
+
+\big(J(w) (\overrightarrow{\mathbf{w}}^{\top} S_{W} \overrightarrow{\mathbf{w}}) \big)^{\prime} = (\overrightarrow{\mathbf{w}}^{\top} S_{B} \overrightarrow{\mathbf{w}})^{\prime} \\
+
+\cancel{J^{\prime}(w) (\overrightarrow{\mathbf{w}}^{\top} S_{W} \overrightarrow{\mathbf{w}}) }
++ J(w) (\overrightarrow{\mathbf{w}}^{\top} S_{W} \overrightarrow{\mathbf{w}})^{\prime}
+= (\overrightarrow{\mathbf{w}}^{\top} S_{B} \overrightarrow{\mathbf{w}})^{\prime} \;, \quad J^{\prime}(w)=0
+
+$$
+
+- 행렬 미분을 이용하여 정리하면 다음과 같다.
+
+$$
+    \frac{\partial}{\partial \mathbf{x}}(\mathbf{x}^{\top} \mathbf{A} \mathbf{x}) = (\mathbf{A} + \mathbf{A}^{\top})\mathbf{x}= 2\mathbf{A}\mathbf{x}, \quad if \; \mathbf{A} \; is \; symmetric \\
+
+    J(w)(2S_{W} \overrightarrow{\mathbf{w}}) = (2S_{B} \overrightarrow{\mathbf{w}})
+$$
+
+- 여기서 $J^{\prime}(w)=0$을 만족하는 w로 고정 되어 있으므로 $J(w)$은 스칼라 값이다. 그래서 식을 다음과 같이 변형하면 고유값 형태의 문제가 된다.
+
+$$
+    \lambda = J(w) \; ,\quad S_{W}^{-1} S_{B} = \mathbf{A} \\
+
+    J(w)(S_{W} \overrightarrow{\mathbf{w}}) = (S_{B} \overrightarrow{\mathbf{w}}) \quad \Rightarrow \quad \mathbf{A} \overrightarrow{\mathbf{w}} = \lambda \overrightarrow{\mathbf{w}}
+
+$$
+
+- 즉 두개 클래스의 $vector \; x$들을 $\mathbf{w}$축에 사영했을때 서로의 중심 거리가 최대가 되고 각 클래스의 분산이 최소가 되는 $\mathbf{w}$는 
+$(S_{W}^{-1} S_{B})$의 고유 vector이다.
+
+---
+
+#### 2. LDA에 대한 두번째 접근(Bayes rule)
+
+- 클래스 $w\_{1}$, $w\_{2}$가 있고 데이터 x가 있다고 할때 목표인 판별 함수(discriminant function) 
+$p(w\_{1}|x)$와 $p(w\_{2}|x)$ 즉, Posterior를 구해야한다. 하지만 이는 실제로 매우 구하기 힘드므로 베이즈 정리를 사용하여 Likelihood와 Prior로 구해야된다.
+베이즈 정리에 의해 Posterior는 다음과 같다.
+
+$$
+    Prior=p(w_i), \quad Likelihood=p(x|w_i), \quad Evidence=p(x) \\
+    Posterior = \frac{Likelihood \times Prior}{Evidence} \;,\quad p(w_i|x) = \frac{p(x|w_i) p(w_i)}{p(x)}  \\
+
+    law \; of \; total \; probability\; :\quad p(x)= \int_{-\infty}^{\infty} p(x|w)p(w)dw \quad or \quad \sum_{i}^{all} p(x|w_i) p(w_i)
+$$
+
+- 여기선 두개의 클래스로 가정했으므로 전체 확률의 법칙을 적용하면 다음과 같은 식이 된다.
+
+$$ 
+    p(w_1|x) = \frac{p(x|w_1) p(w_1)}{p(x|w_1) p(w_1) + p(x|w_2) p(w_2)} \\
+    p(w_2|x) = \frac{p(x|w_2) p(w_2)}{p(x|w_1) p(w_1) + p(x|w_2) p(w_2)}
+$$
+
+- 세상에 거의 대부분의 데이터의 분포는 가우스 정규 분포(Gaussian normal distribution)를 따른다. 
+현재 우리가 판별하고자 하는 데이터 x도 다변량 정규 분포(Multivariate Gaussian Normal distribution)를 따른다고 가정한다. 
+
+- 이때 다변량 정규 분포의 차원은 d이고 이때 평균 $\mu$과 공분산 $\Sigma$는 다음과 같다.
+
+$$
+    \mu_i = \begin{bmatrix}
+    m_1 \\
+    \vdots \\
+    m_d
+    \end{bmatrix}
+    \; , \quad
+
+    \Sigma_i = \begin{bmatrix}
+    \sigma_{1,\,1} && \cdots && \sigma_{1,\,d} \\
+    \vdots && \ddots && \vdots \\
+    \sigma_{d,\,1} && \cdots && \sigma_{d,\,d}
+    \end{bmatrix}
+$$
+
+$$
+    p(x|w_i) = \frac{1}{(2\pi)^{\frac{d}{2}} |\Sigma_i|^{\frac{1}{2}}} \exp \bigg({ -\frac{1}{2} (x-\mu_i)^{\top}\Sigma_i^{-1}(x-\mu_i)} \bigg)
+$$
 
 
 
