@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-22T09:16:39
+last_modified_at: 2022-09-22T18:03:53
 ---
 
 ### Uncertainty의 유형
@@ -354,13 +354,13 @@ $$
 > ---
 **Input**: Test sample x, weights of logistic regression detector $\alpha_{\ell}$, noise $\varepsilon$ and parameters of Gaussian distribution
 ${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
-> 
+>
 > ---
 > Initialize Score vectors: $M(x)=\[M_{\ell} : \forall \ell \]$   
 > **for** each layer $\ell \in 1,...,L$ **do**      
 > $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}\_{\ell,c} )^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
-> $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top} 
-\hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
+> $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top}
+> \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
 > $\quad$Computing confidence score: $M\_{\ell}=\max\_{c} - (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
 > **end for**   
 > **return** Confidence score for test sample $\sum\_{\ell}\alpha\_{\ell}M\_{\ell}$     
@@ -403,7 +403,7 @@ $$
 > ---
 > 
 > **Input**: set of samples from a new class ${x\_i: \forall i = 1,...,N\_{C+1}}$, mean and covariance of observed classes
-${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
+> ${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
 > 
 > ---
 > 
@@ -590,8 +590,9 @@ $$
     p(w_2|x) = \frac{p(x|w_2) p(w_2)}{p(x|w_1) p(w_1) + p(x|w_2) p(w_2)}
 $$
 
-- 세상에 거의 대부분의 데이터의 분포는 가우스 정규 분포(Gaussian normal distribution)를 따른다. 
-현재 우리가 판별하고자 하는 데이터 x도 다변량 정규 분포(Multivariate Gaussian Normal distribution)를 따른다고 가정한다. 
+- 거의 대부분의 실제 데이터는 가우스 정규 분포(Gaussian normal distribution)를 따른다. 
+현재 우리가 판별하고자 하는 데이터 x도 다변량 정규 분포(Multivariate Gaussian Normal distribution)를 따른다고 가정한다. 따라서
+$w$에대한 $x$의 확률인 likelihood 즉, $p(x|w)$는 다변량 정규 분포 확률 밀도 함수가 된다. 
 
 - 이때 다변량 정규 분포의 차원은 d이고 이때 평균 $\mu$과 공분산 $\Sigma$는 다음과 같다.
 
@@ -614,7 +615,160 @@ $$
     p(x|w_i) = \frac{1}{(2\pi)^{\frac{d}{2}} |\Sigma_i|^{\frac{1}{2}}} \exp \bigg({ -\frac{1}{2} (x-\mu_i)^{\top}\Sigma_i^{-1}(x-\mu_i)} \bigg)
 $$
 
+- x일때 어떤 클래스인지 판별하는 함수를 판별 함수(discrimiant function)이라고 한다. 
+여기서 posterior를 판별 함수로 사용하고 posterior의 계산을 쉽게 하기 위해 log-posterior를 사용한다.
+판별 함수는 클래스의 확률이 높게 나오면 해당 클래스로 분류하기 때문에 단조 함수인 log를 사용해도 성질이 변하지 않는다.
 
+$$  
+    \begin{split}
+    Discriminant \; Function \; : \; \delta_i(x) &\propto p(w_i|x)  \\
+     &\propto \log p(w_i|x))  
+    
+    \\ \\
+
+    
+    \delta_i(x) &= \log p(w_i|x) \\
+                &= \log \frac{p(x|w_i)p(w_i)}{p(x)} \\
+                &= \log p(x|w_i) + \log p(w_i) - \log p(x)
+    
+
+    \\  \\
+    
+    \ln p(x|w_i) &= -\frac{d}{2}\ln (2\pi) -\frac{1}{2}\ln |\Sigma_{i}| - \frac{1}{2} (x-\mu_i)^{\top} \Sigma_{i}^{-1} (x-\mu_i) 
+    \end{split}
+$$
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_03.png"
+height="70%" width="70%">
+</p>
+
+- 이제 두 클래스를 판별하는 결정 경계(Decision Boundary)를 정해야 하는데 결정 경계는 위 그림처럼 보통 두 판별 함수의 값이 같은 곳을 기준으로 한다.
+ 그러므로 결정 경계의 관한 식은 $\delta\_{1}(x) - \delta\_{2}(x)=0$이 된다.
+
+$$
+    Decision \; Boundary \; : \; \delta_{1}(x) - \delta_{2}(x) = 0 
+$$
+
+$$
+    
+    \begin{split}
+     
+    \delta_{1}(x) - \delta_{2}(x) &= -\frac{d}{2}\ln (2\pi) -\frac{1}{2}\ln |\Sigma_{1}| - \frac{1}{2} (x-\mu_1)^{\top} \Sigma_{1}^{-1} (x-\mu_1) + \ln p(w_1) - \ln p(x) \\
+                                & \quad - \bigg( -\frac{d}{2}\ln (2\pi) -\frac{1}{2}\ln |\Sigma_{2}| - \frac{1}{2} (x-\mu_2)^{\top} \Sigma_{2}^{-1} (x-\mu_2) + \ln p(w_2) - \ln p(x)     \bigg) \\
+                        &= \frac{1}{2} \bigg( (x-\mu_2)^{\top} \Sigma_{2}^{-1} (x-\mu_2) - (x-\mu_1)^{\top} \Sigma_{1}^{-1} (x-\mu_1) \bigg) + \frac{1}{2}\ln \frac{|\Sigma_{2}|}{|\Sigma_{1}|} - \ln \frac{p(w_2)}{p(w_1)} \\
+                        &= \frac{1}{2} \bigg( {x^{\top} \Sigma_{2}^{-1} x} - {\mu_2^{\top} \Sigma_{2}^{-1} x} - {x^{\top} \Sigma_{2}^{-1} \mu_2}  + {\mu_2^{\top} \Sigma_{2}^{-1} \mu_2} \bigg) 
+                \\ &\quad - \frac{1}{2} \bigg( {x^{\top} \Sigma_{1}^{-1} x} - {\mu_1^{\top} \Sigma_{1}^{-1} x} - {x^{\top} \Sigma_{1}^{-1} \mu_1}  + {\mu_1^{\top} \Sigma_{1}^{-1} \mu_1} \bigg) + \frac{1}{2}\ln \frac{|\Sigma_{2}|}{|\Sigma_{1}|} - \ln \frac{p(w_2)}{p(w_1)}
+    \end{split}
+$$
+
+- 여기서 LDA는 공유 공분산을 가지므로 $\Sigma\_{1}=\Sigma\_{2}=\Sigma$이다. $\Sigma$은 대칭 행렬이므로 $A\cdotp\Sigma\cdotp B == B\cdotp\Sigma\cdotp A$ 이 성립한다. 이를 이용하여 정리하면
+
+$$
+    \require{cancel}
+
+    \begin{split}
+        \delta_{1}(x) - \delta_{2}(x) &=  \frac{1}{2} \bigg( \cancel{x^{\top} \Sigma^{-1} x} - {\mu_2^{\top} \Sigma^{-1} x} - {x^{\top} \Sigma^{-1} \mu_2}  + {\mu_2^{\top} \Sigma^{-1} \mu_2} \bigg) 
+                \\ &\quad - \frac{1}{2} \bigg( \cancel{x^{\top} \Sigma^{-1} x} - {\mu_1^{\top} \Sigma^{-1} x} - {x^{\top} \Sigma^{-1} \mu_1}  + {\mu_1^{\top} \Sigma^{-1} \mu_1} \bigg) + \cancel{\frac{1}{2}\ln \frac{|\Sigma|}{|\Sigma|}} - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= \frac{1}{2} \bigg( 2{\mu_1^{\top} \Sigma^{-1} x} - 2{\mu_2^{\top} \Sigma^{-1} x} + {\mu_2^{\top} \Sigma^{-1} \mu_2} - {\mu_1^{\top} \Sigma^{-1} \mu_1}   \bigg) - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= (\mu_1-\mu_2)^{\top} \Sigma^{-1} x + \frac{1}{2}({\mu_2^{\top} \Sigma^{-1} \mu_2} - {\mu_2^{\top} \Sigma^{-1} \mu_1} + {\mu_2^{\top} \Sigma^{-1} \mu_1}   - {\mu_1^{\top} \Sigma^{-1} \mu_1} ) - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= (\mu_1-\mu_2)^{\top} \Sigma^{-1} x + \frac{1}{2}({\mu_2^{\top} \Sigma^{-1} \mu_2} - {\mu_2^{\top} \Sigma^{-1} \mu_1} + {\mu_1^{\top} \Sigma^{-1} \mu_2}   - {\mu_1^{\top} \Sigma^{-1} \mu_1} ) - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= (\mu_1-\mu_2)^{\top} \Sigma^{-1} x + \frac{1}{2}({\mu_2^{\top} \Sigma^{-1} (\mu_2 - \mu_1)} + \mu_1^{\top} \Sigma^{-1} (\mu_2 - \mu_1) ) - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= (\mu_1-\mu_2)^{\top} \Sigma^{-1} x + \frac{1}{2}(\mu_{2} + \mu_{1}) \Sigma^{-1} (\mu_{2} - \mu_{1})  - \ln \frac{p(w_2)}{p(w_1)}
+ 
+    \end{split}
+$$
+
+- 결정 경계는 $y=Ax+b$의 1차 직선의 방정식 형태가 나오게 되는데 이때 y의 값에 따라 다음 그림과 같이 결정 경계가 움직인다.
+
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_04.png"
+width="70%" height="70%">
+</p>
+
+---
+
+<details>
+<summary> 공유 공분산이 아닐 경우($\Sigma_{1} \ne \Sigma_{2}$) 펼치기</summary>
+<div markdown="1">
+    
+$$  
+    \begin{split}
+    \delta_{1}(x) - \delta_{2}(x) &= \frac{1}{2} \bigg( {x^{\top} \Sigma_{2}^{-1} x} - 2{\mu_2^{\top} \Sigma_{2}^{-1} x} + {\mu_2^{\top} \Sigma_{2}^{-1} \mu_2} \bigg) 
+                \\ &\quad - \frac{1}{2} \bigg( {x^{\top} \Sigma_{1}^{-1} x} - 2{\mu_1^{\top} \Sigma_{1}^{-1} x}  + {\mu_1^{\top} \Sigma_{1}^{-1} \mu_1} \bigg) + \frac{1}{2}\ln \frac{|\Sigma_{2}|}{|\Sigma_{1}|} - \ln \frac{p(w_2)}{p(w_1)}
+                \\ &= \frac{1}{2} \bigg( {x^{\top}( \Sigma_{2}^{-1} - \Sigma_{1}^{-1}) x}
+                - 2(\mu_2^{\top} \Sigma_{2}^{-1} - \mu_1^{\top} \Sigma_{1}^{-1}) x
+                + ({\mu_2^{\top} \Sigma_{2}^{-1} \mu_2} - {\mu_1^{\top} \Sigma_{1}^{-1} \mu_1}) 
+    \bigg) \\ & \quad + \frac{1}{2}\ln \frac{|\Sigma_{2}|}{|\Sigma_{1}|} - \ln \frac{p(w_2)}{p(w_1)}
+
+    \\ &\Rightarrow x^{\top}\mathbf{A}x + \mathbf{B}x + \mathbf{C}       
+    \end{split}
+$$
+    
+- $x^{\top}\mathbf{A}x + \mathbf{B}x + \mathbf{C}$의 형태로 결정 경계는 2차 곡선의 모양으로 그려진다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_05.png"
+height="70%" width="70%">
+</p>
+
+</div>
+</details>
+
+---
+
+#### 고유값(eigen value) 고유 벡터(eigen vector)
+
+- 행렬 A를 선형 변환으로 봤을때, 선형 변환 A에 의해 변환 결과가 자기 자신의 상수배 $\lambda$가 되는 0이 아닌 벡터를 고유 벡터(eigen vector)라고
+하고 이때 상수배 $\lambda$를 고유값(eigen value)라고 한다. 이때 고유값은 최대 n개 까지 존재할 수 있음.
+
+- $n \times n$의 정방행렬 A과 0이 아닌 vector $v$에 대해 다음이 성립.
+
+$$
+    A \cdotp \mathbf{v}=\lambda \cdotp \mathbf{v} \\ \\
+
+    \begin{pmatrix}
+    a_{11} && \cdots && a_{1n} \\
+    \vdots && \ddots && \vdots \\
+    a_{n1} && \cdots && a_{nn}
+    \end{pmatrix}
+    \cdotp
+    \begin{pmatrix}
+    v_{1} \\
+    \vdots \\
+    v_{n} 
+    \end{pmatrix}=
+    \lambda 
+    \begin{pmatrix}
+    v_{1} \\
+    \vdots \\
+    v_{n} 
+    \end{pmatrix}
+    
+$$
+
+- A의 고유값과 고유 벡터가 n개 있다고 하면 선형 변환 A를 다음과 같이 표현이 가능하다.
+
+$$
+    \mathbf{v_1} \to \lambda_1 \quad \cdots \quad  \mathbf{v_n} \to \lambda_n \\
+    
+    A \cdotp [\mathbf{v_1} \cdots \mathbf{v_n}] = 
+    \begin{pmatrix}
+    \lambda_1 & \cdots & 0 \\
+    \vdots & \ddots & \vdots \\
+    0 & \cdots & \lambda_n 
+    \end{pmatrix}
+    \cdotp [\mathbf{v_1} \cdots \mathbf{v_n}]
+    \\
+    P= [\mathbf{v_1} \cdots \mathbf{v_n}] \;, \quad \Lambda=\begin{pmatrix}
+    \lambda_1 & \cdots & 0 \\
+    \vdots & \ddots & \vdots \\
+    0 & \cdots & \lambda_n 
+    \end{pmatrix}
+    \\
+    A \cdotp P = \Lambda \cdotp P \quad \to \quad A=P^{-1} \cdotp \Lambda \cdotp P
+$$
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
