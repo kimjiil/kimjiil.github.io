@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-21T18:19:23
+last_modified_at: 2022-09-22T09:16:39
 ---
 
 ### Uncertainty의 유형
@@ -278,7 +278,7 @@ $$
 $$
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_01.png"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_01.PNG"
 height="90%" width="90%"></p>
 
 - 이 식은 uniform class prior를 가진 generative classifier의 posterior distribution을 사용하여 class label을 예측한다는 뜻이다.
@@ -368,7 +368,7 @@ ${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
 > ---
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.png"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.PNG"
 height="100%" width="100%"></p>
 
 
@@ -476,7 +476,7 @@ $$
 $\overline{m\_{1}' m\_{2}'}$가 최대가 되는 축 $\mathbf{w}$를 찾으면 된다.
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_02.png"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_02.PNG"
 width="40%" height="40%">
 </p>
 
