@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]A Simple Unified Framework for Detecting Out-Of-Distribution Samples and Adversarial Attack[작성중]"
+title: "[논문 리뷰]A Simple Unified Framework for Detecting Out-Of-Distribution Samples and Adversarial Attack[Raw 버전]"
 tags:
   - Abnormal Detection
   - Out-Of-Distribution
@@ -12,8 +12,10 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-22T18:03:53
+last_modified_at: 2022-09-23T15:40:41
 ---
+
+- 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
 
 ### Uncertainty의 유형
 1. Out of Distribution Test Data 
@@ -769,6 +771,43 @@ $$
     \\
     A \cdotp P = \Lambda \cdotp P \quad \to \quad A=P^{-1} \cdotp \Lambda \cdotp P
 $$
+
+- 관련된 연산들
+
+$$  
+    \require{cancel}
+    \begin{split}
+    \det(A) &= \det(P \cdotp \Lambda \cdotp P^{-1}) \\
+        &= \det(P) \det(\Lambda)  \det(P^{-1}) \; , \quad \det(P^{-1})=\det(P)^{-1} \\
+        &= \cancel{\det(P)} \cancel{\det(P)^{-1}} \det(\Lambda) \\
+        &= \det(\Lambda) \\
+        &= \lambda_{1} \lambda_{2} \cdots \lambda_{n} = \prod_{i=1}^{n} \lambda_{i}
+    \end{split}
+$$
+
+- 행렬의 Determinant는 라플라스 전개로 계산.
+
+$$  
+    |A| = \det(A) = \sum_{j=1}^{n} a_{ij} A_{ij} \;, \quad i:row\, , \; j:column\\
+    A_{ij} = (-1)^{i+j}|M_{ij}| \;, \quad M_{ij} \; is \; cofactor \\
+    
+    A = \begin{bmatrix}
+        a_{11} & a_{12} & a_{13} \\
+        a_{21} & a_{22} & a_{23} \\
+        a_{31} & a_{32} & a_{33}
+        \end{bmatrix} \;, \quad
+    
+    M_{11} = \begin{bmatrix}
+            a_{22} & a_{23} \\
+            a_{32} & a_{33}
+            \end{bmatrix} \; , \quad
+    
+    M_{21} = \begin{bmatrix}
+            a_{12} & a_{13} \\
+            a_{32} & a_{33}
+            \end{bmatrix} 
+$$
+
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
