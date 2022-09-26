@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-23T15:40:41
+last_modified_at: 2022-09-26T09:53:13
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -45,18 +45,18 @@ height="80%" width="80%"></p>
 ### 논문 해석
 
 #### [1]Intro
-- Deep neural networks`DNNs`는 speech recognition[[1][1_link]], object detection, image classification과 같은 많은 분야의 classification task에서
+- Deep neural networks(DNNs)는 speech recognition[[1][1_link]], object detection, image classification과 같은 많은 분야의 classification task에서
    높은 정확도를 달성했다.
   - 하지만 예측 불확실성(predictive uncertainty)을 측정하는 것은 여전히 도전 과제로 남아 있다.[[20][20_link], [21][21_link]]
   - 잘 보정된 예측 불확실성을 얻는 것은 실제 시스템[[2]][2_link](self-driving, secure authentication system[[6][6_link], [30][30_link]])에 DNNs을 배포할 때뿐만 아니라 많은 기계 학습 application(active learning[[8][8_link]], novelty detection[[18][18_link]])에서 유용하게 사용되므로 필수적이다.
 - DNNs의 예측 불확실성은 적대적이거나 통계적으로 훈련 데이터의 분포로 부터 멀리 떨어진 abnormal sample을 탐지하는 문제와 매우 깊게 연관되어 있다.
-- Out-of-distribution`OOD` sample을 탐지하기 위해 최근 연구들은 사후 분포(posterior distribution)[[13][13_link], [21][21_link]]로 부터 얻은 confidence를 이용하고 있다.
+- Out-of-distribution(OOD) sample을 탐지하기 위해 최근 연구들은 사후 분포(posterior distribution)[[13][13_link], [21][21_link]]로 부터 얻은 confidence를 이용하고 있다.
   - 예를 들어 Hendrycks & Gimpel[[13][13_link]]는 분류기로 부터 얻은 사후 분포의 최대값을 기준 방법으로 제안하였고, 이것은 DDNs[[21][21_link]]의 input, output으로 처리하여 성능을 향상 시켰다.
   - adversarial sample들을 탐지하기 위해, DNNs의 feature space에서 그 샘플들을 특성화 하기 위한 density estimator를 기반으로 한 confidence score를 제안하였다[[7][7_link]].
   - 가장 최근에는 Ma et al.[[22][22_link]]는 Local Intrinsic Dimensionality`LID`를 제안 했고 LID를 사용하여 효과적으로 test sample들의 특성을 축정할 수 있음을 실험적으로 보여주었다.
   - 하지만, 대부분의 이런 류의 이전 연구들은 전형적으로 OOD와 adversarial sample 둘다에 대해 평가 하지 않는다. 우리가 아는한 2개의 task에 대해 동시에 잘 동작하는 통합 detector는 없다.
 
-- `Contribution`
+- Contribution
   - 이 논문에서 간단하지만 매우 효과적인 방법을 제안함. OOD와 adversarial sample을 포함한 abnormal test sample들을 탐지하는데 재학습을 필요로 하지도 않고 어떤 사전 학습된 softmax neural classifier에도 상관 없이 적용 가능함.
   - 아이디어를 요약하자면 거리 기반의 generative classifier의 컨셉을 이용한 DNNs의 feature space에서 test sample의 probability density를 측정하는 것이다.
   - 특히 Gaussian discriminant analysis에서 사후 분포는 softmax classifier와 거의 동일하게 보이기 때문에 class-conditional 가우시안 분포는 사전 훈련된 feature에 적합하다고 가정한다.
