@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-26T09:53:13
+last_modified_at: 2022-09-27T08:59:56
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -83,7 +83,7 @@ height="80%" width="80%"></p>
 #### [2] Mahalanobis distance-based score from generative classifier
 
 - softmax classifier을 가진 Deep neural networks(DNNs)가 주어졌을때, Out-of-distribution(OOD)과 adversarial sample과 같은 abnormal sample을 탐지하기위한 단순하지만 효과적인 방법을 제안한다.
-- 먼저, Gaussian Discriminant Analysis(GDA)으로 유도된 generaive classifier를 기반으로한 confidence score에 대해 설명하고,
+- 먼저, Gaussian Discriminant Analysis(GDA)으로 유도된 generative classifier를 기반으로한 confidence score에 대해 설명하고,
 이 모델의 성능을 높이는 추가적인 기술에 대해서도 소개한다.
 
 ##### [2.1] Why Mahalanobis distance-based score?
