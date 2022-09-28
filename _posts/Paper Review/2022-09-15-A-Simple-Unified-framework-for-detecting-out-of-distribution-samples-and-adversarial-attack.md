@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-27T08:59:56
+last_modified_at: 2022-09-28T18:12:25
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -808,6 +808,122 @@ $$
             \end{bmatrix} 
 $$
 
+---
+
+### Code Review
+
+[출저][[Deep Mahalanobis Detector] Paper github ](https://github.com/pokaxpoka/deep_Mahalanobis_detector)
+
+#### 1. get training sample mean covariance
+
+training sample를 pretrained Model 통과 시킨 Feature들의 mean과 covariance를 계산한다.  
+
+##### class mean 계산
+
+```python
+def sample_estimator(model, num_classes, feature_list, train_loader):
+    ...
+    for data, target in train_loader:
+        output, out_features = model.feature_list(data)
+        
+        # get hidden features
+        for i in range(num_output):
+            out_features[i] = out_features[i].view(out_features[i].size(0), out_features[i].size(1), -1)
+            out_features[i] = torch.mean(out_features[i].data, 2)
+        # construct the sample matrix
+        for i in range(data.size(0)):
+            label = target[i]
+            if num_sample_per_class[label] == 0:
+                out_count = 0
+                for out in out_features:
+                    list_features[out_count][label] = out[i].view(1, -1)
+                    out_count += 1
+            else:
+                out_count = 0
+                for out in out_features:
+                    list_features[out_count][label] \
+                    = torch.cat((list_features[out_count][label], out[i].view(1, -1)), 0)
+                    out_count += 1                
+            num_sample_per_class[label] += 1
+            
+    sample_class_mean = []
+    out_count = 0
+    for num_feature in feature_list:
+        temp_list = torch.Tensor(num_classes, int(num_feature)).cuda()
+        for j in range(num_classes):
+            temp_list[j] = torch.mean(list_features[out_count][j], 0)
+        sample_class_mean.append(temp_list)
+        out_count += 1
+    ...
+```
+
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/how_to_calculate_class_mean.PNG"
+width="100%" height="100%">
+</p>
+
+ 이미지를 사전훈련된 모델에 통과시켜 총 5개층의 hidden layer로 부터 feature를 추출한다. 추출한 feature map ($1\times 64(C) \times 32(H) \times 32(W)$)을 channel 방향으로 평균 ($1 \times 64 $) 을 낸다. 
+ 전체 이미지에 대해 feature level와 class 별로 concat 시켜 list_feature를 만든다. list_feature의 크기는 $5 \times 10$ 크기의 list로 3행 4열에는 class 4의 이미지에서 level 3 feature layer에서 뽑힌 feature를 말한다.
+list_feature 각 level, class 별로 모인 feature들을 class의 수로 평균을 내어 class mean를 만든다. class mean은 channel과 데이터 수로 평균을 낸 최종 feature를 level과 class별로 계산한 것이다.
+
+##### covariance 계산
+
+covariance는 class mean과 다르게 전체 class가 공유하는 값을 계산한다.
+
+```python
+def sample_estimator(model, num_classes, feature_list, train_loader):
+    ...
+    precision = []
+    for k in range(num_output):
+        X = 0
+        for i in range(num_classes):
+            if i == 0:
+                X = list_features[k][i] - sample_class_mean[k][i]
+            else:
+                X = torch.cat((X, list_features[k][i] - sample_class_mean[k][i]), 0)
+                
+        # find inverse            
+        group_lasso.fit(X.cpu().numpy())
+        temp_precision = group_lasso.precision_
+        temp_precision = torch.from_numpy(temp_precision).float().cuda()
+        precision.append(temp_precision)
+    ...
+```
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/how_to_calculate_covariance.PNG"
+width="100%" height="100%">
+</p>
+
+위 그림처럼 feature vector에 mean vector를 뺀 matrix를 통해 feature에 대한 covariance matrix를 계산한다.       
+        
+Model-Resnet34과 TrainDataset-CIFAR-10에서 class mean [[10, 64], [10, 64], [10, 128], [10, 256], [10, 512]]과 
+Covariance Matrix [[64, 64], [64, 64], [128, 128], [256, 256], [512, 512]]가 결과 값으로 계산된다.
+
+#### 2. get Mahalanobis Score of test sample 
+
+Training Sample의 mean과 covariance를 통해 Test Sample의 Mahalanobis Score를 계산한다. 
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/score_calcul_00.png"
+height="100%" width="100%">
+</p>
+
+Test Sample Batch을 각 layer에 통과시켜 feature map을 추론하고 channel에 대해 평균을 취해 mean feature vector을 계산한다. 
+mean feature vector $x$을 모든 class에 대해 $(x-\mu\_c)^\top \Sigma^{-1} (x-\mu\_c)$을 계산하여 최대값을 가지는 class의 score만 추출하여 모든 batch에 대해 평균을 취하여 Loss를 구한다.
+Loss를 backward시켜 Image의 gradient를 구하여 Batch Image에 다음과 같은 노이즈를 추가한다.
+
+$$
+Noised\;Image = Batch\;Image + magnitude \times Sign(Image.gradient)
+$$
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/score_calcul_01.PNG"
+height="100%" width="100%">
+</p>
+
+Noised Image를 다시 위와같이 layer를 통과시키고 같은 연산을 반복하여 Mahalanobis score를 추론한다. 
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
