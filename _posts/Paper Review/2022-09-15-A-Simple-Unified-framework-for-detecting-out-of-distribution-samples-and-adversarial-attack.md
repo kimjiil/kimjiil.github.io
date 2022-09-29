@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-29T09:59:23
+last_modified_at: 2022-09-29T11:15:30
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -923,7 +923,19 @@ $$
 height="100%" width="100%" id="magnific">
 </p>
 
-Noised Image를 다시 위와같이 layer를 통과시키고 같은 연산을 반복하여 Mahalanobis score를 추론한다. 
+Noised Image를 다시 위와같이 layer를 통과시키고 같은 연산을 반복하여 Mahalanobis score를 추론한다.
+
+#### 3. Logistic Regression 
+
+ 논문에서는 CIFAR-10의 Test Dataset을 In-distribution으로 사용하고 나머지 SVHN, Tiny ImageNet, LSUN을 Out-distribution으로 사용했다.
+In, Out-distribution에 대하여 Mahalanobis Score를 구하고 일부 데이터만(CIFAR-10의 10,000개중 1,000개 SVHN 26,032개중 1,000개) 학습에 사용했다.
+In-distiribution인 CIFAR-10은 Label 0을 부여하고 Out-distribution인 SVHN은 1을 부여했다. 학습에 쓰이지 않은 나머지 데이터로 ROC curve를 그려 AUROC를 측정함.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_01.png" 
+height="85%" width="85%">
+</p>
+
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 
