@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-28T18:12:25
+last_modified_at: 2022-09-29T09:59:23
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -920,7 +920,7 @@ $$
 
 <p align="center">
 <img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/score_calcul_01.PNG"
-height="100%" width="100%">
+height="100%" width="100%" id="magnific">
 </p>
 
 Noised Image를 다시 위와같이 layer를 통과시키고 같은 연산을 반복하여 Mahalanobis score를 추론한다. 
