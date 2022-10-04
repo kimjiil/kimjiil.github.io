@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-09-30T18:01:25
+last_modified_at: 2022-10-04T10:17:41
 ---
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -294,7 +294,7 @@ height="90%" width="90%"></p>
 
 - 추가로, Out-of-distribution sample을 탐지하는데 Mahalanobis distance-based metric이 매우 유용하게 사용될 수 있음을 보여 준다.
 
-- 성능 평가를 위해 test sample x에 대해 Confidence score $M(x)의 값을 계산하고 그 값이 어떤 threshold 이상이면 positive로 판단하는 단순한 detector
+- 성능 평가를 위해 test sample x에 대해 Confidence score $M(x)$의 값을 계산하고 그 값이 어떤 threshold 이상이면 positive로 판단하는 단순한 detector
 를 사용하여 ROC curve를 그림.
 
   - 데이터로부터 계산된 class mean만을 이용한 Euclidean distance를 비교로 사용했다. Figure 1(c)를 보면 Mahalanobis distance 기반 방법(blue)이
@@ -395,7 +395,7 @@ LSUN, TinyImageNet, DeepFool에서는 final feature와 비교하여 때때로 lo
 - 이러한 점을 기반으로 다음의 공식을 기반으로 class mean과 covariance를 단순히 계산하고 업데이트하므로써 new class를 수용하는 Mahalanobis distance-based classifier를 **Algorithm 2**에서 설명한다.
 
 $$
-    \hat{y}(x)=\underset{c}{argmin}\big(f(x) - \hat{\mu}\_{c}  \big)^{\top} \hat{\Sigma}^{-1} \big( f(x) - \hat{\mu}\_{c} \big)
+    \hat{y}(x)=\underset{c}{argmin}\big(f(x) - \hat{\mu}_{c}  \big)^{\top} \hat{\Sigma}^{-1} \big( f(x) - \hat{\mu}_{c} \big)
 $$
 
 > ---
