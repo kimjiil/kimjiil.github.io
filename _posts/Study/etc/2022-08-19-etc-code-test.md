@@ -33,3 +33,8 @@ gcd(a,b) =
       gcd(b, a mod b) & \text{if b $\neq$ 0}
     \end{cases}    
 $$
+
+$$
+    \text{loss}(x, class) = -\log\left(\frac{\exp(x[class])}{\sum_j \exp(x[j])}\right)
+                       = -x[class] + \log\left(\sum_j \exp(x[j])\right)
+$$
