@@ -1,5 +1,5 @@
 ---
-title: "수학 공식 테스트"
+title: "수학 공식 테스트(타이틀 변경시 댓글 유지)"
 categories:
   - etc
 tags:
