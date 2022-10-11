@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-08-25T09:26:49
+last_modified_at: 2022-10-11T14:04:51
 ---
 
 ## Github io 변경 사항
@@ -203,3 +203,66 @@ last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대
 > date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours"  #GMT+9 한국 시간
   2022-08-24T00:37:13
 ```
+
+### 포스트에 댓글 추가
+
+github에서 Uttemaces App 설치 이후
+
+default.html 에 다음과같은 코드를 추가하여 댓글 추가
+
+```html
+...
+<script src="https://utteranc.es/client.js"
+        repo="kimjiil/kimjiil.github.io"
+        issue-term="pathname"
+        theme="dark-blue"
+        crossorigin="anonymous"
+        async>
+</script>
+...
+```
+
+[[참고 블로그] https://www.hahwul.com/2020/08/08/jekyll-utterances/] (https://www.hahwul.com/2020/08/08/jekyll-utterances/)
+
+### 사이트 검색 노출 설정
+
+github.io root 폴더에 sitemap.xml 파일 추가
+
+```xml
+---
+layout: null
+---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+        xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {% for post in site.posts %}
+    <url>
+        <loc>{{ site.url }}{{ post.url }}</loc>
+        {% if post.lastmod == null %}
+        <lastmod>{{ post.date | date_to_xmlschema }}</lastmod>
+        {% else %}
+        <lastmod>{{ post.lastmod | date_to_xmlschema }}</lastmod>
+        {% endif %}
+
+        {% if post.sitemap.changefreq == null %}
+        <changefreq>weekly</changefreq>
+        {% else %}
+        <changefreq>{{ post.sitemap.changefreq }}</changefreq>
+        {% endif %}
+
+        {% if post.sitemap.priority == null %}
+        <priority>0.5</priority>
+        {% else %}
+        <priority>{{ post.sitemap.priority }}</priority>
+        {% endif %}
+
+    </url>
+    {% endfor %}
+</urlset>
+```
+
+이후 https://search.google.com/search-console/about 에서 등록
+
+[[참고] https://eona1301.github.io/github_blog/GithubBlog-Search/](https://eona1301.github.io/github_blog/GithubBlog-Search/) 
