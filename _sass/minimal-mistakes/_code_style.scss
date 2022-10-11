@@ -434,3 +434,65 @@ $window-height: 16px;
     color: #fff;
   }
 }
+
+.language-xml {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "xml";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}
+
+.language-html {
+  position: relative;
+  margin-bottom: 1.5em;
+  padding: calc(#{$window-height * 0.3} + 0em) 0em 0em;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: 0 0.25em 1em rgba($text-color, 0.25); //base color
+  background-color: $background-color; //base color
+
+  &::before {
+    content: "HTML";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0 0;
+    background: mix($background-color, #fff, 25%); //base color
+    color: mix($text-color, #FFBF00, 50%); //base color
+    font-size: ($window-height);
+    line-height: 0;
+    text-indent: (0.5 * $window-height);
+  }
+
+  .highlight {
+    margin: 0;
+    padding: 0;
+    background-color: initial;
+    color: #fff;
+  }
+}

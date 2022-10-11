@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-10-11T14:04:51
+last_modified_at: 2022-10-11T15:37:02
 ---
 
 ## Github io 변경 사항
@@ -222,46 +222,13 @@ default.html 에 다음과같은 코드를 추가하여 댓글 추가
 ...
 ```
 
-[[참고 블로그] https://www.hahwul.com/2020/08/08/jekyll-utterances/] (https://www.hahwul.com/2020/08/08/jekyll-utterances/)
+[[참고 블로그] https://www.hahwul.com/2020/08/08/jekyll-utterances/](https://www.hahwul.com/2020/08/08/jekyll-utterances/)
 
 ### 사이트 검색 노출 설정
 
 github.io root 폴더에 sitemap.xml 파일 추가
 
-```xml
----
-layout: null
----
-
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
-        xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {% for post in site.posts %}
-    <url>
-        <loc>{{ site.url }}{{ post.url }}</loc>
-        {% if post.lastmod == null %}
-        <lastmod>{{ post.date | date_to_xmlschema }}</lastmod>
-        {% else %}
-        <lastmod>{{ post.lastmod | date_to_xmlschema }}</lastmod>
-        {% endif %}
-
-        {% if post.sitemap.changefreq == null %}
-        <changefreq>weekly</changefreq>
-        {% else %}
-        <changefreq>{{ post.sitemap.changefreq }}</changefreq>
-        {% endif %}
-
-        {% if post.sitemap.priority == null %}
-        <priority>0.5</priority>
-        {% else %}
-        <priority>{{ post.sitemap.priority }}</priority>
-        {% endif %}
-
-    </url>
-    {% endfor %}
-</urlset>
-```
+<script src="https://gist.github.com/kimjiil/830d30dacf1d16306a9f1eba6c087dc5.js"></script>
 
 이후 https://search.google.com/search-console/about 에서 등록
 
