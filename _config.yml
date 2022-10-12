@@ -19,7 +19,7 @@ locale                   : "en-US"
 title                    : "내가 다시보려고 만든 블로그"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "Jiil Kim"
+name                     : "Jean Valjean"
 description              : "다시 보려고 만든 블로그."
 url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
@@ -104,9 +104,9 @@ analytics:
 
 # Site Author
 author:
-  name             : "Jiil Kim"
+  name             : "Jean Valjean"
   avatar           : "/assets/images/Myself_Neon.jpg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an ***person***."
+  bio              : "In Prison"
   location         : "Republic of Korea"
   email            :
   links:
