@@ -12,8 +12,14 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-04T10:17:41
+last_modified_at: 2022-10-12T18:11:32
 ---
+
+#### ㅇㅇㅇ
+
+<details>
+<summary> <span style="color: #ffd33d"><b>Raw Version 펼치기</b></span></summary>
+<div markdown="1">
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
 
@@ -943,6 +949,9 @@ height="85%" width="85%">
 , CIFAR-10 데이터에는 라벨 0을 부여하고 SVHN는 라벨 1을 부여하여 이를 가지고 로지스틱 회귀 함수인 OOD Detector를 통해 나머지 데이터를 추론한다.
 이때 실제 상황에서 OOD를 판단할 다변량 가우시안 확률분포의 mean과 covariance를 잘 커버할만큼 많은 Train Dataset을 구하기 힘들다.
 
+
+</div>
+</details>
 
 [1_link]: https://arxiv.org/abs/1512.02595 "Deep Speech 2:End-to-end speech recognition in english and mandarin. In ICML, 2016."
 

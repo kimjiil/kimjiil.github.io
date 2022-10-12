@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-10-11T15:37:02
+last_modified_at: 2022-10-12T18:11:32
 ---
 
 ## Github io 변경 사항
@@ -208,17 +208,22 @@ last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대
 
 github에서 Uttemaces App 설치 이후
 
-default.html 에 다음과같은 코드를 추가하여 댓글 추가
+single.html 에 다음과같은 코드를 추가하여 댓글 추가
 
 ```html
 ...
-<script src="https://utteranc.es/client.js"
-        repo="kimjiil/kimjiil.github.io"
-        issue-term="pathname"
-        theme="dark-blue"
-        crossorigin="anonymous"
-        async>
-</script>
+<div class="page__comments">
+  <h2 class="page__comments-title"> {{ site.data.ui-text[site.locale].comments_label | default: "Leave Comments" }}</h2>
+  <h4>
+    <script src="https://utteranc.es/client.js"
+      repo="kimjiil/kimjiil.github.io"
+      issue-term="pathname"
+      theme="dark-blue"
+      crossorigin="anonymous"
+      async>
+    </script>
+  </h4>
+</div>
 ...
 ```
 
