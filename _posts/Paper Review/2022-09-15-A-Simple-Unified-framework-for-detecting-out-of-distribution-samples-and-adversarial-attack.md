@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]A Simple Unified Framework for Detecting Out-Of-Distribution Samples and Adversarial Attack[Raw 버전]"
+title: "[논문 리뷰]A Simple Unified Framework for Detecting Out-Of-Distribution Samples and Adversarial Attack"
 tags:
   - Abnormal Detection
   - Out-Of-Distribution
@@ -12,10 +12,55 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-12T18:11:32
+last_modified_at: 2022-10-13T18:10:48
 ---
+<span style="font-size:17pt">
+<b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
+</span> 
 
-#### ㅇㅇㅇ
+<a href="https://arxiv.org/abs/1807.03888" target="_blank"><b>[PDF]</b></a>
+, <b><span style="color: #F2AA4C">Out-Of-Distribution</span></b>, kimin Lee, Kibok Lee, Honglak Lee, Jinwoo shin
+
+
+
+### <span style="color: #ffd33d">Summary</span>
+
+대충 predictive uncertainty를 다루는것이 challenge problem으로 남아있어 우리가 해결하려고한다.
+근데 DNN의 predictive uncertainty는 Out of distribution인 abnormal sample을 탐지하는 것과 매우 연관성이 높음.
+근데 이게또 OOD sample을 찾는데 사후 분포를 이용한 generative classifier가 연구진행중임 => 이말인 즉슨 OOD sample을 찾는데
+generative classifier가 효과적일수도 있다?라고 가정
+근데 또 수학 공식으로 살펴보니 generative classifier가 softmax classifier가 유사하게 생김 그래서 대체가능함
+그리고 기존 pretrained model들은 data들을 feature space에서 잘 분리되도록 사상되어 학습됬기 때문에 이러한 feature들을 이용하면
+feature 분포를 사용하여 더 잘 구분할수 있음.
+
+input calibration(FGSM 에서 영감 받음), feature ensemble (low level feature로 실험했더니 의외로 성능이 좋더라)
+
+이때 실험은 CIFAR-10으로 pretrained model을 통해 CIFAR-10 dataset을 in-distribution으로 놓고 나머지 LSUN, Tiny ImageNet, SVHN을 
+out-distribution으로 놓고 실험을 진행함
+
+그리고 class incremental에 대해서도 실험을 진행함 => class mean과 covariance를 업데이트하면서 incremental에 대해서도 
+robust한 성능을 가짐
+
+
+<hr/> <!-- 수평선 --> 
+
+### <span style="color: #ffd33d">Method</span>
+
+대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
+
+<hr/> <!-- 수평선 --> 
+
+### <span style="color: #ffd33d">Experiment</span>
+
+대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
+
+<hr/> <!-- 수평선 --> 
+
+### <span style="color: #ffd33d">Code</span>
+
+대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
+
+<hr/> <!-- 수평선 --> 
 
 <details>
 <summary> <span style="color: #ffd33d"><b>Raw Version 펼치기</b></span></summary>
