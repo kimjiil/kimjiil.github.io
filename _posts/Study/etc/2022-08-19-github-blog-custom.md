@@ -13,13 +13,13 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true 
-last_modified_at: 2022-10-12T18:11:32
+last_modified_at: 2022-10-14T14:28:22
 ---
 
 ## Github io 변경 사항
 - Github blog를 만들면서 변경한 점 메모
 
-***
+<hr/>
 
 ### Code Block 라인 줄 표시
 수정 파일 - _config.yml
@@ -54,7 +54,9 @@ kramdown:
     }
 
 ```
-***
+
+<hr/>
+
 ### Code Block Sytle 변경
 수정 파일 - _sass/minimal-mistakes.scss
 하단에 다음 코드 추가
@@ -101,7 +103,9 @@ $window-height: 16px;
   }
 }
 ```
-***
+
+<hr/>
+
 ### Post 하단에 Date 정보 출력
 
 수정 파일 - _config.yml
@@ -123,7 +127,8 @@ defaults:
       related: true
 ```
 
-***
+<hr/>
+
 ### Post 하단의 last_modified_at 자동 업데이트
 
 깃헙 블로그의 Post를 관리하는데 최종 수정일을 Post하단 부분에 표시를 남겨두고 싶음.
@@ -204,6 +209,8 @@ last_modified_at: $(date -u "+%Y-%m-%dT%H:%M:%S" -d "+9 hours") 문자열로 대
   2022-08-24T00:37:13
 ```
 
+<hr/>
+
 ### 포스트에 댓글 추가
 
 github에서 Uttemaces App 설치 이후
@@ -229,6 +236,8 @@ single.html 에 다음과같은 코드를 추가하여 댓글 추가
 
 [[참고 블로그] https://www.hahwul.com/2020/08/08/jekyll-utterances/](https://www.hahwul.com/2020/08/08/jekyll-utterances/)
 
+<hr/>
+
 ### 사이트 검색 노출 설정
 
 github.io root 폴더에 sitemap.xml 파일 추가
@@ -238,3 +247,51 @@ github.io root 폴더에 sitemap.xml 파일 추가
 이후 https://search.google.com/search-console/about 에서 등록
 
 [[참고] https://eona1301.github.io/github_blog/GithubBlog-Search/](https://eona1301.github.io/github_blog/GithubBlog-Search/) 
+
+<hr/>
+
+### 블로그 폰트 수정
+
+<p align="center">
+<img src="/assets/images/2022-08-19-github-blog-custom/font_specific.PNG"
+hegiht="100% width=100%">
+</p>
+
+[https://fonts.google.com/](https://fonts.google.com/) 에서 마음에 드는 폰트를 선택후 위 그림 처럼 마음에 드는 옵션에 + 버튼을
+눌러주면  오른쪽에 selected famillies에 장바구니 처럼 폰트가 담기게 된다. @import 부분에 있는 코드를 복사하여 /assets/css/main.scss 코드에 붙여 넣기 해주면 된다.
+
+그리고 /_sass/minimal-mistakes/_variable.scss에 왼쪽부터 순서대로 적용되므로 가장 왼쪽 부분에 폰트의 이름을 추가하면 된다.
+
+```scss
+...
+/* system typefaces */
+$serif: Georgia, Times, serif !default;
+$sans-serif: "Montserrat","Roboto Condensed", -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", "Gamja Flower", "Jua", "Noto Sans Korean", "Gothic A1", "Inter",
+  "Helvetica Neue", "Lucida Grande", Arial, sans-serif !default;
+$monospace: Monaco, Consolas, "Lucida Console", monospace !default;
+...
+```
+
+<hr/> 
+
+### 블로그 Header 폰트 색상 변경
+
+/_sass/_base.scss 에서 header 부분은 h1,h2,h3,h4,h5,h6 부분에 color 속성을 추가하여 색상 코드를 추가함. 
+이제 귀찮게 header 부분에  <span style="color: #ffd33d"`>  추가 안해도 됨.
+
+```scss
+...
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 2em 0 0.5em;
+  line-height: 1.2;
+  font-family: $header-font-family;
+  font-weight: bold;
+  color: #ffd33d;
+}
+...
+```

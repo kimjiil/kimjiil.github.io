@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-13T18:10:48
+last_modified_at: 2022-10-14T14:28:22
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -41,6 +41,20 @@ out-distribution으로 놓고 실험을 진행함
 그리고 class incremental에 대해서도 실험을 진행함 => class mean과 covariance를 업데이트하면서 incremental에 대해서도 
 robust한 성능을 가짐
 
+<hr/>
+
+DNNs은 음성 인식, 물체 탐지, 이미지 분류와 같은 다양한 분야에 적용되어 뛰어난 성능을 보여 주어 실제 생활 속에도 많이 적용되고 있습니다. 
+안면 인식, 지문 인식을 정보 보안이나 구역 통제를 위해 사용되거나 자율 주행과 같이 사람과 물체를 탐지하여 피하거나 표지판을 인식하여 교통 법규를 
+준수하게 하는 등의 다양한 곳에 적용되어 사용되고 있습니다. 
+
+그런데 DNNs의 뛰어난 성능을 무작정 신뢰하여 실제 생활속에 적용한다면 큰 사고를 일으킬
+가능성이 있습니다. 예를들어 자율 주행에서 사람을 인식하지 못하여 멈추지 않고 충돌한다거나 안면 인식에서 특정 방법으로 생성된 안경을 착용하면 
+다른 사람의 얼굴로 인식되어 보안에 문제가 생길 수 있습니다. 
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack\impersonation_attack.png"
+height="70%" width="70%">
+</p>
 
 <hr/> <!-- 수평선 --> 
 
