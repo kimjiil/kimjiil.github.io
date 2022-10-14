@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-14T14:28:22
+last_modified_at: 2022-10-14T18:03:47
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -25,42 +25,42 @@ last_modified_at: 2022-10-14T14:28:22
 
 ### <span style="color: #ffd33d">Summary</span>
 
-대충 predictive uncertainty를 다루는것이 challenge problem으로 남아있어 우리가 해결하려고한다.
-근데 DNN의 predictive uncertainty는 Out of distribution인 abnormal sample을 탐지하는 것과 매우 연관성이 높음.
-근데 이게또 OOD sample을 찾는데 사후 분포를 이용한 generative classifier가 연구진행중임 => 이말인 즉슨 OOD sample을 찾는데
-generative classifier가 효과적일수도 있다?라고 가정
-근데 또 수학 공식으로 살펴보니 generative classifier가 softmax classifier가 유사하게 생김 그래서 대체가능함
-그리고 기존 pretrained model들은 data들을 feature space에서 잘 분리되도록 사상되어 학습됬기 때문에 이러한 feature들을 이용하면
-feature 분포를 사용하여 더 잘 구분할수 있음.
+이 논문을 간단하게 요약하자면, pretrained model을 재학습하지 않고 model을 통과한 feature들을 추출합니다.
+이때, feature들은 feature space에서 class별로 Gaussian Distribution을 따르기 때문에 Test Sample X를 가장 가까운 class의 gaussian distribution으로 부터의 거리인
+mahalanobis distance를 계산하고 이를 confidence score로 사용하여 sample이 in/out-distribution 어디에 속하는지 판단하는 것입니다.
 
-input calibration(FGSM 에서 영감 받음), feature ensemble (low level feature로 실험했더니 의외로 성능이 좋더라)
+softmax classifier는 계산 특성상 confidence 비율을 나타내기 때문에 OOD Sample이 들어올경우 모든 class에대해 고르게 confidence를 분배해야
+하지만 수식 특성상(exponenatial) 한쪽 class에서 high-confidence로 예측되어 문제가 발생합니다. 
+논문에서 이러한 문제점과 Linear Discriminant Analysis에서 공유 공분산을 가질 경우 softmax와 유사한 수식을 가지는 generative classifier로 대체했습니다. 
 
-이때 실험은 CIFAR-10으로 pretrained model을 통해 CIFAR-10 dataset을 in-distribution으로 놓고 나머지 LSUN, Tiny ImageNet, SVHN을 
-out-distribution으로 놓고 실험을 진행함
+Fast Gradient Sign Method(FGSM)에서 아이디어를 얻어 Unseen data에 대해 일반화 성능을 높이기 위해 confidence 방향으로 Noise를 주어
+In/Out distribution이 더 잘 구분 될 수 있도록 이미지를 calibration 했습니다.
+그리고 Pretrained Network에서 high-level feature 뿐만 아니라 low-level feature를 같이 사용하여 feature 끼리 ensemble하여 모델의 성능을 높였습니다.
 
-그리고 class incremental에 대해서도 실험을 진행함 => class mean과 covariance를 업데이트하면서 incremental에 대해서도 
-robust한 성능을 가짐
-
-<hr/>
-
-DNNs은 음성 인식, 물체 탐지, 이미지 분류와 같은 다양한 분야에 적용되어 뛰어난 성능을 보여 주어 실제 생활 속에도 많이 적용되고 있습니다. 
-안면 인식, 지문 인식을 정보 보안이나 구역 통제를 위해 사용되거나 자율 주행과 같이 사람과 물체를 탐지하여 피하거나 표지판을 인식하여 교통 법규를 
-준수하게 하는 등의 다양한 곳에 적용되어 사용되고 있습니다. 
-
-그런데 DNNs의 뛰어난 성능을 무작정 신뢰하여 실제 생활속에 적용한다면 큰 사고를 일으킬
-가능성이 있습니다. 예를들어 자율 주행에서 사람을 인식하지 못하여 멈추지 않고 충돌한다거나 안면 인식에서 특정 방법으로 생성된 안경을 착용하면 
-다른 사람의 얼굴로 인식되어 보안에 문제가 생길 수 있습니다. 
-
-<p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack\impersonation_attack.png"
-height="70%" width="70%">
-</p>
 
 <hr/> <!-- 수평선 --> 
 
 ### <span style="color: #ffd33d">Method</span>
 
-대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack\resnet_cifar10_feature_space_by_tsne.PNG"
+height="30%" width="30%">
+<figcaption align="center"> CIFAR-10으로 pretrained된 Resnet의 feature space를 t-sne로 나타낸것</figcaption>
+</p>
+
+먼저 논문에서는 사전 학습된 네트워크의 Feature Space는 class-conditional gaussian distribution을 따를 것이라는 가정하고 들어갑니다.
+실제로 논문에서 위 그림처럼 CIFAR-10의 sample들은 class별로 gaussian distribution을 따르고 있다는 것을 보여주고 있습니다.
+
+또한 Softamx classifier과 class-conditional gaussian distribution에 기반한 classifier의 수식적인 양상이 유사한데 
+softmax classifier의 posterior를 수식적으로 표현하면 다음과 같습니다.
+
+$$
+    P(y=c|x)=\frac{exp(\pmb{\mathbb{w}}_c^{\top} f(x) + b_c )}
+                {\sum_{c'}{exp(\pmb{\mathbb{w}}_{c'}^{\top} f(x) + b_{c'} )}}
+$$
+
+이제 Generative classifier의 Posterior  $P(y=c|x)$를 바로 얻고 싶지만 이는 
+이때 전체 클래스에 대해 공유 공분산을 가지는 class-conditional gaussian distribution(Likelihood)는 다음과
 
 <hr/> <!-- 수평선 --> 
 
