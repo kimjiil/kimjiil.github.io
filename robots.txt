@@ -2,3 +2,7 @@ user-agent: *
 Allow: /
 
 Sitemap: http://kimjiil.github.io/sitemap.xml
+
+Disallow: /assets/
+Disallow: /docs/
+Disallow: /test/
