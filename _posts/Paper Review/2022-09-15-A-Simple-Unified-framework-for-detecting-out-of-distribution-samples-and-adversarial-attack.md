@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-14T18:03:47
+last_modified_at: 2022-10-17T18:19:14
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -25,17 +25,24 @@ last_modified_at: 2022-10-14T18:03:47
 
 ### <span style="color: #ffd33d">Summary</span>
 
-이 논문을 간단하게 요약하자면, pretrained model을 재학습하지 않고 model을 통과한 feature들을 추출합니다.
-이때, feature들은 feature space에서 class별로 Gaussian Distribution을 따르기 때문에 Test Sample X를 가장 가까운 class의 gaussian distribution으로 부터의 거리인
-mahalanobis distance를 계산하고 이를 confidence score로 사용하여 sample이 in/out-distribution 어디에 속하는지 판단하는 것입니다.
+이 논문을 간단하게 요약하면, 먼저 pretrained model은 재학습하지 않고 model을 통과한 feature들을 추출한다.
+이때 softmax classifier로 학습한 모델은 feature space에서 class-conditional gaussian distribution을 따르게 된다.     
 
-softmax classifier는 계산 특성상 confidence 비율을 나타내기 때문에 OOD Sample이 들어올경우 모든 class에대해 고르게 confidence를 분배해야
-하지만 수식 특성상(exponenatial) 한쪽 class에서 high-confidence로 예측되어 문제가 발생합니다. 
-논문에서 이러한 문제점과 Linear Discriminant Analysis에서 공유 공분산을 가질 경우 softmax와 유사한 수식을 가지는 generative classifier로 대체했습니다. 
+training sample가 모델을 통과하여 추출된 feature들을 각 class에 대한 parameter인 class-mean과 covariance를 계산한다.
+test sample x에 대해 mahalanobis distance를 계산하고 이를 이용한 confidence score를 사용한다.
+이때 test sample x은 모든 class에 대해 confidence score를 계산하고 그중 max값 가진 클래스 즉, test sample x에 가장 근접한 
+gaussian distribution에 대한 confidence score만 사용하게 된다.        
+
+그리고 이 confidence score를 통해 out-of-distribution과 
+in-of-distribution을 판단하는 rogistic regression 모델을 학습시켜 새로운 sample에 대해 in/out-distribution 어디에 속하는지 판단하게 된다.
+
+softmax classifier는 계산 특성상 confidence 비율을 나타내기 때문에 OOD Sample이 들어올 경우 모든 class에대해 고르게 confidence를 분배해야
+하지만 수식 특성상(exponenatial) 한쪽 class에서 high-confidence로 예측되어 문제가 발생한다.
+논문에서 이러한 문제점과 Linear Discriminant Analysis에서 공유 공분산을 가질 경우 softmax와 유사한 수식을 가지는 generative classifier로 대체한다.
 
 Fast Gradient Sign Method(FGSM)에서 아이디어를 얻어 Unseen data에 대해 일반화 성능을 높이기 위해 confidence 방향으로 Noise를 주어
-In/Out distribution이 더 잘 구분 될 수 있도록 이미지를 calibration 했습니다.
-그리고 Pretrained Network에서 high-level feature 뿐만 아니라 low-level feature를 같이 사용하여 feature 끼리 ensemble하여 모델의 성능을 높였습니다.
+In/Out distribution이 더 잘 구분 될 수 있도록 이미지를 calibration 한다.
+그리고 Pretrained Network에서 high-level feature 뿐만 아니라 low-level feature를 같이 사용하여 feature 끼리 ensemble하여 모델의 성능을 높였다.
 
 
 <hr/> <!-- 수평선 --> 
@@ -43,13 +50,13 @@ In/Out distribution이 더 잘 구분 될 수 있도록 이미지를 calibration
 ### <span style="color: #ffd33d">Method</span>
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack\resnet_cifar10_feature_space_by_tsne.PNG"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/resnet_cifar10_feature_space_by_tsne.PNG"
 height="30%" width="30%">
 <figcaption align="center"> CIFAR-10으로 pretrained된 Resnet의 feature space를 t-sne로 나타낸것</figcaption>
 </p>
 
-먼저 논문에서는 사전 학습된 네트워크의 Feature Space는 class-conditional gaussian distribution을 따를 것이라는 가정하고 들어갑니다.
-실제로 논문에서 위 그림처럼 CIFAR-10의 sample들은 class별로 gaussian distribution을 따르고 있다는 것을 보여주고 있습니다.
+먼저, 논문에서는 사전 학습된 네트워크의 feature space는 class-conditional gaussian distribution을 따를 것이라는 가정하고 들어갑니다.
+실제로 논문에서 위 그림처럼 CIFAR-10으로 학습한 resnet의 feature space는 class별로 gaussian distribution을 따르고 있다는 것을 보여주고 있습니다.
 
 또한 Softamx classifier과 class-conditional gaussian distribution에 기반한 classifier의 수식적인 양상이 유사한데 
 softmax classifier의 posterior를 수식적으로 표현하면 다음과 같습니다.
@@ -59,8 +66,185 @@ $$
                 {\sum_{c'}{exp(\pmb{\mathbb{w}}_{c'}^{\top} f(x) + b_{c'} )}}
 $$
 
-이제 Generative classifier의 Posterior  $P(y=c|x)$를 바로 얻고 싶지만 이는 
-이때 전체 클래스에 대해 공유 공분산을 가지는 class-conditional gaussian distribution(Likelihood)는 다음과
+여기서 $f(x)$은 마지막 layer에서 나온 feature 이고 $w\_c^{\top}$와 $b\_c$은 softmax classifier의 weight와 bias를 뜻합니다.
+
+다음으로 Generative classifier의 Posterior $P(y=c|x)$를 계산해야 하는데
+우리가 현재 아는 정보는 feature space가 class-conditional gaussian distribution을 따른다는 것이다.
+그러므로 likelihood는 다음과 같이 표현이 가능하다. 논문은 증명에서 GDA의 간단한 케이스인 LDA(Linear Discriminant Analysis)로 가정하고 진행하였다. 
+이때 LDA에서 모든 클래스는 같은 공분산을 가지게됨.
+
+$$
+    \begin{split}
+    \mathit{Likelihood} \quad P(x|y=c)&=\mathcal{N}(x|\mu_{c},\; \Sigma) \\    
+                                      &= \frac{1}{2\pi^{\frac{d}{2}}|\Sigma|^{\frac{1}{2}}} exp(-\frac{1}{2}(x-\mu_{c})^{\top}\Sigma^{-1}(x-\mu_{c}))
+    \end{split}
+$$
+
+Posterior는 베이지안 룰에 의해 다음과 같은 계산식으로 표현됨.
+
+$$
+    \begin{split}
+        Posterior &= \frac{Likelihood \times Prior}{Evidence} \\
+        P(y=c|x) &= \frac{P(x|y=c) P(y=c)}{P(x)} \\
+                 &= \frac{P(x|y=c) P(y=c)}{\sum_{c'}{P(x|y=c') P(y=c')}} \quad (Law \; of \; total \; probabilty)
+    \end{split}
+$$
+
+여기서 $Prior$는 클래스에 대한 사전 정보로 전체에서 해당 class가 차지하는 비율을 나타낸다.
+
+$$
+    Prior \quad P(y=c) = \frac{\beta_{c}}{\sum_{c'}{\beta_{c'}}}
+$$
+
+앞선 식들을 $Posterior$에 넣고 정리하면 다음과 같이 변형된다.
+
+$$
+    P(y=c|x) = \frac{(2\pi)^{-\frac{d}{2}} |\Sigma|^{-\frac{1}{2}} exp(-\frac{1}{2}(x-\mu_{c})^{\top}\Sigma^{-1} (x-\mu_{c})) \frac{\beta_{c}}{\sum_{c'}{\beta_{c'}}}}
+                {\sum_{c'}{(2\pi)^{-\frac{d}{2}} |\Sigma|^{-\frac{1}{2}} exp(-\frac{1}{2}(x-\mu_{c'})^{\top}\Sigma^{-1} (x-\mu_{c'})) \frac{\beta_{c'}}{\sum_{c'}{\beta_{c'}}}}}
+$$
+
+여기서 공통되는 부분인 $2\pi^{-\frac{d}{2}}$, $\|\Sigma\|^{-\frac{1}{2}}$, $\sum\_{c'}{\beta\_{c'}}$을 약분하고 정리해주면 위에서 봤던
+softmax classifier의 식과 매우 유사한 공식이 나온다.
+
+$$
+    \begin{split}
+    P(y=c|x) &= \frac{exp(-\frac{1}{2}(x-\mu_{c})^{\top}\Sigma^{-1} (x-\mu_{c})) \beta_{c}}
+                    {\sum_{c'}{exp(-\frac{1}{2}(x-\mu_{c'})^{\top}\Sigma^{-1} (x-\mu_{c'})) \beta_{c'}}}
+        \\   &= \frac{exp(-\frac{1}{2} \big[ x^{\top}\Sigma^{-1}x - \mu_{c}^{\top}\Sigma^{-1}x - x^{\top}\Sigma^{-1}\mu_{c} + \mu_{c}^{\top}\Sigma^{-1}\mu_{c} \big] + \ln{\beta_{c}})}
+                    {\sum_{c'}{ exp( -\frac{1}{2} \big[ x^{\top}\Sigma^{-1}x - \mu_{c'}^{\top}\Sigma^{-1}x - x^{\top}\Sigma^{-1}\mu_{c'} + \mu_{c'}^{\top}\Sigma^{-1}\mu_{c'} \big] + \ln{\beta_{c'}}) }}
+
+        \\   &= \frac{exp(-\frac{1}{2}x^{\top}\Sigma^{-1}x) \cdotp exp(\mu_{c}^{\top}\Sigma^{-1}x -\frac{1}{2}\mu_{c}^{\top}\Sigma^{-1}\mu_{c} + \ln{\beta_{c}}) }
+                    {\sum_{c'}{exp(-\frac{1}{2}x^{\top}\Sigma^{-1}x) \cdotp exp(\mu_{c'}^{\top}\Sigma^{-1}x -\frac{1}{2}\mu_{c'}^{\top}\Sigma^{-1}\mu_{c'} + \ln{\beta_{c'}})}}
+
+        \\   &=  \frac{exp(\mu_{c}^{\top}\Sigma^{-1}x -\frac{1}{2}\mu_{c}^{\top}\Sigma^{-1}\mu_{c} + \ln{\beta_{c}}) }
+                    {\sum_{c'}{exp(\mu_{c'}^{\top}\Sigma^{-1}x -\frac{1}{2}\mu_{c'}^{\top}\Sigma^{-1}\mu_{c'} + \ln{\beta_{c'}})}}
+        \\ &\pmb{\mathbb{w'_{c}}}^{\top} =  \mu_{c}^{\top}\Sigma^{-1}, \quad b'_{c} = -\frac{1}{2}\mu_{c}^{\top}\Sigma^{-1}\mu_{c} + \ln{\beta_{c}}
+        
+        \\   &=  \frac{ exp(\pmb{\mathbb{w'_{c}}}^{\top}x + b'_{c}) }
+                    {\sum_{c'}{ exp(\pmb{\mathbb{w'_{c'}}}^{\top}x + b'_{c'} )}}
+    \end{split}
+$$
+
+그러므로 softmax classifier로 사전 학습된 feature space도 역시 class-conditional gaussian distribution을 따른다고 볼 수 있다.
+
+
+이제 사전 학습된 softmax neural classifier로 부터 generative classifier를 추정하기 위해서 parameter인 class mean $\mu\_{c}$와 공유 공분산 $\Sigma$을 구해야 된다.
+이 parameter들은 empirical하게 training sample들로 부터 계산한다.
+
+$$
+    training \; samples \; \mathcal{X} = \{ (x_1,y_1), \, \cdots, (x_N,y_N) \}
+\\  \hat{\mu_{c}} = \frac{1}{N_c} \sum_{i:y_i=c}{f(x_i)} \, , \quad \hat{\Sigma}=\sum_{c}{\sum_{i:y_i=c}{\big[(f(x_i)-\hat{\mu_{c}})(f(x_i) - \hat{\mu_{c}})^{\top}\big]}}
+
+$$
+
+$f(\cdotp)$는 사전학습된 네트워크의 softmax classifier를 제외한 마지막 layer의 feature이고 $N_c$는 class c의 개수를 말한다.
+
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/how_to_calculate_class_mean.PNG"
+height="100%" width="100%">
+<figcaption align="center"> class mean 구하는 과정 </figcaption>
+</p>
+
+
+class mean을 구하는 과정은 위의 그림과 같다. 각 계층의 layer로 부터 추출된 feature를 사용하는건 feature ensemble이다. 
+layer로 부터 추출된 feature는 channel 차원으로 평균 계산해준다. 이 vector를 class별로 따로 모아서 평균을 내준다.
+이렇게 feature level 별로 생성된 class mean은 channel과 class에 대한 matrix가 생성된다.
+
+에를들어 feature level 0(feature dim-64)에서 class 4에 대한 training sample의 vector들을 모아서 평균을 내주면 1 x 64의 vector가 되고 이 벡터는 10 x 64의 matrix에서 4행에 위치하게 된다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/how_to_calculate_covariance.PNG"
+height="100%" width="100%">
+<figcaption align="center"> 공유 공분산 구하는 과정 </figcaption>
+</p>
+
+class mean을 구한 이후 공유 공분산을 구하는 과정은 위 그림에 나타냈다. 모든 sample에 대해 추출한 feature를 클래스 별로 모아
+$N_c \times Dim$ matrix를 만들고 class mean에서 해당 class의 matrix을 가져와 추출한 $N_c \times Dim$ feature matrix에 빼준다.
+각각의 class mean에 대해서 빼준 모든 feature들을 concat해서 $N \times Dim$의 행벡터를 만들고 행벡터를 제곱하여 Covariance matrix를 만든다.
+
+
+training sample을 제외한 나머지 sample x에 대해 mahalanobis distance를 계산하여 sample x와 가장 가까운 class-conditional gaussian distribution
+사이의 distance를 confidence score $M(x)$로 사용한다. 
+
+$$
+    M(x) = \max_{c}{-(f(x)-\hat{\mu_{c}})^{\top} \Sigma^{-1} (f(x)-\hat{\mu_{c}}) }
+$$
+
+<hr/> <!-- 수평선 -->
+
+<details>
+<summary> <span style="color: #ffd33d">Mahalanobis distance 간단한 설명 펼치기/접기</span> </summary>
+<div markdown="1">
+
+- Mahalanobis distance는 어떤 sample x가 가우시안 분포의 중심으로 부터 표준 편차의 몇배 만큼 떨어져 있는 비율을 나타낸다.
+- sample x를 가우시안 분포의 평균값과 표준편차로 정규화 한것과 같고 이를 1차원 가우시안 분포일때는 다음과 같다.
+
+$$
+    Distance \; D = \sqrt{(\frac{x-\mu}{\sigma})^2}
+$$
+
+- 이 식은 1차 가우스 분포 함수의 지수 부분과 같다. $g(x)= \frac{1}{\sigma \sqrt{2\pi}} exp(-\frac{1}{2}(\frac{x-\mu}{\sigma})^2)$
+- d차원을 가진 다변량 가우시안 분포에서의 Mahalanobis distance는 다음과 같다.
+
+$$
+    \begin{split}
+    Multiple \; Gaussian \; g(x) &=  \frac{1}{(2\pi)^{\frac{d}{2}} |\Sigma|^{-1}} exp(-\frac{1}{2}(x-\mu)^{\top}\Sigma^{-1}(x-\mu))
+
+    \\ Mahalanobis \; distance \; D &= \sqrt{(x-\mu)^{\top}\Sigma^{-1}(x-\mu)}
+    \end{split}
+$$
+
+</div>
+</details>
+
+<hr/> <!-- 수평선 -->
+
+Confiden Score를 구하는 과정은 다음 그림과 같다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/score_calcul_00.png"
+height="100%" width="100%">
+<figcaption align="center"> confidence score 구하는 과정 </figcaption>
+</p>
+
+각 layer에서 추출된 feature은 같은 과정을 반복한다. 모든 class c에 대해 추출된 feature으로 confidence score를 계산하고 그 중 최대값을 사용한다. 
+이후 input calibration을 위해 batch에 대해 평균을 낸 값을 Loss로 사용한다.
+
+각 샘플에 대해 $M(x)$값을 계산한 이후 classifier의 성능을 더 높이기 위해 전처리 방법을 추가하여 들어오는 이미지에 대해 calibration을 해준다.
+이미지에 작은 perturbation을 추가하여 sample이 In/Out distribution이 더 잘 구분되도록 해주는 역할을 한다.
+
+이 input calibration 방법은 Fast Gradient Sign Method(FGSM)에서 아이디어를 얻었고, FGSM은 back propagation을 통해 loss를 최소화하도록 학습하는 것을
+반대로 이용하여, loss를 증가시키는 방향의 gradient를 계산하여 얻은 극소량의 pertubation을 input에 더해 줌으로써 true label에 대한 softmax score를
+낮추어 mis-classification을 유도하는 방법이다.
+
+$$
+    FGSM \; Method \; : \; \hat{x} = x + \epsilon sign(\nabla_{x} J(\theta,x,y))  
+$$
+
+FGSM과는 반대로 loss를 최소화하도록 하는 방향으로 pertubation을 주어 input에 대한 confidence score를 높여 주어 in-distribution sample에
+대한 예측을 강화하여 더 잘 예측 되도록 도와주는 역할을 한다.
+
+$$
+    \begin{split}
+    Input \; Calibratin \; : \; \hat{x} &= x + \epsilon sign(\nabla_{x}M(x))  
+    \\  &= x - \epsilon sign(\nabla_{x} (f(x)-\hat{\mu_{\hat{c}}})^{\top} \Sigma^{-1} (f(x)-\hat{\mu_{\hat{c}}}) )
+    \end{split}
+$$
+
+여기서 $\epsilon$은 noise의 정도를 조절하고 $\hat{c}$은 sample x에서 가장 가까운 class를 나타낸다.
+
+이제 극소량의 noise가 포함된 image가 생성되고 noised image를 다시 network에 통과시켜 아까와 같은 방법으로 confidence score를 계산한다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/score_calcul_01.PNG"
+height="100%" width="100%">
+<figcaption align="center"> confidence score 계산하는 과정 </figcaption>
+</p>
+
+이렇게 구해진 confidence score를 in-of-distribution sample에 대해 Label 0를 out-of-distribution sample에 대해 Label 1을 부여한다.
+그리고 각 feature level에 구한 confidence score를 새로운 feature로 갖는 데이터로 rogistic regression model을 학습시킨다. 
+이렇게 학습된 model은 OOD sample일 경우 1.0에 가까운 값을 출력하고 반대로 IOD Sample일 경우 0에 가까운 값을 출력하게 된다.
 
 <hr/> <!-- 수평선 --> 
 
