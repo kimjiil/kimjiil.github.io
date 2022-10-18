@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-17T18:19:14
+last_modified_at: 2022-10-18T09:43:38
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -30,15 +30,15 @@ last_modified_at: 2022-10-17T18:19:14
 
 training sample가 모델을 통과하여 추출된 feature들을 각 class에 대한 parameter인 class-mean과 covariance를 계산한다.
 test sample x에 대해 mahalanobis distance를 계산하고 이를 이용한 confidence score를 사용한다.
-이때 test sample x은 모든 class에 대해 confidence score를 계산하고 그중 max값 가진 클래스 즉, test sample x에 가장 근접한 
+이때 test sample x은 모든 class에 대해 confidence score를 계산하고 그 중 max값 가진 클래스 즉, test sample x에 가장 근접한 
 gaussian distribution에 대한 confidence score만 사용하게 된다.        
 
-그리고 이 confidence score를 통해 out-of-distribution과 
-in-of-distribution을 판단하는 rogistic regression 모델을 학습시켜 새로운 sample에 대해 in/out-distribution 어디에 속하는지 판단하게 된다.
+그리고 이 confidence score를 통해 out-of-distribution과 in-of-distribution을 판단하는
+rogistic regression 모델을 학습시켜 새로운 sample이 in/out-distribution 어디에 속하는지 판단하게 된다.
 
 softmax classifier는 계산 특성상 confidence 비율을 나타내기 때문에 OOD Sample이 들어올 경우 모든 class에대해 고르게 confidence를 분배해야
-하지만 수식 특성상(exponenatial) 한쪽 class에서 high-confidence로 예측되어 문제가 발생한다.
-논문에서 이러한 문제점과 Linear Discriminant Analysis에서 공유 공분산을 가질 경우 softmax와 유사한 수식을 가지는 generative classifier로 대체한다.
+하지만 수식 특성상(exponential) 한쪽 class에서 high-confidence로 예측되어 문제가 발생한다.
+논문에서 이러한 문제점때문에 softmax와 유사한 수식을 가지는 generative classifier로 대체한다.
 
 Fast Gradient Sign Method(FGSM)에서 아이디어를 얻어 Unseen data에 대해 일반화 성능을 높이기 위해 confidence 방향으로 Noise를 주어
 In/Out distribution이 더 잘 구분 될 수 있도록 이미지를 calibration 한다.
@@ -55,18 +55,18 @@ height="30%" width="30%">
 <figcaption align="center"> CIFAR-10으로 pretrained된 Resnet의 feature space를 t-sne로 나타낸것</figcaption>
 </p>
 
-먼저, 논문에서는 사전 학습된 네트워크의 feature space는 class-conditional gaussian distribution을 따를 것이라는 가정하고 들어갑니다.
+먼저, 논문에서는 사전 학습된 네트워크의 feature space는 class-conditional gaussian distribution을 따를 것이라는 가정한다.
 실제로 논문에서 위 그림처럼 CIFAR-10으로 학습한 resnet의 feature space는 class별로 gaussian distribution을 따르고 있다는 것을 보여주고 있습니다.
 
 또한 Softamx classifier과 class-conditional gaussian distribution에 기반한 classifier의 수식적인 양상이 유사한데 
-softmax classifier의 posterior를 수식적으로 표현하면 다음과 같습니다.
+softmax classifier의 posterior를 수식적으로 표현하면 다음과 같다.
 
 $$
     P(y=c|x)=\frac{exp(\pmb{\mathbb{w}}_c^{\top} f(x) + b_c )}
                 {\sum_{c'}{exp(\pmb{\mathbb{w}}_{c'}^{\top} f(x) + b_{c'} )}}
 $$
 
-여기서 $f(x)$은 마지막 layer에서 나온 feature 이고 $w\_c^{\top}$와 $b\_c$은 softmax classifier의 weight와 bias를 뜻합니다.
+여기서 $f(x)$은 마지막 layer에서 나온 feature 이고 $w\_c^{\top}$와 $b\_c$은 softmax classifier의 weight와 bias를 뜻한다.
 
 다음으로 Generative classifier의 Posterior $P(y=c|x)$를 계산해야 하는데
 우리가 현재 아는 정보는 feature space가 class-conditional gaussian distribution을 따른다는 것이다.
@@ -124,9 +124,6 @@ $$
                     {\sum_{c'}{ exp(\pmb{\mathbb{w'_{c'}}}^{\top}x + b'_{c'} )}}
     \end{split}
 $$
-
-그러므로 softmax classifier로 사전 학습된 feature space도 역시 class-conditional gaussian distribution을 따른다고 볼 수 있다.
-
 
 이제 사전 학습된 softmax neural classifier로 부터 generative classifier를 추정하기 위해서 parameter인 class mean $\mu\_{c}$와 공유 공분산 $\Sigma$을 구해야 된다.
 이 parameter들은 empirical하게 training sample들로 부터 계산한다.
