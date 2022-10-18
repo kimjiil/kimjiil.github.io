@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-18T17:39:35
+last_modified_at: 2022-10-18T17:58:10
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -270,12 +270,42 @@ ${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
 4. 1~3과정을 모든 layer에 대해 반복한다.
 5. 각 layer에서 나온 confidence score를 feature로 하는 rogistic regression model을 학습시켜 In/Out 여부를 판단한다.
 
+논문은 OOD sample 탐지 뿐만아니라 new class가 추가되는 class-incremental learning에서도 사용될 수 있다고 주장하는데
+new class도 OOD class와 마찬가지로 training distribution의 범위 밖에 있기 때문에 new class를 network를 재학습 없이 분류 할 수 있다는것이
+당연하다는 것이다.
+
+논문에서는 단순히 모든 class의 공유 공분산을 업데이트하고 new class의 mean값을 계산함으로써 new class를 분류할 수 있음을 실험적으로 보여준다.
+이 과정을 알고리즘으로 표현하면 다음과 같다.
+
+ ---
+> 
+> **Algorithm 2** Updating Mahalanobis distance-based classifier for class-incremental learning.
+> 
+> ---
+> 
+> **Input**: set of samples from a new class ${x\_i: \forall i = 1,...,N\_{C+1}}$, mean and covariance of observed classes
+> ${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
+> 
+> ---
+> 
+> Compute the new class mean:  $\hat{\mu}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} f(x\_{i}) $      
+> Compute the covariance of the new class: $ \hat{\Sigma}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} (f(x\_{i}) -  \hat{\mu}\_{C+1} )^{\top} $        
+> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}\_{C+1} $       
+> **return** Mean and covariance of all classes ${ \hat{\mu}\_{c} : \forall\_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
+>
+> ---
+
+먼저 OOD로 분류된(?) sample들을 new class로 가정하고 class-mean을 empirical하게 계산한다. 
+마찬가지로 new class를 추가하여 공유 covariance을 업데이트 해준다. 그리고 이 mean값과 공유 covariance를 통해 score를 계산한다(?)
+아마도 각 layer에서 나온 feature를 통해 rogistic resgression 하는것으로 보인다(incremental learning에 대한 자세한 code는 못찾겠음).
 
 <hr/> <!-- 수평선 --> 
 
 ### <span style="color: #ffd33d">Experiment</span>
 
-대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
+1. OOD sample Detecting 성능
+2. adversarial smaple detecting 성능
+3. class-incremental learning 성능
 
 <hr/> <!-- 수평선 --> 
 
