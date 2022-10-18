@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-18T09:43:38
+last_modified_at: 2022-10-18T17:39:35
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -242,6 +242,34 @@ height="100%" width="100%">
 이렇게 구해진 confidence score를 in-of-distribution sample에 대해 Label 0를 out-of-distribution sample에 대해 Label 1을 부여한다.
 그리고 각 feature level에 구한 confidence score를 새로운 feature로 갖는 데이터로 rogistic regression model을 학습시킨다. 
 이렇게 학습된 model은 OOD sample일 경우 1.0에 가까운 값을 출력하고 반대로 IOD Sample일 경우 0에 가까운 값을 출력하게 된다.
+
+
+> ---
+> **Algorithm 1** Computing the Mahalanobis distance-based confidence score
+> 
+> ---
+**Input**: Test sample x, weights of logistic regression detector $\alpha_{\ell}$, noise $\varepsilon$ and parameters of Gaussian distribution
+${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
+>
+> ---
+> Initialize Score vectors: $M(x)=\[M_{\ell} : \forall \ell \]$   
+> **for** each layer $\ell \in 1,...,L$ **do**      
+> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}\_{\ell,c} )^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top}
+> \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
+> $\quad$Computing confidence score: $M\_{\ell}=\max\_{c} - (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> **end for**   
+> **return** Confidence score for test sample $\sum\_{\ell}\alpha\_{\ell}M\_{\ell}$     
+> 
+> ---
+
+논문에서 나타낸 전체적인 과정에 대한 알고리즘이다. 
+1. sample에 대해 confidence score를 계산하여 closest class gaussian distribution을 찾는다.
+2. 가장 가까운 분포의 confidence score를 backward시켜 Input Image에 대한 gradient를 noise로 이미지에 추가한다.
+3. noised image를 다시 모델에 통과시켜 confidence score를 계산한다.
+4. 1~3과정을 모든 layer에 대해 반복한다.
+5. 각 layer에서 나온 confidence score를 feature로 하는 rogistic regression model을 학습시켜 In/Out 여부를 판단한다.
+
 
 <hr/> <!-- 수평선 --> 
 
@@ -661,6 +689,160 @@ $$
 > **return** Mean and covariance of all classes ${ \hat{\mu}\_{c} : \forall\_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
 >
 > ---
+
+#### [3] Experimental results
+
+- 이 섹션에서는 다양한 vision dataset CIFAR-10[[15][15_link]] SVHN[[28][28_link]], ImageNet[[5][5_link]], LSUN[[32][32_link]]에서
+ReNet[[12][12_link]], DenseNet[[14][14_link]]과 같은 deep nueral network를 사용하여 제안된 방법이 얼마나 효과적인지를 입증할 것이다.
+- 공간의 부족함으로 인해 더욱 자세한 실험 세팅과 결과는 보충 자료에 제공할 것이다.
+- 우리의 코드는 [https://github.com/pokaxpoka/deep_Mahalanobis_detector](https://github.com/pokaxpoka/deep_Mahalanobis_detector)에서 이용이 가능한다.
+
+##### [3.1] Detecting out-of-distribution samples
+
+
+###### [3.1.1] Setup
+- out-of-distribution(OOD) sample을 찾는 문제를 위해, DenseNet(100 Layers)과 ResNet(34 Layers)을 CIFAR-10, CIFAR-100, SVHN dataset을
+분류하기 위해 학습했다.
+- 학습에서 사용된 dataset은 in-distribution(positive) dataset으로 간주하고 나머지는 OOD(negative) dataset으로 취급했다.
+- test dataset은 학습 과정에는 관여하지 않고 오직 평가를 위해 사용되었다.
+- 게다가 TinyImageNet(ImageNet dataset의 일부)과 LSUN dataset은 OOD로 취급되어 테스트되었다.
+- 평가 과정에서 우리는 test sample의 confidence score를 측정하는 threshold-based detector를 사용하고, 이 confidence score가 threshold이상 일 경우 
+test sample은 in-distribution으로 분류하였다.
+- 다음과 같은 방법으로 성능을 측정하였다. true positive rate(TPR)이 95%이상인 지점에서의 true negative rate(TNR),
+area under hte receiver operating characteristic curve(AUROC), the area under the precision-recall curve(AUPR), accuracy
+
+- 비교를 위해 maximum value of the posterior distribution에서 정의된 confidence score을 사용하는 baseline method[[13][13_link]]과
+the state-of-the-art인 ODIN[[21][21_link]], ODIN은 maximum value of the processed posterior distribution에서 confidence score를 정의했다.
+
+- 제안 방법에서, DenseNet(or ResNet)의 dense(or residual) block의 끝마다 confidence score를 추출했다.
+- 각 conv layer에서 추출된 feature map은 계산적인 효율을 위해 average pooling에 의해 차원 감소를 했다: 
+ $\mathcal{F} \times \mathcal{H} \times \mathcal{W} \rightarrow \mathcal{F} \times 1$,
+ 여기서 $\mathcal{F}$는 channel의 개수를 의미하고 $\mathcal{H} \times \mathcal{W}$은 feature map의 크기를 의미한다.
+- Algorithm 1에서 보여줬듯이 logistic regression detector의 output을 최종 confidence score로서 사용한다.
+- 모든 hyperparameter들은 분리된 validation set에서 선택된다.
+  - 분리된 validation set은 in과 out에서 각각 선택된 1,000개의 이미지로 구성된다.
+  - Ma et al[[22][22_link]]과 유사하게 logistic regression detector의 weight들은 nested cross validation을 사용하여 학습된다.
+  - class label은 in-distribution에 대해 positive를 할당하고 OOD sample에 대해서는 negative를 할당한다.
+- 실제로는 OOD validation dataset은 존재하지 않기 때문에, in-distribution(positive) sample과 FGSM[[10][10_link]]에 의해 생성된 
+adversarial(negative)에 해당하는 sample들을 사용하여 hyperparameter를 튜닝하는 것을 고려했다.
+
+###### [3.1.2] Contribution by each technique and comparison with ODIN
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_1.PNG"
+width="75%" height="75%">
+<figcaption align="center"> Table 1. baseline과 ODIN과 성능 비교 </figcaption>
+</p>
+
+- Table 1에서 ODIN과 baseline method를 비교로 우리 제안 했던 기술들(feature ensemble, input calibration)들의 성능에 대한 기여를 보여준다.
+- CIFAR-10으로 학습된 ResNet을 SVHN을 OOD sample로 사용한 탐지 성능을 측정했다.
+- 여기서 추가 기술들을 점진적으로 적용했을때 성능도 같이 점진적으로 향상되는것을 보여준다.
+- 제안 방법은 input calibration과 feature ensemble없이도 baseline method의 성능을 넘어선다.
+  - 이것은 제안 방법이 posterior distribution과 비교하여 OOD sample을 매우 효과적으로 특성화(characterize)할 수 있다는 것을 암시한다
+- feature ensemble과 input calibartion을 사용하여 탐지 성능을 ODIN과 비교할만할 정도로 향상 시켰다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_2.PNG"
+height="75%" witdh="75%">
+<figcaption align="center"> Table 2. 모든 dataset 쌍에서 baseline과 ODIN과 성능 비교 </figcaption>
+</p>
+
+- Table 2에서 왼쪽 열인 Validation on OOD samples에서 모든 dataset 쌍에서 ODIN과 탐지 성능을 비교했다.
+- 모든 테스트 케이스에서 제안 방법은 ODIN과 baseline method의 성능 보다 높았다.
+- 특히 제안 방법은 TNR의 성능에서 두드러졌는데 CIFAR-100으로 학습된 DensNet에서 LSUN sample을 탐지한 비율이 ODIN과 비교하여 41.2%에서 91.4%로 향상되었다.
+
+###### [3.1.3] Comparison of robustness
+
+- 제안 방법의 robustness를 평가하기 위해, 모든 hyperparameter는 FGSM[[10][10_link]]으로 생성된 adversarial sample과 in-distribution만 사용하여 조정(tuning)했다.
+- Table 2의 오른쪽 열에서 볼 수 있듯이, ODIN의 성능은 몇몇 케이스(SVHN에서 학습한 DenseNet)에서 baseline method보다 성능이 떨어졌지만,
+제안 방법은 여전히 모든 케이스에서 ODIN과 baseline method의 성능을 뛰어넘었다.
+- OOD없이 학습된 제안방법은 OOD을 포함하여 학습된 ODIN의 성능보다 높았다.
+- 제안방법의 robustness를 다양한 training setup에서 성능을 증명했다.
+- 제안방법은 training sample의 class mean과 covariance를 경험적 기반으로 사용하기 때문에 training data 특성에 영향을 받을 수 있다는 단점이 있다.
+- robustness를 증명하기 위해 CIFAR-10 dataset에서 random label로 할당되고 training data의 수를 다양하게 조절해서 ResNet을 학습한 모델의 
+탐지 성능을 측정했다.
+- Figure 3에서 볼 수 있듯이 제안 방법(blue bar) noisy data을 포함하거나 적은 수의 training sample에서 심지어 높은 탐지 성능을 유지 했지만
+ODIN(yellow bar), basline(red bar)는 성능을 유지하지 못했다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_figure_03.PNG"
+height="75%" width="75%">
+<figcaption align="center"> Figure 3. 노이즈와 training sample의 수를 조절하여 학습한 결과 </figcaption>
+</p>
+
+- 마지막으로, 표준적인 cross entropy loss로 학습된 softmax neural classifier을 사용한 제안 방법의 성능은 confidence loss[[20][20_link]]으로 학습된
+ softmax neural classifier을 사용한 ODIN의 성능보다 높았다.
+  - confidence loss[[20][20_link]]은 posterior distribution을 calibrate하기 위해 generator와 classifier를 결합하여 학습한다. 심지어 이러한 모델을 학습하는 것의 연산 비용이 비싸다.
+
+##### [3.2] Detecting adversarial samples
+
+###### [3.2.1] Setup
+
+- adversarial sample을 탐지하는 문제를 위해 DenseNet과 ResNet을 CIFAR-10, CIFAR-100, SVHN dataset을 분류하는 것에 대해 학습하고
+성능 측정을 위해 이 dataset들을 positive sample로 사용했다.
+- 다음의 attack method: FGSM[[10][10_link]], BIM[[16][16_link]], DeepFool[[26][26_link]], CW[[3][3_link]]들로 생성된
+adversarial image를 negative sample로 사용했다. 이 attack method에 대한 상세한 설명은 보충 자료에서 찾아 볼 수 있다.
+- 비교를 위해 predictive uncertainty(PU)와 kernel density(KD)를 결한한 logistic regression detector를 사용했다.
+- 또한 비교를 위해 SOTA인 local intrinsic dimensionality(LID) score를 사용했다.
+- 다음의 [[7][7_link], [22][22_link]]에서 비슷한 전략을 사용한다. original test sample의 10%을 랜덤으로 선택하여 logistic regression detector를 학습
+하는데 사용하고 나머지 test sample을 평가에 사용한다.
+- nested cross-validation을 training set에서 사용하여 모든 hyperparameter를 조정한다.
+
+###### [3.2.2] Comparison with LID and generalization analysis
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_3.PNG"
+width="75%" height="75%">
+<figcaption align="center"> Table 3. Adversarial Detection Performance </figcaption>
+</p>
+
+- Table 3의 왼쪽 열은 모든 normal과 adversarial 쌍에 대한 logistic regression detector의 AUROC score를 표시했다. 
+대부분의 케이스에서 제안 방법의 성능이 제일 뛰어났다.
+- 특히 CIFAR-10으로 학습된 ResNet을 사용하여 CW Sample을 찾을 때 성능이 LID의 82.2%에서 제안방법의 95.8%으로 성능이 높아졌다.
+- [[22][22_link]]와 유사하게 제안 방법이 simple attack으로 조정되어서 일반화 되어 더욱 complex attack을 탐지할 수 있는지 아닌지를 평가했다.
+- 마지막으로 FGSM에 의해 생성된 sample을 사용하여 logistic regression detector를 학습했을때의 탐지 성능을 측정했다.
+- Table 3의 오른쪽 열에서 표시한 것처럼 FGSM에서 학습한 제안방법이 BIM, DeepFool, CW과 같은 더욱 복잡한 공격에 대해서도 정확하게 탐지하는 것을 볼 수 있다.
+- 비록 LID가 일반화 성능이 좋지만 제안 방법은 여전히 모든 케이스에서 성능이 높았다.
+- 실험 결과를 보면 자연스럽게 LID가 OOD Sample을 탐지하는데 유용한지 아닌지 질문이 떠오른다.
+- 정말로 모든 테스트 케이스에서 제안방법이 LID의 성능과 비교하여 높은지 아닌지를 보충자료에서 비교했다.
+
+##### [3.3] Class-incremental learning
+
+###### [3.3.1] Setup
+
+- class-incremental learning task를 위해 ResNet-34을 CIFAR-100과 다운샘플링된 ImageNet[[4][4_link]]에 대해 분류하도록 학습했다.
+- Section 2.3에 설명한것 처럼, 우리는 충분한 양의 기본 class들로 사전 학습된 classifier과 새로운 class에 해당하는 dataset이 점진적으로 하나씩 하나씩 주어지는 것으로 가정했다.
+- 특별히, 2가지의 다른 시나리오에서 테스트 했다.
+  - 첫번째 시나리오는 CIFAR-100 class의 절반을 기본 클래스로 주어지고 나머지를 new class로 주어진 상황
+  - 두번째 시나리오는 CIFAR-100의 모든 class가 기본 클래스로 주어지고 다운 샘플링된 ImageNet의 class중 100개를 new class로 주어진 상황
+- 모든 시나리오에서 테스트를 5번 반복한 이후 평균낸 값을 최종 성능으로 사용하고 매 반복마다 랜덤하게 class 나누었다. 
+- 새로운 class가 들어올때마다 fine-tuend되는 softmax classifier와 오직 class mean을 계산함으로써 새로운 class에 적응하는 
+Ecludean classifier[[25][25_link]]를 성능 비교 대상으로 고려했다.
+- softmax classifier에서 거의 0에 근접하는 cost training[[25][25_link]]을 달성하기 위해 softmax layer만 업데이트하고 
+Rebuffi & Kolesnikov [[29][29_link]]의 memory management을 따랐다. 이 memory management는 제한된 메모리에 old class들의 일부 작은 샘플들을 저장하는 것이다.
+여기서 이 제한된 메모리의 크기는 mahalanobis distance-based classifier의 parameter들을 저장하는 메모리의 크기와 비슷하다.
+- 다시말해, softmax classifier의 학습을 위해 유지되는 old exemplars의 수는 학습된 class의 수와 hidden feature의 차원(실험에서는 512차원)의 합으로 선택 됩니다.
+- 평가에서 [[18][18_link]] 먼저 new class 점수에 대한 추가 편향을 조정하여 base-new 정확도 곡선을 그리고, 
+base-new 클래스 정확도를 평균화하면 base class와 new class 간의 성능 측정이 불균형해질 수 있으므로 곡선 아래 면적(AUC)을 측정합니다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_figure_04.PNG"
+width="75%" height="75%">
+<figcaption align="center"> Figure 4. class-incremental learning에 대한 성능 </figcaption>
+</p>
+
+###### [3.3.2] Comparison with other classifiers
+
+- Figure 4은 위에서 언급된 2가지 시나리오에서 방법들의 incremental learning 성능을 AUC로 비교했다.
+- 각각의 sub-figure는 학습된 class의 수에 대응되는 AUC에 대한 그래프(left)과 
+마지막 new class가 추가된 후 그려진 base-new class 정확도 그래프(right)이다.
+- 제안된 Mahalanobis distance-based classifier는 비록 오른쪽 figure 4(b)에서는 작은 차이(catastrophic forgetting issue 때문)가 났지만
+new class의 수가 증가할수록 큰폭으로 성능 차이가 났다. 
+- 특히, 제안 방법은 첫번째(두번쨰) 시나리오 실험에서 new class가 모드 추가된후의 성능이 40.0% (22.1%)로 
+softmax classifer의 성능인 32.7% (15.6%)와 Euclidean distance classifier의 성능 32.9% (17.1%) 보다 더 성능이 더 높았다.
+- 또한 CIFAR-100을 base class로 두고 CIFAR-10을 new class로 지정하고 전반적인 실험 과정이 유사한 실험 결과를 보충 자료에 표시했다.
+- 추가적인 실험 결과는 제안방법의 confidence score가 다른 것과 비교하여 더 성능이 좋다는 것을 증명했다.
+
 
 #### [4] Conclusion
 
