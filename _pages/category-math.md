@@ -2,6 +2,6 @@
 layout: category
 taxonomy: Math
 title: Math
-permalink: "/math/"
+permalink: "/study/math/"
 author_profile: false
 ---

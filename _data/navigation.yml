@@ -22,12 +22,16 @@ main:
         url: /papers/image-generation/
       - title: "Computer Vision"
         url: /papers/computer-vision/
+
   - title: "Study"
     sublinks:
       - title: "Math"
-        url: /math/
+        url: /study/math/
+      - title: "Pytorch"
+        url: /study/pytorch/
       - title: "etc"
-        url: /etc/
+        url: /study/etc/
+
   - title: "Project"
     sublinks:
       - title: "Object Detection"
