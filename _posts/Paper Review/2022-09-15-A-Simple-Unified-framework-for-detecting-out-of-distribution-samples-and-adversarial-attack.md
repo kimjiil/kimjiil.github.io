@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-18T17:58:10
+last_modified_at: 2022-10-19T15:52:49
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -303,20 +303,144 @@ new class도 OOD class와 마찬가지로 training distribution의 범위 밖에
 
 ### <span style="color: #ffd33d">Experiment</span>
 
-1. OOD sample Detecting 성능
-2. adversarial smaple detecting 성능
-3. class-incremental learning 성능
+논문에서는 모델을 다음의 3가지 task에 대해서 성능을 평가했다. 
+1. Out-of-distribution sample을 탐지하는 task
+2. FGSM[[10][10_link]], BIM[[16][16_link]], DeepFool[[26][26_link]], CW[[3][3_link]]와 같은 attack method에서 생성된 adversarial sample을 탐지하는 task 
+3. 기존 모델에 new class가 추가되는 class-incremental learning task
+
+#### Experiment 1. Detecting Out-of-Distribution samples 
+
+실험을 위해 DenseNet-100과 ResNet-34 Network로 사용했고 CIFAR-10, CIFAR-100, SVHN dataset을 training set으로 사용했다.
+test set으로는 TinyImageNet, LSUN을 사용했다.
+
+학습에 사용될 dataset은 CIFAR-10, CIFAR-100, SVHN중 1개를 선택하여 In-distribution(positive) dataset으로 취급하고 나머지
+training dataset은 Out-distiribution(negative)으로 취급했다. 그리고 test set은 오로지 validation에만 사용했다.
+예를 들어 CIFAR-10을 training set으로 선택하면 SVHN, TinyImageNet, LSUN을 OOD dataset으로 생각하고 실험을 진행함.
+
+평가 과정에서 test sample의 confidence score를 threshold이상 일 경우 in-distribution으로 분류하는 threshold-based detector를 사용했다.
+
+성능지표는 true positive rate(TPR)이 95%이상인 지점에서 true negatvie rate(TNR)의 값, AUROC,
+area under the recision-recall(AUPR), Accuracy를 사용했다.
+
+성능 비교를 위해 모델은 baseline method[[13][13_link]]과 ODIN[[21][21_link]]를 사용했다. 
+
+##### Contribution by each technique
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_1.PNG"
+height="75%" width="75%">
+<figcaption align="center"> Table 1. 모델에 적용된 기술이 성능이 미치는 영향 </figcaption>
+</p>
+
+모델에 적용된 기술들이 성능 향상에 얼마나 기여 했는지를 보여주는 실험이다. 
+baseline과 ODIN을 비교 대상으로 선택했고 모델에 Feature ensemble과 Input-preprocessing 2개의 기술을 번갈아 적용하면서 성능에 끼치는 영향을
+5개의 성능지표로 평가 했다.
+
+아무것도 적용안된 모델은 baseline method의 성능보다 좋지만 ODIN을 넘지 못했고 기술이 적용된 모델들은 모두 ODIN 성능을 넘어갔다는 점에서
+Input-preprocessing과 Feature ensemble 모두 모델에 큰 영향을 미쳤다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.png"
+height="75%" width="75%">
+<figcaption align="center"> figure 2. feature level에 따른 AUROC 성능 </figcaption>
+</p>
+
+feature ensemble의 경우 DenseNet에서 basic block을 변경해 가면서 AUROC에 대한 성능을 측정했는데,
+low level에서 성능이 더 좋은 경우(DeepFool의 중간 layer의 경우)와 같이 low level feature에도 confidence score에 긍정적인 영향을 미치는
+특성들이 있을 가능성이 높다. 
+
+하지만 그대로 low level의 의견을 반영 하기에는 반대로 악영향을 미치는 경우 성능의 편차가 커지므로 weight sum의 형태로 logistic weight
+를 학습시켜 악영향을 미치는 level feature의 영향을 줄여 feature ensemble의 효과를 최대한으로 높였다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_2.png"
+height="100%" width="100%">
+<figcaption align="center"> Table 2. 모든 dataset 쌍에서 baseline, ODIN과 모델의 성능 비교 </figcaption>
+</p>
+
+Table 2에서는 가능한 모든 데이터쌍에서 모델을 변경해가며 학습하여 baseline과 ODIN과 다양한 성능 지표에서 비교한다.
+왼쪽 열인 validation on OOD samples는 logistic regression model의 decision boundary를 그릴떄 OOD sample을 포함한 경우 성능이다.
+예를 들어 In-dist가 CIFAR-10이고 Out-dist SVHN인 경우 CIFAR-10에서 500개 SVHN에서 500개를 선택하여 logistic regression model을 학습했다.
+
+반면 오른쪽열인 validation on adversarial samples는 logistic regression model의 decision boundary를 In-dist sample와 
+FGSM[[10][10_link]]으로 생성된 sample을 사용한다. 예를 들어 이 경우 In-dist는 CIFAR-10이고 Out-dist가 SVHN일때 Out-dist는 SVHN을 FGSM으로 변형한 샘플들이 들어가게 된다.
+
+모든 dataset의 쌍의 경우에서 제안 모델의 성능이 우세해 모델이 robustness하다는 것을 보여준다.
+또다른 robustness를 증명하기 위해 논문에서는 training data의 수를 매우 적게 조절해가며 성능을 측정하고 
+또 training set에 noisy가 섞인 경우, training sample에 현재와 전혀 다른 random label을 부여해서 학습한 모델의 성능을 측정했다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_figure_03.PNG"
+height="75%" width="75%">
+<figcaption align="center"> Figure 3. 모델의 robustness를 보여주는 실험(왼쪽-training set 수, 오른쪽 noisy training set) </figcaption>
+</p>
+
+figure 3.(a)에서 training set의 수가 점점 줄어들수록 ODIN(노란색), Baseline(빨간색)의 AUROC 성능이 점점 낮아지는 경향을 보이지만
+제안 모델은 성능을 유지한다. 
+
+마찬가지로 figure 3.(b)에서 Noisy label이 포함된 training set의 비율이 높아질수록 ODIN, Baseline의 성능을 낮아지지만 
+제안 모델의 성능은 유지되는 것을 볼 수 있다.
+
+#### Experiment 2. Detecting Adversarial Attack 
+
+마찬가지로 DenseNet-100과 ResNet-34를 Network를 사용하고 CIFAR-10, CIFAR-100, SVHN dataset을 training에 사용했다.
+Attack method로 FGSM[[10][10_link]], BIM[[16][16_link]], DeepFool[[26][26_link]], CW[[3][3_link]]의 방법들을 사용해
+training set으로 사용된 데이터의 일부를 오염시켜 사용했다. 
+
+비교를 위해 predictive uncertainty(PU)와 kernel density(KD)를 결합한 logistic regression detector와 SOTA인 
+Local Instrinsic Dimensionality(LID) score를 사용했다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_3.PNG"
+height="100%" width="100%">
+<figcaption align="center"> Table 3. Adversarial Attack 탐지에 대한 성능 비교 </figcaption>
+</p>
+
+Table 3의 왼쪽 열인 Detection of Known attack은 Logistic Regression Model에 adversarial method로 부터 생성된 일부 sample을
+보여준(학습)한 상태에서의 성능이다.
+각 method에서 생성된 out-dist 이미지와 in-dist 이미지를 통해 logistic regression model을 fit한다.
+
+오른쪽 열인 Detection ok unknown attack은 Logistic Regression Model에 "seen"이라고 표시된 FGSM에 대해서만 생성된 sample을 
+보여준 상태의 성능이다. 오른쪽 열은 simple attack method인 FGSM에서 학습된 모델이 complex attack method(BIM, DeepFool, CW)
+에서도 성능이 잘나오도록 일반화가 가능한지를 보여준다.
+
+
+#### Experiment 3. Class-Incremental Learning
+
+class-incremental learning task 성능 실험에서 Resnet-34을 사용했고 dataset으로는 CIFAR-100과 다운샘플링된 ImageNet을 사용했다.
+
+성능 평가를 위해 2가지의 다른 시나리오에서 테스트를 진행했다.
+
+- 첫번째 시나리오는 CIFAR-100 class의 절반인 50개의 class를 base class로 주고 나머지 50개의 class를 new class로 취급하여 점차 추가되는 상황
+- 두번째 시나리오는 CIFAR-100 class 전부를 base class로 주고 다운 샘플링된 ImageNet class중 100개의 class를 new class로 주어진 상황
+
+모든 시나리오에서 테스트를 5번 반복한 후 5개의 평균낸 값을 최종 성능으로 평가했고 매 반복마다 랜덤하게 class가 선택되도록 했다.
+성능 비교를 위해 새로운 class가 추가될때마다 fine-tuned되는 softmax classifier와 class mean을 업데이트함으로써 새로운 class에 
+적응하는 Euclidean classifier[[25][25_link]]을 선택했다.
+
+특이 사항으로 softmax classifier의 fine-tuned하는 과정에서의 사용하는 계산과 메모리 비용을 거의 0에 근접하도록 줄이기 위해
+Rebuffi & kolesnikov [[29][29_link]]의 방식을 선택했다.
+
+<p align="center">
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_figure_04.PNG"
+height="80%" width="80%">
+<figcaption align="center"> Figure 4. class-incremental learning에 대한 성능 비교 </figcaption>
+</p>
+
+Figure 4의 왼쪽 sub-figure는 첫번째 시나리오, 오른쪽은 두번째 시나리오에 대한 성능 비교 그래프이다.
+sub-figure에서 왼쪽 그래프는 class가 새로이 1개씩 추가될때마다의 AUC 성능을 그래프 나타낸 것이고 오른쪽 그래프는 모든 class가 추가된 상태
+마지막 상태에서의 ROC curve이다.(오른쪽 그래프는 왼쪽 AUC 성능 그래프에서 the number of classes가 100일때의 최종 상태의 roc curve 이고
+class가 추가될때마다 roc curve는 새롭게 그려진다)
+
+모든 모델이 새로운 class가 추가될때마다 AUC 성능이 떨어지지만 제안 방법 (40.0%/22.1%)과 softmax (32.7%/15.6%), Euclidean (32.9%/17.1%)로 떨어지는 정도에서
+차이가 났다. 하지만 AUC가 50% 이하인 시점에서 실험 결과가 유의미(?)한지는 모르겠다.
 
 <hr/> <!-- 수평선 --> 
 
-### <span style="color: #ffd33d">Code</span>
-
-대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.대충 본문내용입니다.
-
-<hr/> <!-- 수평선 --> 
+아래는 논문 번역과 그와 관련되서 공부한 자료들을 순서없이 모은거라 참고로 보면 될거같다.
 
 <details>
-<summary> <span style="color: #ffd33d"><b>Raw Version 펼치기</b></span></summary>
+<summary> <span style="color: #ffd33d"><b>논문 번역 및 공부했던 자료 모음 펼치기</b></span></summary>
 <div markdown="1">
 
 - 논문 날번역 및 의식의 흐름대로 논문을 보면서 공부했던 내용을 정리함.
@@ -724,8 +848,8 @@ $$
 
 - 이 섹션에서는 다양한 vision dataset CIFAR-10[[15][15_link]] SVHN[[28][28_link]], ImageNet[[5][5_link]], LSUN[[32][32_link]]에서
 ReNet[[12][12_link]], DenseNet[[14][14_link]]과 같은 deep nueral network를 사용하여 제안된 방법이 얼마나 효과적인지를 입증할 것이다.
-- 공간의 부족함으로 인해 더욱 자세한 실험 세팅과 결과는 보충 자료에 제공할 것이다.
-- 우리의 코드는 [https://github.com/pokaxpoka/deep_Mahalanobis_detector](https://github.com/pokaxpoka/deep_Mahalanobis_detector)에서 이용이 가능한다.
+- 공간의 부족함으로 인해 더욱 자세한 실험 세팅과 결과는 보충 자료에서 설명할 것이다.
+- 우리의 코드는 [https://github.com/pokaxpoka/deep_Mahalanobis_detector](https://github.com/pokaxpoka/deep_Mahalanobis_detector)에서 이용가능하다.
 
 ##### [3.1] Detecting out-of-distribution samples
 
