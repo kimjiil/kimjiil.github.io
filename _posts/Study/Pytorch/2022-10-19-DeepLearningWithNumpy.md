@@ -10,8 +10,16 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-21T10:13:00
+last_modified_at: 2022-10-21T17:46:39
 ---
+
+<hr/>
+
+#### Github 링크
+
+[https://github.com/kimjiil/DeepLearningWithNumpy](https://github.com/kimjiil/DeepLearningWithNumpy){:target="_blank"}
+
+<hr/>
 
 - 전체적인 구조는 코드 문법등은 Pytorch와 유사하게 하려고함.
 - numpy에서 그치지않고 GPU에 data를 올려 연산하는 과정까지 구현
@@ -20,7 +28,42 @@ last_modified_at: 2022-10-21T10:13:00
 
 #### Numba, cupy, Numpy Matrix Multiplication Calc Time
 
-- Numba(GPU, CPU), Numpy의 속도가 비슷하고 cupy가 10배 빨라서 cupy 사용
+- Numba(GPU, CPU), Numpy의 속도가 비슷하고 cupy가 빨라서 cupy 사용
+- [Why are cuda gpu matrix multiplies slower than numpy? How is numpy so fast?](https://stackoverflow.com/questions/68754407/why-are-cuda-gpu-matrix-multiplies-slower-than-numpy-how-is-numpy-so-fast){:target="_blank"}
+
+
+<details>
+<summary>nvprof으로 Numba code test</summary>
+<div markdown="1">
+
+- Numpy, Numba에서 같은 크기의 matrix multiplication calc time  
+
+```text
+==5688== NVPROF is profiling process 5688, command: python numba_test.py
+<Managed Device 0>
+Numpy CPU - 1.1220035552978516s
+
+------------------------------------------------------------------------------------------------------
+==5688== Profiling application: python numba_test.py
+==5688== Profiling result:
+   Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+325.82ms  21.908ms                    -               -         -         -         -  97.656MB  4.3532GB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+347.94ms  397.56ms                    -               -         -         -         -  97.656MB  245.64MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+746.28ms  4.18387s          (500 500 1)       (16 16 1)        41  2.0000KB        0B         -           -           -           -  NVIDIA GeForce          1         7  cudapy::__main__::fast_matmul$241(Array<double, int=2, C, mutable, aligned>, Array<double, int=2, C, mutable, aligned>, Array<double, int=2, C, mutable, aligned>) [151]
+4.93015s  4.11571s          (500 500 1)       (16 16 1)        41  2.0000KB        0B         -           -           -           -  NVIDIA GeForce          1         7  cudapy::__main__::fast_matmul$241(Array<double, int=2, C, mutable, aligned>, Array<double, int=2, C, mutable, aligned>, Array<double, int=2, C, mutable, aligned>) [154]
+9.04586s  126.57ms                    -               -         -         -         -  488.28MB  3.7673GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+
+Regs: Number of registers used per CUDA thread. This number includes registers used internally by the CUDA driver and/or tools and can be more than what the compiler shows.
+SSMem: Static shared memory allocated per CUDA block.
+DSMem: Dynamic shared memory allocated per CUDA block.
+SrcMemType: The type of source memory accessed by memory operation/copy
+DstMemType: The type of destination memory accessed by memory operation/copy
+```
+
+
+</div>
+</details>
+
 
 <details>
 <summary> 결과 코드 펼치기 </summary>
@@ -225,37 +268,204 @@ for i in range(epoch):
 #### Objectives
 
 ##### Layer 추가하기
+<hr/>
+:white_check_mark: Conv2d
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
 
-- [ ] Conv2d
-- [ ] Linear
-- [ ] BatchNormalization
-- [ ] ReLu
-- [ ] MaxPool
-- [ ] AvgPool
-- [ ] Flatten
-- [ ] Sigmoid
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
 
+</div>
+</details>
+<hr/>
+:white_check_mark: Linear
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:white_check_mark: BatchNormalization
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:heavy_check_mark: ReLu
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+
+:white_check_mark: MaxPool
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:white_check_mark: AvgPool
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:white_check_mark: Flatten
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:white_check_mark: Sigmoid
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+
+<hr/>
 ##### Opimizer 추가하기
+<hr/>
+:white_check_mark: Adam
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
 
-- [ ] Adam
-- [ ] AdamW
-- [ ] Stochastic Gradient Descent
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
 
+</div>
+</details>
+<hr/>
+:white_check_mark: AdamW
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
+:white_check_mark: Stochastic Gradient Descent
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
+
+</div>
+</details>
+<hr/>
 
 ##### Loss 추가하기
+<hr/>
+:white_check_mark: Mean Square Error
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
 
-- [ ] Mean Square Error
-- [ ] Cross Entropy 
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
 
+</div>
+</details>
+<hr/>
+:white_check_mark: Cross Entropy 
+<details>
+<summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
+<div markdown="1">
 
+```python
+Test Code 입니다.
+Test Code 입니다.
+Test Code 입니다.
+```
 
-
+</div>
+</details>
+<hr/>
 
 
 #### Reference 
 
-[https://github.com/SkalskiP/ILearnDeepLearning.py](https://github.com/SkalskiP/ILearnDeepLearning.py
-)
+[https://github.com/SkalskiP/ILearnDeepLearning.py](https://github.com/SkalskiP/ILearnDeepLearning.py)
+
+
+
 
 
 
