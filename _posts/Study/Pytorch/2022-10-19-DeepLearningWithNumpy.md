@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-21T17:46:39
+last_modified_at: 2022-10-26T18:05:46
 ---
 
 <hr/>
@@ -225,6 +225,36 @@ with cupy.cuda.Device(0) as dev:
     cupy GPU calc Time 0.001
     cupy GPU calc Time 0.002
     cupy GPU calc Time 0.001
+
+</div>
+</details>
+
+#### Module
+
+- pytorch는 모델을 Module로 생성하고 sub module과 현재 module이 갖고있는 parameter를 저장한다. 
+- class myModule을 만들어 _modules에 sub module을 저장하고 _paramters에 paramter들을 저장한다.
+- Model()에서 function call이 일어나면 하위 module들의 foward 함수가 호출되도록 함
+- pytorch와 마찬가지로 .to()를 호출할 경우 모든 parameter 및 module이 설정한 device에서 돌도록 함
+  - 단순히 numpy 와 cupy를 스위칭하는 형식으로 구현함.
+
+
+
+#### Tensor
+
+- pytorch에서 backward와 각종 연산을 처리하기 위해서 Tensor라는 변수를 사용한다. 여기서도 backward 및 각종 연산을 처리하기 위해
+cupyTensor라는 class를 만들어 처리하기로 함.
+- cupy, Numpy 둘다 ndarray를 사용하여 계산이 가능하기 때문에 cupyTensor에 ndarray를 저장하여 이를 사용해서 계산하기로 함
+- .grad와 .grad_fn을 attribute로 갖고 backward시 사용함
+- Numpy와 cupy를 따로 저장하는 변수를 만들고 하위 함수를 call하는 wrapper 함수를 만듬
+  - 예를 들어 cupyTensor로 만들어진 변수들을 더하기 할 경우 wrapper 함수 내부에서 numpy.add 함수를 다시 call 하는 형식
+
+<details>
+<summary><span style="color: #4682B4">cupyTensor 구현 상제 펼치기</span></summary>
+<div markdown="1">
+
+```python
+Test Code 입니다.
+```
 
 </div>
 </details>
