@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-19T15:57:57
+last_modified_at: 2022-10-31T10:08:35
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -353,7 +353,7 @@ low level에서 성능이 더 좋은 경우(DeepFool의 중간 layer의 경우)�
 를 학습시켜 악영향을 미치는 level feature의 영향을 줄여 feature ensemble의 효과를 최대한으로 높였다.
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_2.png"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/paper_table_2.PNG"
 height="100%" width="100%">
 <figcaption align="center"> Table 2. 모든 dataset 쌍에서 baseline, ODIN과 모델의 성능 비교 </figcaption>
 </p>
