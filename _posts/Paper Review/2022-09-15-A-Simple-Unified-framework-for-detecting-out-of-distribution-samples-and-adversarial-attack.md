@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-31T10:08:35
+last_modified_at: 2022-10-31T10:09:55
 ---
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
@@ -340,7 +340,7 @@ baseline과 ODIN을 비교 대상으로 선택했고 모델에 Feature ensemble�
 Input-preprocessing과 Feature ensemble 모두 모델에 큰 영향을 미쳤다.
 
 <p align="center">
-<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.png"
+<img src="/assets/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/figure_02.PNG"
 height="75%" width="75%">
 <figcaption align="center"> figure 2. feature level에 따른 AUROC 성능 </figcaption>
 </p>
