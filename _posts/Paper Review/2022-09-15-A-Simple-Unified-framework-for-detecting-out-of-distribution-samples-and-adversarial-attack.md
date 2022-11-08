@@ -12,8 +12,9 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-31T10:09:55
+last_modified_at: 2022-11-08T17:30:31
 ---
+
 <span style="font-size:17pt">
 <b>A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks</b>
 </span> 

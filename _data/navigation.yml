@@ -22,6 +22,8 @@ main:
         url: /papers/image-generation/
       - title: "Computer Vision"
         url: /papers/computer-vision/
+      - title: "Deep Learning"
+        url: /papers/deep-learning/
 
   - title: "Study"
     sublinks:
