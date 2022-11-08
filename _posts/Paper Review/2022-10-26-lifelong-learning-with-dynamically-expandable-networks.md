@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-08T17:30:31
+last_modified_at: 2022-11-08T18:16:01
 ---
 
 
@@ -451,7 +451,31 @@ PCA로 차원수가 500까지 줄어든 데이터셋에서 제공하는 `DECAF` 
 - 각 task에서 최적으로 학습되기 때문에 `DNN-STL`은 CIFAR-100과 AWA dataset에서 가장 좋은 성능을 보인다. 반면에 다른 모든 모델들은 semantic drift가 발생하는 실시간으로 학습되기 때문에
 성능이 낮다.
 
-- task의 수가 적을때 MTL은 Multi-task learning을 통한 knowledge 공유에
+- task 수가 적을 때는 다중 과제 학습을 통한 지식 공유에서 MTL이 가장 잘 작동하지만 task 수가 많을 때는 MTL보다 학습 능력이 크기 때문에 STL이 더 잘 작동한다.
+
+- DEN은 이러한 batch model와 거의 비슷하거나 MNIST-Variation dataset에서는 성능이 더 앞선다.
+
+- L2와 EWC와 같이 regularization과 결합된 재학습 모델은 비록 전자보다 후자가 성능이 더 뛰어나지만 전체적으로 좋지 않은 성능을 가진다.
+
+  - 이러한 성능 약화는 유동적으로 네트워크의 크기를 조절하지 못하는 모델(L2, EWC)이므로 예상되었다. 
+
+- Progressive network는 앞선 2개의 모델보다는 성능이 좋지만 모든 데이터의 경우에서 DEN보다 성능이 좋지 않았다.
+
+- task의 수가 가장 크고 적절한 네트워크 크기를 찾는데 어렵기 때문에 AWA dataset에서의 성능이 차이가 가장 중요하다.
+
+- 만약 네트워크가 너무 작으면 new task를 표현하기 위한 학습 능력이 충분하지 않게 되고 반대로 네트워크 크기가 너무 크면 overfitting하기 쉽게 된다.
+
+- 각 dataset에서 MTL과 비교하여 측정된 network capacity에 대한 각 모델의 성능을 실험했다.
+
+- baseline과 비교하여 다른 network capacity를 가지는 여러개의 모델에 대한 성능을 실험했다. DEN은 Progressive network보다 상당히 적은 수의 parameter로 더 나은 성능을 가지고
+같은 수의 parameter를 사용할 경우 더 좋은 성능을 얻었다.
+
+- DEN은 오직 STL의 18.0%, 60.3%, 11.9%의 네트워크 크기만을 가지고 MNIST-Variation, CIFAR-100, AWA에서 같은 수준의 성능을 얻었다.
+이러한점은 DEN의 유동적으로 network의 최적 크기를 찾아준다는 가장 중요한 이점을 보여준다. MNIST-Variation에서는 매우 작은 모델로 학습되고 반면에 CIFAR-100에서는 상당히 큰 network로 학습된다.
+
+- 게다가 모든 task에 대한 DEN 모델의 fine-tuning은 모든 dataset에서 가장 좋은 성능을 보여준다. 이는 DEN이 lifelong learning 뿐만아니라 모든 task를 이용가능할 떄
+network 크기를 추정하는데에도 사용할 수 있음을 보여준다.
+
 
 
 #### [5] Conclusion
