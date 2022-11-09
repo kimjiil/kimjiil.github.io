@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-08T18:16:01
+last_modified_at: 2022-11-09T11:44:04
 ---
 
 
@@ -427,7 +427,7 @@ solution을 찾기 힘들어진다.
 1) FeedForward networks : ReLU를 활성함수로 사용하고 312-128개의 neuron을 가지는 2개의 layer network를 사용했다.
 
 2) Convolutional networks : 실험은 CIFAR-100 dataset에서 진행하고 AlexNet([Krizhevsky et al.2012][7_link])의 수정된 버전을 사용했다. 
-$5 \time 5$ filter size를 가지는 5개의 convolution layers(64-128-256-256-128 detpth)와 3개의 FC Layer (384-192-100 neuron)를 사용함.
+$5 \times 5$ filter size를 가지는 5개의 convolution layers(64-128-256-256-128 detpth)와 3개의 FC Layer (384-192-100 neuron)를 사용함.
 
 ###### [4.1.3] Datasets
 
@@ -476,9 +476,76 @@ PCA로 차원수가 500까지 줄어든 데이터셋에서 제공하는 `DECAF` 
 - 게다가 모든 task에 대한 DEN 모델의 fine-tuning은 모든 dataset에서 가장 좋은 성능을 보여준다. 이는 DEN이 lifelong learning 뿐만아니라 모든 task를 이용가능할 떄
 network 크기를 추정하는데에도 사용할 수 있음을 보여준다.
 
+###### [4.2.1] Effect of selective retraining
 
+- MNIST-Variation dataset에서 Area Under ROC(AUROC)와 학습 속도를 측정하여 selective retraining이 얼마나 효율적이고 효과적인지를 실험했다.
+
+- DNN-selective라고 불리는 network 확장이 없는 모델과 대응하여 DNN-L2와 DNN-L1에서의 재학습된 모델을 정확도와 효율성면에서 비교한다.
+
+- Figure 4(a)는 GPU computation의 실제 시간으로 측정된 학습 시간과 정확도를 보여준다. 각 모델을 살펴 보면 selective retraining이 full retraining보다 매우 적은 
+학습 시간을 가지고 심지어 sparse network weight를 가지는 DNN-L1 보다도 더 적다.
+
+- 게다가 DNN-L1은 DNN-L2보다 낮은 정확도를 가지는 반면 DNN-Selective는 base network보다 2% 향상된 정확도를 가진다.
+  - 이러한 성능 향상은 DEN이 각각의 새롭게 추가된 task에 대해 일부분의 subnetwork만 학습시켜서 catastrophic forgetting이 발생하는 것을 방지했기 때문이다.
+
+- Figure 4(b)은 selective retraining중인 각 layer에서 선택된 neuron의 수를 보여준다.
+
+- DNN-Selective은 task-specific한 상단 부분의 Layer에서는 상당히 적은 유닛이 선택되고 반면에 포괄적인 부분을 담당하는 저레벨의 layer 유닛은 많은 부분이 선택된다.
+>  - low level layer는 주로 낮은 수준의 feature 예를들어 edge, color, corner와 같은 대부분의 물체에서 발견할 수 있는 포괄적인 부분을 잡는 경우가 많고
+반면에 high level layer 높은 수준의 feature 얼굴, 바퀴와 같이 낮은 수준의 feature들이 합쳐진 물체의 형상을 잡는 경우가 많음.
+그래서 high level layer은 task에 따라가 크게 변하는 경우가 많고 low level layer은 어떤 task가 오든 공통적인 부분이 많음.
+DNN-Selective에서 상단 부분의 layer는 task에 따라 달라지므로 new task와 연관된 neuron이 적어 선택된 수가 적고
+하단 부분의 layer는 모든 물체에서 발견할수 있는 저수준의 feature가 많아 new task와도 연관된 neuron이 많아서 선택된 수가 많다.
+
+###### [4.2.2] Effect of network expansion
+
+- network expansion의 효과를 selective retraining과 layer expansion을 한 제안 모델의 다양한 변종들을 비교했고 network split은 진행하지 않았다.
+이런 모델들을 실험에서 DNN-Dynamic라고 명명함.
+
+- DNN-Dynamic를 메인 실험에서 사용된 DNN-L2와 비교하고 DNN-Constant와도 비교했다. DNN-Constant는 MNIST-Variation dataset에서 고정된 수의 unit을 각 layer에 추가하여 
+제안 모델을 확장시키는 버전이다. 
+
+- Figure 4(c)는 이러한 실험 결과를 보여주는데, DNN-Dynamic AUROC에서 가장 좋은 성능을 얻었고 DNN-Constant를 포함한 모든 모델보다 성능이 높았다. 
+하지만 DNN-Dynamic의 network 증가된 크기는 DNN-Constant(k=20)보다 매우 작았다.
+
+- 이렇게 적은 수의 parameter는 갖는 점은 학습 효율면에서도 이점을 가질뿐만 아니라 모델의 overfitting을 방지하는데도 강점을 갖는다.
+
+- DNN-Constant의 network 크기를 DEN과 유사한 수준인 k=13으로 설정해서 좋은 성능을 얻었지만, 여전히 각 layer에 대해 유동적으로 neuron의 수를 적용하는 DEN의 성능보다는
+좋지 않았다. 
+
+
+###### [4.2.3] Effect of network split/duplication and timestamped inference
+
+- network split/duplication과 unit timestamping이 semantic drift(또는 catastrophic forgetting)를 얼마나 방지하는지를 보여주기 위해
+later task에 대해 좋은 성능을 얻으면서, 제안 모델의 성능을 basline과 DEN-No-Stamp(timestamping이 없는 버전)과 같은 DEN의 변종과 비교했다.
+
+- Figure 5에서 (a), (b), (c)는 각각 training stage t가 t=1, t=4, t=7일때의 모델의 성능의 성능으 변화를 보여준다.
+
+- DNN-L2은 앞선 stage에서 모델의 semantic drift를 방지하지만 later task(t=4, 7)에서 점점 성능이 나빠지는 결과를 보여준다.
+
+- DNN-EWC는 [Kirkpatrick et al(2017)][5_link]에서 실험한것과 마찬가지로 DNN-L2보다 더나은 성능을 보였다.
+
+- 하지만 DNN-EWC는 network의 크기 확장을 할수 없기 때문에 제한된 표현 능력을 갖게되어 제안 모델과 DNN-Progressive비해 매우 낮은 성능을 가진다. 
+
+- DNN-Progressive는 모델에서 parameter를 재학습하지 않기 때문에 old-task에서는 sematic drift가 일어나지 않는다. 
+
+- DEN w/o Timestamping은 later task에 대해 DNN-Progressive 보다 더나은 성능을 보이고 task가 진행될수록 생기는 성능저하 폭이 적다.
+
+- 마지막으로 timestamp inference를 가지는 제안 모델 DEN은 어떤 learning stage에서도 급격한 성능 저하를 볼수 없고 DNN-Progressive보다 성능이 매우 뛰어나다.
+
+- 이런 실험결과로 DEN이 semantic drift를 방지하는것에는 매우 효과적임을 알 수 있다.
 
 #### [5] Conclusion
+
+- lifelong learning에 대한 특별한 DNN인 Dynamically Expandable Network를 제안했다. DEN은 task와의 연관도를 이용하여 old task에 대해 학습한
+network의 일부분만 재학습하고 반면에 new task를 설명하기 위한 new knowledge가 필요할때 네트워크가 필요한 최적의 크기를 찾아 크기를 확장했다. 그러면서 모델에서
+semantic drift가 발생하는 것을 방지했다.
+
+- DEN의 convolutional network와 feedforward 둘다에대해 구현했고 lifelong learning scenario에서 다양한 데이터셋을 실험에 사용했다.
+현재의 다른 lifelong learning method와 비교하여 매우 큰 성능 향상을 보였고, 성능이 비슷할 경우 약 11.9% - 60.3%의 네트워크 크기만을 사용하여 효율적임을 보였다.
+게다가 DEN이 network structure estimation에서도 매우 유용하게 사용될 수 있음을 보여준다. 
+
+
 
 </div>
 </details>
