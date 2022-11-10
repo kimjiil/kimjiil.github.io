@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-09T18:02:58
+last_modified_at: 2022-11-10T18:11:41
 ---
 
 
@@ -27,11 +27,126 @@ last_modified_at: 2022-11-09T18:02:58
 
 ### <span style="color: #ffd33d">Summary</span>
 
-lifelong learning에서 이런저런 문제가 있었고
-이걸 해결하기 위해 이전 논문들이 이런 방법을 썻는데
-이게 생각보다 효과적이지 못해서
-우리가 이런 방법을 적용해서 더 효과적인 모델을 만들었는데
-이모델이 대충 이런방법이다?
+#### 1. Lifelong learning?
+
+사람은 평생에 걸쳐 외부에서 자극을 받고 이를 통해 무언가를 학습한다. 어떤 행위를 함으로써 고통이 주어진다면 사람은 학습하여 더이상 그 행위를 하지 않는다. 
+이런 외부 자극이 평생에 걸쳐 끊임 없이 주어지고 이를 계속 학습하지만 사람은 이전의 자극에 대한 학습이 바로 사라지지 않고 기억에 남게 된다. 
+
+사람처럼 기계나 프로그램도 끊임 없이 새로운 task가 주어지고 이를 계속 학습하는 방법을 평생 학습(lifelong learning)이라고 한다.
+
+##### 1.1 Lifelnong learning의 특징
+
+- Multi Task Learning으로 모델이 사람처럼 단일 작업이 아닌 여러 작업에서 범용적으로 사용할 수 있어야함. 
+
+- 학습 데이터가 정체되어있는 offline learning이 아닌 학습 데이터가 실시간으로 들어오는 online learning이 가능해야 됨.
+
+- 지식 공유(transfer learning)을 통해 새로운 task와 연관성이 높은 정보를 이전 task로 부터 추출 가능해야됨.
+  - 사람은 새로운 형태의 자동차를 봐도 이 물체를 자동차라고 인식한다. 이전 데이터에서 자동차의 보편적인 특징을 활용해서 유추함. 
+
+##### 1.2 why deep nueral network?
+
+- 단순히 layer의 weight를 공유하는 매우 직관적인 방법으로 transfer learning이 가능함.
+
+- 새로운 학습 데이터혹은 새로운 task가 들어올때마다 모델의 weight를 update해줌으로써 continual learning, Multi task learning이 가능함.
+
+하지만 이런 weight 공유라던지 모델을 단순히 재학습하는 방법에서 Catastrophic forgetting, Semantic drift 문제가 발생한다. 
+새로운 task에 대한 학습이 진행되는 동안 이전 task에 대한 성능이 급격하게 떨어지는 현상이다.
+학습 과정에서 weight가 큰 폭으로 변해 이전 task의 feature 정보들을 망각하거나 feature의 정보가 의미적으로 변하는 것을 말한다.
+
+
+##### 2. 연구 동향
+
+연구는 catastrophic forgetting, semantic drift를 방지하고 네트워크를 좀더 효율적으로 사용하거나 학습 속도를 높이는데 초점을 맞추고 있다.
+
+1. Elastic Weight Consolidation
+
+  Elastic Weight Consolidation(EWC)는 Google Deep Mind에서 나온 논문으로, 데이터셋을 학습하면서 해당 데이터셋에서 중요한 역할을 하는 
+  weight를 찾아 이후 추가 학습에서 이 weight가 변하지 않도록 학습을 진행한다.
+  
+  EWC는 다음과 같이 Loss fuction에서 $F\_{i}$(Fisher information matrix)를 활용하여 reluarization을 한다. A는 이전 Task를 B는 새로운 TASK를 의마한다.
+  
+  $$
+    L(\theta) = L_{B}(\theta) + \sum_{i}{\frac{\lambda}{2} F_{i} ( \theta_{i} - \theta^{*}_{A,i} )^{2}}
+  $$
+  
+  <p align="center">
+  <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/EWC_figure_01.PNG"
+  height="" width="">
+  <figcaption align="center"> 일반적인 trasfer learning과 EWC의 차이 </figcaption>
+  </p>
+  
+  회색 범위는 이전 Task A에서 Loss가 낮은 Weight parameter 범위를 나타내고 연노랑색은 새로운 Task B에서 Loss가 낮은 Weight parameter의 범위를 나타낸다.
+  
+  Task A에 대해 학습한 현재 parameter의 위치가 $\theta\_{A}^{*}$이고 새로운 Task B에 대해 학습을 진행한다고 가정한다.
+  
+  파란색 화살표인 Loss function에 어떤 regularization도 없을 경우 weight는 그대로 Task B에 대해 Loss가 가장 적은 중앙 부분으로 학습이 진행된다.
+  이 경우 Task A에 대한 Loss가 높아지고 성능이 떨어지므로 catastrophic forgetting 현상이 발생한다.
+  
+  반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $L\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이
+  어중간하게 둘다 좋지 않게 변한다. 
+  
+  빨간색 EWC는 Weight paramter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
+  두 Task가 겹치는 범위로 최대한 이동한다.
+
+2. Progressive Network [[Rusu et al.(2016)]][13_link]
+
+Google Deepmind에서 발표한 논문으로 deep nueral netowrk의 구조를 변형하여 catastrophic forgetting이 일어나는 것을 막은 방법이다.
+
+<p align="center">
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/progressive_network_process.png"
+height="100%" width="100%">
+<figcaption align="center"> progressive network 방법 </figcaption>
+</p>
+
+[[그림 출저 - https://realblack0.github.io/2020/03/22/lifelong-learning.html]](https://realblack0.github.io/2020/03/22/lifelong-learning.html)
+
+새로운 Task t가 추가될때마다 t-1시점의 network에 sub-network를 추가한다.
+t-1시점의 network의 weight를 고정시켜 catastrophic forgetting을 방지하고 Task t와 연관도가 높은 weight를 활용하여 sub network를 학습시킨다.
+
+논문에서 이런 측면 연결(lateral connection)을 통해 knowledge transfer해서 효율적인 학습을 진행한다.
+
+##### 3. Dynamically Expandable Networks(DEN)
+
+<p align="center">
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
+height="85%" width="85%">
+<figcaption align="center"> DEN과 다른 lifelong learning 방법과 비교 </figcaption>
+</p>    
+
+
+DEN과 다른 lifelong learning 방법인 EWC, progressive network의 차이점을 보여주는데 EWC는 네트워크 확장없이 weight를 선택하여 최대한 변하지않도록 regularizer를
+통해 제약하고 progressive network는 고정된 크기의 sub network를 추가하여 학습을 진행한다.
+
+이와 다르게 DEN은 다음과 같은 효율적인 방법으로 학습을 진행한다.
+
+- 재학습을 하는 과정에서 EWC와 마찬가지로 새로운 Task와 관련된 Weight만 선택하여 재학습하는 Selective Retraining을 제안
+
+- Progressive Network와 같이 Task가 추가됨에 따라 필요한 만큼의 네트워크의 크기를 늘려 새로운 Task를 수용할 수 있는 Dynamically Network Expansion을 제안
+
+- 재학습 이후 이전과 현재 weight를 비교해서 semantic drift가 발생한 weight를 쪼개서 이전 task에 대한 feature를 유지하는 split/duplication 과정 제안
+
+
+[lifelong learning에 관한 얘기]
+- Multi Task Learning
+- Online Learning
+
+[생기는 문제점]
+- catastrophic forgetting
+- semantic drift
+
+[위의 과제를 하기 위해 다음과 같은 연구들함]
+
+딥러닝 분야에서 새로운 task에 대해 모델을 재학습함으로써 lifelong learning할수 있음
+
+catastrophic forgetting을 방지하기위해 단순히 l2 regular를 사용하여 weight의 급격한 변화를 막음 => 이후의 들어오는 task에 대한 성능이 좋지않음(sub optimal)
+위의 한계점을 극복하기위한 방법이 EWC
+- EWC
+
+semantic drift를 방지하기위해 뉴런을 추가함.
+[Zhou et. al(2012)]은 high loss를 가지는 학습이 잘안되는 어려운 학습샘플에 대해 새로운 뉴런을 추가해서 이 뉴런에 학습시킬것을 제안함
+- Porgressive Network[Rusu et al.(2016)]은 이전 Task에 대한 뉴런을 고정하고 새로운 네트워크를 추가하여 이전 task한 뉴런을 현재 task의 네트워크에 연결만하고 현재 네트워크를 학습시킴 
+
+
 
 ### Method
 
@@ -44,10 +159,16 @@ lifelong learning에서 이런저런 문제가 있었고
 어떤 모델들과 비교했고 어떤 데이터셋을 사용했으며
 다음과같은 방법(metric)으로 비교했다.
 
+
+### Reference
+
+[https://realblack0.github.io/2020/03/22/lifelong-learning.html](https://realblack0.github.io/2020/03/22/lifelong-learning.html){:target="_blank"}
+
+
 ### 논문 해석
 
 <details>
-<summary> 논문 해석 펼치기/접기</summary>
+<summary> <span style="color: #ffd33d">논문 해석 펼치기/접기</span></summary>
 <div markdown="1">
 
 #### [1] Introduction
@@ -354,13 +475,13 @@ activation map을 각 그룹으로 지정했다.
 [Alvarez & Salzmann(2016)][2_link]{:target="_blank"} 있다.
 하지만 본 논문에서는 이를 부분적인 network에 적용했다. Algorithm 3에서 expansion 과정에 대해 설명한다.
 
-- selective retraining이 끝나고 network는 적당한 threhold 밑으로 Loss가 떨어졌는지를 체크한다. 만약 Loss가 떨어지지 않았다면 
+- selective retraining이 끝나고 network는 적당한 threshold 밑으로 Loss가 떨어졌는지를 체크한다. 만약 Loss가 떨어지지 않았다면 
 k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한다.
 
 - Eq.5에 있는 group sparsity regularization 때문에 학습에서 불필요하다고 여겨지는 hidden unit(혹은 convolutional filters)는 전체적으로 비활성화될 것이다.
 
-- 이런 dynamic network expansion prcoess로부터 모델이 $\bf{W}^{t-1}\_{l}$에 의해 표현되지 못하는 새로운 feature를 잡아낼 수 있다고 기대되어지고 
-반면에 많은 유닛이 추가되는것을 방지하면서 network의 크기를 효율적으로 사용할 수 있게된다.
+- 이런 dynamic network expansion process로부터 모델이 $\bf{W}^{t-1}\_{l}$에 의해 표현되지 못하는 새로운 feature를 잡아낼 수 있다고 기대되어지고 
+반면에 많은 유닛이 추가되는 것을 방지하면서 network의 크기를 효율적으로 사용할 수 있게 된다.
 
 
 > ---
@@ -384,7 +505,7 @@ k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한
 ##### [3.3] Network Split/Duplication
 
 - lifelong learning에서 가장 중요한 도전 과제는 semantic drift와 catastrophic forgetting 문제이다. 모델이 나중에 들어온 task에 대해
-점진적으로 학습하면서 이전 task에서 학습된 것들을 잊고 그러면서 전체적인 task에 대한 성능이 떨어지는것을 말한다. 
+점진적으로 학습하면서 이전 task에서 학습된 것들을 잊고 전체적인 task에 대한 성능이 떨어지는 것을 말한다. 
 
 - semantic drift를 막는 가장 간단하지만 대중적인 방법은 원래의 parameter의 값으로 부터 크게 벗어나지 않도록 $l\_{2}$-regularization을 
 사용하여 다음과 같이 제약하는 것이다.
@@ -396,7 +517,7 @@ $$
 - 여기서 $t$는 현재 task를 의미하고 $\bf{W}^{t-1}$는 task $\lbrace 1, ..., t-1\rbrace$ 에서 학습된 network의 weight tensor를 의미한다.
 $\lambda$는 regularization parameter이다. 
 
-- 이 $l\_{2}$ regularization은 opmization에서 $\bf{W}^{t}$가 $\bf{W}^{t-1}$와 근접하는 solution을 찾도록 강제한다. 주어진 $\lambda$의 크기에 따라
+- 이 $l\_{2}$ regularization은 optimization에서 $\bf{W}^{t}$가 $\bf{W}^{t-1}$와 근접하는 solution을 찾도록 강제한다. 주어진 $\lambda$의 크기에 따라
 $\lambda$가 작으면 이전 Weight와의 차이가 커도 되므로 이전 task에 대해서 잊는 반면 새로운 task에서 많이 학습할 것이다.
 반면에 $\lambda$가 크면 이전 weight와의 차이가 커지면 안되므로 이전 task에 대해서 가능한한 보존 하려고 노력하면서 학습할 것이다.
 
@@ -418,7 +539,7 @@ semantic drift된 정도 $\rho^{t}\_{i}$를 측정한다.
 
 - neuron의 복제 이후 `split`은 전체적인 network 구조를 변화시키기 때문에 network는 optimization Eq.6에 의해 다시 weight를 학습할 필요가 있다. 
 
-- 하지만 실제로 이러한 2번째 재학습은 이미 첫번쨰 학습에서 대부분의 parameter들이 optimal하기 때문에 대부분 빠른 속도로 수렴하게 된다.
+- 하지만 실제로 이러한 2번째 재학습은 이미 첫번쨰 학습에서 대부분의 parameter들이 optimal한 위치에 있기 때문에 대부분 빠른 속도로 수렴하게 된다.
 
 - Algorithm 4에 이러한 `split` 과정에 대해 설명되어 있다.
 
@@ -496,10 +617,10 @@ PCA로 차원수가 500까지 줄어든 데이터셋에서 제공하는 `DECAF` 
 
 - 제안 모델을 효율성과 예측 정확도라는 관점에서 평가했고 효율성은 학습 시간과 학습이 끝나는 시점에서의 network 크기로 측정했다.
 
-- Figure 3의 처음 행에 제안 모델과 baseline의 average per-task에 대한 성능비교를 나타내었다.
+- Figure 3의 처음 행에 제안 모델과 baseline의 average per-task에 대한 성능 비교를 나타내었다.
 
 - 각 task에서 최적으로 학습되기 때문에 `DNN-STL`은 CIFAR-100과 AWA dataset에서 가장 좋은 성능을 보인다. 반면에 다른 모든 모델들은
-semantic drift가 발생하는 실시간으로 학습되기 때문에 성능이 낮다.
+semantic drift가 발생할 수 있는 실시간 학습(online learning)이기 때문에 성능이 낮다.
 
 - task 수가 적을 때는 다중 과제 학습을 통한 지식 공유에서 MTL이 가장 잘 작동하지만 task 수가 많을 때는 MTL보다 학습 능력이 크기 때문에 STL이 더 잘 작동한다.
 
@@ -507,13 +628,13 @@ semantic drift가 발생하는 실시간으로 학습되기 때문에 성능이 
 
 - L2와 EWC와 같이 regularization과 결합된 재학습 모델은 비록 전자보다 후자가 성능이 더 뛰어나지만 전체적으로 좋지 않은 성능을 가진다.
 
-  - 이러한 성능 약화는 유동적으로 네트워크의 크기를 조절하지 못하는 모델(L2, EWC)이므로 예상되었다. 
+  - L2, EWC은 유동적으로 네트워크의 크기를 조절하지 못하는 모델이기 때문에 성능 약화가 일어날 수 밖에 없다. 
 
 - Progressive network는 앞선 2개의 모델보다는 성능이 좋지만 모든 데이터의 경우에서 DEN보다 성능이 좋지 않았다.
 
-- task의 수가 가장 크고 적절한 네트워크 크기를 찾는데 어렵기 때문에 AWA dataset에서의 성능이 차이가 가장 중요하다.
+- task의 수가 가장 크고 적절한 네트워크 크기를 찾는데 어려운 AWA dataset에서의 성능폭 차이가 가장 중요하다.
 
-- 만약 네트워크가 너무 작으면 new task를 표현하기 위한 학습 능력이 충분하지 않게 되고 반대로 네트워크 크기가 너무 크면 overfitting하기 쉽게 된다.
+- 만약 네트워크가 너무 작으면 new task를 표현하기 위한 학습 능력을 충분히 갖출 수 없고 반대로 네트워크 크기가 너무 크면 overfitting하기 쉽다.
 
 - 각 dataset에서 MTL과 비교하여 측정된 network capacity에 대한 각 모델의 성능을 실험했다.
 
@@ -531,7 +652,7 @@ semantic drift가 발생하는 실시간으로 학습되기 때문에 성능이 
 
 - MNIST-Variation dataset에서 Area Under ROC(AUROC)와 학습 속도를 측정하여 selective retraining이 얼마나 효율적이고 효과적인지를 실험했다.
 
-- DNN-selective라고 불리는 network 확장이 없는 모델과 대응하여 DNN-L2와 DNN-L1에서의 재학습된 모델을 정확도와 효율성면에서 비교한다.
+- DNN-selective(network 확장이 없는 버전)라고 불리는 모델과 대응하여 DNN-L2와 DNN-L1에서 재학습된 모델을 정확도와 효율성면에서 비교한다.
 
 - Figure 4(a)는 GPU computation의 실제 시간으로 측정된 학습 시간과 정확도를 보여준다. 각 모델을 살펴 보면 selective retraining이
 full retraining보다 매우 적은 학습 시간을 가지고 심지어 sparse network weight를 가지는 DNN-L1 보다도 더 적다.
