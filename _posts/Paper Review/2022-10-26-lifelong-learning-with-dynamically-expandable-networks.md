@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-10T18:11:41
+last_modified_at: 2022-11-11T18:13:57
 ---
 
 
@@ -50,109 +50,135 @@ last_modified_at: 2022-11-10T18:11:41
 - 새로운 학습 데이터혹은 새로운 task가 들어올때마다 모델의 weight를 update해줌으로써 continual learning, Multi task learning이 가능함.
 
 하지만 이런 weight 공유라던지 모델을 단순히 재학습하는 방법에서 Catastrophic forgetting, Semantic drift 문제가 발생한다. 
-새로운 task에 대한 학습이 진행되는 동안 이전 task에 대한 성능이 급격하게 떨어지는 현상이다.
-학습 과정에서 weight가 큰 폭으로 변해 이전 task의 feature 정보들을 망각하거나 feature의 정보가 의미적으로 변하는 것을 말한다.
+새로운 task에 대한 학습이 진행되는 동안 weight가 큰 폭으로 변해 이전 task의 feature 정보들을 망각하거나 feature의 정보가 의미적으로 변하면서
+이전 task에 대한 성능이 급격하게 떨어지는 현상을 말한다.
 
+#### 2. 연구 동향
 
-##### 2. 연구 동향
-
-연구는 catastrophic forgetting, semantic drift를 방지하고 네트워크를 좀더 효율적으로 사용하거나 학습 속도를 높이는데 초점을 맞추고 있다.
+lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를 방지하고 네트워크를 좀더 효율적으로 사용하거나 학습 속도를 높이는데 초점을 맞추고 있다.
 
 1. Elastic Weight Consolidation
-
-  Elastic Weight Consolidation(EWC)는 Google Deep Mind에서 나온 논문으로, 데이터셋을 학습하면서 해당 데이터셋에서 중요한 역할을 하는 
-  weight를 찾아 이후 추가 학습에서 이 weight가 변하지 않도록 학습을 진행한다.
   
-  EWC는 다음과 같이 Loss fuction에서 $F\_{i}$(Fisher information matrix)를 활용하여 reluarization을 한다. A는 이전 Task를 B는 새로운 TASK를 의마한다.
-  
-  $$
-    L(\theta) = L_{B}(\theta) + \sum_{i}{\frac{\lambda}{2} F_{i} ( \theta_{i} - \theta^{*}_{A,i} )^{2}}
-  $$
-  
-  <p align="center">
-  <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/EWC_figure_01.PNG"
-  height="" width="">
-  <figcaption align="center"> 일반적인 trasfer learning과 EWC의 차이 </figcaption>
-  </p>
-  
-  회색 범위는 이전 Task A에서 Loss가 낮은 Weight parameter 범위를 나타내고 연노랑색은 새로운 Task B에서 Loss가 낮은 Weight parameter의 범위를 나타낸다.
-  
-  Task A에 대해 학습한 현재 parameter의 위치가 $\theta\_{A}^{*}$이고 새로운 Task B에 대해 학습을 진행한다고 가정한다.
-  
-  파란색 화살표인 Loss function에 어떤 regularization도 없을 경우 weight는 그대로 Task B에 대해 Loss가 가장 적은 중앙 부분으로 학습이 진행된다.
-  이 경우 Task A에 대한 Loss가 높아지고 성능이 떨어지므로 catastrophic forgetting 현상이 발생한다.
-  
-  반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $L\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이
-  어중간하게 둘다 좋지 않게 변한다. 
-  
-  빨간색 EWC는 Weight paramter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
-  두 Task가 겹치는 범위로 최대한 이동한다.
-
+    Elastic Weight Consolidation(EWC)는 Google Deep Mind에서 나온 논문으로, 데이터셋을 학습하면서 해당 데이터셋에서 중요한 역할을 하는 
+    weight를 찾아 이후 추가 학습에서 이 weight가 변하지 않도록 학습을 진행한다.
+    
+    EWC는 다음과 같이 Loss fuction에서 $F\_{i}$(Fisher information matrix)를 활용하여 reluarization을 한다. A는 이전 Task를 B는 새로운 TASK를 의마한다.
+    
+    $$
+      L(\theta) = L_{B}(\theta) + \sum_{i}{\frac{\lambda}{2} F_{i} ( \theta_{i} - \theta^{*}_{A,i} )^{2}}
+    $$
+    
+    <p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/EWC_figure_01.PNG"
+    height="" width="">
+    <figcaption align="center"> 일반적인 trasfer learning과 EWC의 차이 </figcaption>
+    </p>
+    
+    회색 범위는 이전 Task A에서 Loss가 낮은 Weight parameter 범위를 나타내고 연노랑색은 새로운 Task B에서 Loss가 낮은 Weight parameter의 범위를 나타낸다.
+    
+    Task A에 대해 학습한 현재 parameter의 위치가 $\theta\_{A}^{*}$이고 새로운 Task B에 대해 학습을 진행한다고 가정한다.
+    
+    파란색 화살표인 Loss function에 어떤 regularization도 없을 경우 weight는 그대로 Task B에 대해 Loss가 가장 적은 중앙 부분으로 학습이 진행된다.
+    이 경우 Task A에 대한 Loss가 높아지고 성능이 떨어지므로 catastrophic forgetting 현상이 발생한다.
+    
+    반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $l\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이
+    어중간하게 둘다 좋지 않게 변한다. 
+    
+    빨간색 EWC는 Weight paramter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
+    두 Task가 겹치는 범위로 최대한 이동한다.
+    
 2. Progressive Network [[Rusu et al.(2016)]][13_link]
+  
+    Google Deepmind에서 발표한 논문으로 deep nueral netowrk의 구조를 변형하여 catastrophic forgetting이 일어나는 것을 막은 방법이다.
+    
+    <p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/progressive_network_process.png"
+    height="100%" width="100%">
+    <figcaption align="center"> progressive network 방법 </figcaption>
+    </p>
+    
+    [[그림 출저 - https://realblack0.github.io/2020/03/22/lifelong-learning.html]](https://realblack0.github.io/2020/03/22/lifelong-learning.html)
+    
+    새로운 Task t가 추가될때마다 t-1시점의 network에 sub-network를 추가한다.
+    t-1시점의 network의 weight를 고정시켜 catastrophic forgetting을 방지하고 Task t와 연관도가 높은 weight를 활용하여 sub network를 학습시킨다.
+    
+    논문에서 이런 측면 연결(lateral connection)을 통해 knowledge transfer해서 효율적인 학습을 진행한다.
 
-Google Deepmind에서 발표한 논문으로 deep nueral netowrk의 구조를 변형하여 catastrophic forgetting이 일어나는 것을 막은 방법이다.
+3. Dynamically Expandable Networks(DEN)
 
-<p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/progressive_network_process.png"
-height="100%" width="100%">
-<figcaption align="center"> progressive network 방법 </figcaption>
-</p>
-
-[[그림 출저 - https://realblack0.github.io/2020/03/22/lifelong-learning.html]](https://realblack0.github.io/2020/03/22/lifelong-learning.html)
-
-새로운 Task t가 추가될때마다 t-1시점의 network에 sub-network를 추가한다.
-t-1시점의 network의 weight를 고정시켜 catastrophic forgetting을 방지하고 Task t와 연관도가 높은 weight를 활용하여 sub network를 학습시킨다.
-
-논문에서 이런 측면 연결(lateral connection)을 통해 knowledge transfer해서 효율적인 학습을 진행한다.
-
-##### 3. Dynamically Expandable Networks(DEN)
-
-<p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
-height="85%" width="85%">
-<figcaption align="center"> DEN과 다른 lifelong learning 방법과 비교 </figcaption>
-</p>    
-
-
-DEN과 다른 lifelong learning 방법인 EWC, progressive network의 차이점을 보여주는데 EWC는 네트워크 확장없이 weight를 선택하여 최대한 변하지않도록 regularizer를
-통해 제약하고 progressive network는 고정된 크기의 sub network를 추가하여 학습을 진행한다.
-
-이와 다르게 DEN은 다음과 같은 효율적인 방법으로 학습을 진행한다.
-
-- 재학습을 하는 과정에서 EWC와 마찬가지로 새로운 Task와 관련된 Weight만 선택하여 재학습하는 Selective Retraining을 제안
-
-- Progressive Network와 같이 Task가 추가됨에 따라 필요한 만큼의 네트워크의 크기를 늘려 새로운 Task를 수용할 수 있는 Dynamically Network Expansion을 제안
-
-- 재학습 이후 이전과 현재 weight를 비교해서 semantic drift가 발생한 weight를 쪼개서 이전 task에 대한 feature를 유지하는 split/duplication 과정 제안
+    <p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
+    height="85%" width="85%">
+    <figcaption align="center"> DEN과 다른 lifelong learning 방법과 비교 </figcaption>
+    </p>    
 
 
-[lifelong learning에 관한 얘기]
-- Multi Task Learning
-- Online Learning
+    DEN과 다른 lifelong learning 방법인 EWC, progressive network의 차이점을 보여주는데 EWC는 네트워크 확장없이 weight를 선택하여 최대한 변하지않도록 regularizer를
+    통해 제약하고 progressive network는 고정된 크기의 sub network를 추가하여 학습을 진행한다.
 
-[생기는 문제점]
-- catastrophic forgetting
-- semantic drift
+    이와 다르게 DEN은 다음과 같은 효율적인 방법으로 학습을 진행한다.
+    
+    - 재학습을 하는 과정에서 EWC와 마찬가지로 새로운 Task와 관련된 Weight만 선택하여 재학습하는 Selective Retraining 과정
 
-[위의 과제를 하기 위해 다음과 같은 연구들함]
+    - Progressive Network와 같이 Task가 추가됨에 따라 필요한 만큼의 네트워크의 크기를 늘려 새로운 Task를 수용할 수 있는 Dynamically Network Expansion 과정
 
-딥러닝 분야에서 새로운 task에 대해 모델을 재학습함으로써 lifelong learning할수 있음
-
-catastrophic forgetting을 방지하기위해 단순히 l2 regular를 사용하여 weight의 급격한 변화를 막음 => 이후의 들어오는 task에 대한 성능이 좋지않음(sub optimal)
-위의 한계점을 극복하기위한 방법이 EWC
-- EWC
-
-semantic drift를 방지하기위해 뉴런을 추가함.
-[Zhou et. al(2012)]은 high loss를 가지는 학습이 잘안되는 어려운 학습샘플에 대해 새로운 뉴런을 추가해서 이 뉴런에 학습시킬것을 제안함
-- Porgressive Network[Rusu et al.(2016)]은 이전 Task에 대한 뉴런을 고정하고 새로운 네트워크를 추가하여 이전 task한 뉴런을 현재 task의 네트워크에 연결만하고 현재 네트워크를 학습시킴 
-
+    - 재학습 이후 이전과 현재 weight를 비교해서 semantic drift가 발생한 weight를 쪼개서 이전 task에 대한 feature를 유지하는 split/duplication 과정 
 
 
 ### Method
 
-그래서 대충 이런과정을 거치는 방법이다.
+논문에서 lifelong learning를 연속적인 시간 $t=1,...,t,...,T$에서 시점 t에 들어오는 task $t$의 training dataset인 
+$D\_{t}= \lbrace x\_{i}, y\_{i} \rbrace^{N\_{t}}\_{i=1} $를 학습하는 문제로 생각했다.
 
-실제예시는 이렇다.
+이때, 각각의 task $t$는 single-task이거나 sub-task로 구성된 multi-task가 될 수도 있다. 시점 $t$에서 이전 시점 $t-1$의 weight parameter만 사용이 가능하고
+task $1$ 부터 task $t-1$까지의 dataset은 다시 사용이 불가능하다고 가정했다.
+
+다음의 수식을 통해 학습을 진행하여 task $t$에 대한 model parameter $\bf{W}^{t}$을 얻는 것을 목표로 한다.
+
+$$
+    \underset{\bf{W}^{t}}{minimize} \; \mathcal{L}(\bf{W}^{t}; \bf{W}^{t-1}, \, \mathcal{D}_{t}) + \lambda \, \Omega(\bf{W}^{t}), \; t=1,...,T
+$$
+
+새로운 task $t$가 들어오면 $t$시점의 dataset $\mathcal{D}\_{t}$와 이전 $t-1$시점의 model parameter $\bf{W}^{t-1}$을 
+이용하여 Loss function $\mathcal{L}$구하고 $t$시점의 model parameter $\bf{W}^{t}$는 regularizer $\Omega$와 $\lambda$를 통해 페널티를 준다.
+
+DEN은 다음과 같이 차례대로 3가지 과정으로 알고리즘이 구성되어 있다. 각각의 과정에서 regularizer는 다르게 적용되고 적용되는 weight 범위도 달라진다.
+
+1. Selective Learning
+2. Dynamic Network Expansion
+3. Split & Duplication
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_02.PNG"
+    height="100%" width="100%">
+    <figcaption align="center"> 논문에서 설명한 3가지 과정에 대한 그림 </figcaption>
+</p>
+
+맨 처음 task 1이 도착하면 3가지 알고리즘을 사용하지 않고 다음과 같이 $l\_{1}$-regularization으로 sparse한 weight가 나오도록 학습을 진행한다.
+
+$$
+    \underset{\bf{W}^{t=1}}{minimize} \; \mathcal{L}(\bf{W}^{t=1}; \, \mathcal{D}_{t}) + \mu \, \sum^{L}_{l=1}{ \| \bf{W}^{t=1}_{l} \|_{1}}
+$$
+
+이후 task 2부터 순서대로 다음 알고리즘을 수행한다.
+자세한 설명을 위해 Dataset MNIST-Variation을 사용하여 다음과 같은 hidden layer 2개를 가지는 간단한 네트워크에서 각 알고리즘이 수행되는
+과정을 그림으로 설명한다.
+
+$y \in \lbrace 0,1 \rbrace$인 binary classification으로 예시를 들었다. label 0을 postive로 설정하고 나머지 label 1~9를 negative로 설정함
+
+#### 1. Selective Learning
+
+실시간으로 task $t$가 들어오면 task $t$에 대한 classifier를 새로 만들어 task $t-1$의 classifier와 교체한다. 
+그리고 전체에 대한 학습이 아닌 일부 데이터만으로 배치 학습을 진행한다.
+
+* Classifier Layer에서 0번째 class의 feature만 검사해서 feature selection하는 이유
+
+같은 task에 대해서 class를 구분짓는 feature는 어차피 모든 class에서 유사하게 사용될 가능성이 높다. class 2나 class 7를 구별하기 위해 사용되는 feature는 유사함.
+그렇기 때문에 class 0의 feature weight가 0인지 아닌지만 검사
+
+#### 2. Dynamic Network Expansion
+
+#### 3. Split & Duplication
 
 ### Experiment
 
@@ -197,7 +223,7 @@ transfer learning에서 매우 중요한 주제이다.
 사용하지 못할 가능성이 높다.
 
 - 동시에 representation의 원래 의미로부터 멀어져 더이상 old task에 대해 최적화 되있지 않기 때문에 ,new task에 대해 재학습된 representation들은 
-old task에 대해 적대적인 영향을 미친다.
+old task에 대해 부정적인 영향을 미친다.
 
 - 예를들어, 얼룩말의 얼룩무늬를 표현하는 feature는 이후의 얼룩무늬 티셔츠나 fence와 같은 class들을 분류하는 task에서 이러한 feature에 대해 
 학습하는 동안 의미가 크게 변할 것이다.
@@ -319,7 +345,7 @@ task에 대해 sub optimal한 성능을 가지게 된다.
 - 연손적인 데이터 흐름에서 모델에 도달하는 학습 데이터의 분포에 대해 알수 없고 몇개의 task가 도달할지도 모르는 lifelong learning scenario에서의 
 deep neural network의 incremental training 문제로 간주했다.
 
-- 특히, 우리의 목표는 $t=1,...,t,...,T$에서 $t$시점에 들어오는 training data를 $D\_{t}=\lbrace x\_{i}, y\_{i} \rbrace^{N\_{i}}\_{i=1}$이라하고 
+- 특히, 우리의 목표는 $t=1,...,t,...,T$에서 $t$시점에 들어오는 training data를 $D\_{t}=\lbrace x\_{i}, y\_{i} \rbrace^{N\_{t}}\_{i=1}$이라하고 
 한계가 정해지지않은 $T$개의 task가 연속적으로 들어오는 과정에서 모델을 학습하는 것이다.
 
 - 각 task $t$는 single task가 될수도 있고 sub task들로 구성된 복합 task일수도 있다. 
