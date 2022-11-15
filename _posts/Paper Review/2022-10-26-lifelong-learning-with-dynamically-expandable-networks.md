@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-11T18:13:57
+last_modified_at: 2022-11-15T18:00:31
 ---
 
 
@@ -81,10 +81,9 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
     파란색 화살표인 Loss function에 어떤 regularization도 없을 경우 weight는 그대로 Task B에 대해 Loss가 가장 적은 중앙 부분으로 학습이 진행된다.
     이 경우 Task A에 대한 Loss가 높아지고 성능이 떨어지므로 catastrophic forgetting 현상이 발생한다.
     
-    반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $l\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이
-    어중간하게 둘다 좋지 않게 변한다. 
+    반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $l\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이 둘다 좋지 않게 변한다. 
     
-    빨간색 EWC는 Weight paramter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
+    EWC로 학습한 빨간색 화살표는 Weight parameter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
     두 Task가 겹치는 범위로 최대한 이동한다.
     
 2. Progressive Network [[Rusu et al.(2016)]][13_link]
@@ -108,7 +107,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
 
     <p align="center">
     <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
-    height="85%" width="85%">
+    height="100%" width="100%">
     <figcaption align="center"> DEN과 다른 lifelong learning 방법과 비교 </figcaption>
     </p>    
 
@@ -164,21 +163,154 @@ $$
 자세한 설명을 위해 Dataset MNIST-Variation을 사용하여 다음과 같은 hidden layer 2개를 가지는 간단한 네트워크에서 각 알고리즘이 수행되는
 과정을 그림으로 설명한다.
 
-$y \in \lbrace 0,1 \rbrace$인 binary classification으로 예시를 들었다. label 0을 postive로 설정하고 나머지 label 1~9를 negative로 설정함
+$y \in \lbrace 0,1 \rbrace$인 binary classification으로 예시를 들었다. 10개의 label중 1개를 postive로 설정하고 나머지 label을 negative로 설정함
 
 #### 1. Selective Learning
 
-실시간으로 task $t$가 들어오면 task $t$에 대한 classifier를 새로 만들어 task $t-1$의 classifier와 교체한다. 
-그리고 전체에 대한 학습이 아닌 일부 데이터만으로 배치 학습을 진행한다.
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_00.PNG"
+    height="100%" width="100%">
+    <figcaption align="center"> build connection & selective learning </figcaption>
+</p>
+
+
+위 그림(왼쪽)처럼 task $t$가 들어오면 task $t$에 대한 classifier를 새로 만들어 task $t-1$의 classifier와 교체하고 이전 classifier는 저장한다.
+classifier를 제외한 나머지 layer를 고정시키고 다음의 식으로 색칠된 부분인 classifier만 학습한다.
+
+
+$$
+    \underset{\bf{W}^{t}_{L,t}}{minimize} \, {\mathcal{L}( \bf{W}^{t}_{L,t}; \, \bf{W}^{t-1}_{1:L-1}, \, \mathcal{D}_{t} ) + \mu \| \bf{W}^{t}_{L,t} \|_{1} }
+$$  
+
+여기서 $\bf{W}^{t}\_{L,t}$는 $t$시점의 최상단인 L번째 layer의 weight parameter를 뜻한다.  
+
+하단의 layer를 고정하고 classifier를 $l\_1$-regularizer으로 학습시키면 task $t-1$에서 task $t$와 유사한 feature를 가진 부분은 값이 
+올라오고 전혀 관련없는 feature는 값이 올라오지 않아 학습과정에서 현재 task에 관련된 부분의 feature를 제외한 나머지가 0인 sparse matrix가 된다.
+
+classifer에서 현재 task와 관련된(0이 아닌) feature weight와 연결되어 있는 하단 layer의 모든 weight들을 따로 떼어내 sub-network $S$를 구성한다. 
+위 그림(오른쪽)처럼 구성된 sub-network $S$에서만 task $t$의 데이터셋을 다음의 식으로 학습한다.
+
+$$
+    \underset{\bf{W}^{t}_{S}}{minimize} \, \mathcal{L} ( \bf{W}^{t}_{S} ; \, \bf{W}^{t-1}_{S^{\complement}} , \, \mathcal{D}_{t}) + 
+    \mu \| \bf{W}^{t}_{S} \|_{2} + \lambda \| \bf{W}^{t-1}_S - \bf{W}^{t}_S \|^{2}_{2}
+$$
+
+현재 task와 관련된 weight만 선택한 부분 재학습은 coputational overhead를 낮추고 선택되지 않은 부분은 재학습의 영향을 받지 않기 때문에 negative transfer가 일어나지 않아
+catastrophic forgetting, semantic drift의 발생 가능성을 낮춘다.
+
+selective learning에서 선택된 Sub network $S$만으로 task $t$를 잘 표현할 수 있다면 학습 과정에서의 Loss가 잘 수렴할 것이다. 하지만 
+Sub network $S$만으로 표현이 불가능하면 Loss가 잘 수렴하지 않으면 network의 크기(capacity)가 부족하다고 판단하고 다음 단계인 
+네트워크 확장으로 넘어간다.
+
+---
 
 * Classifier Layer에서 0번째 class의 feature만 검사해서 feature selection하는 이유
 
 같은 task에 대해서 class를 구분짓는 feature는 어차피 모든 class에서 유사하게 사용될 가능성이 높다. class 2나 class 7를 구별하기 위해 사용되는 feature는 유사함.
 그렇기 때문에 class 0의 feature weight가 0인지 아닌지만 검사
 
+---
+
+
 #### 2. Dynamic Network Expansion
 
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_01.PNG"
+    height="60%" width="60%">
+    <figcaption align="center"> Network Expansion stage 1 </figcaption>
+</p>
+
+
+위 그림처럼 고정된 수(k=2)의 weight parameter를 classifier를 제외한 각 layer에 추가한다. 그리고 추가된 weight와 classifier의 weight 부분만 
+다음식으로 학습을 진행한다. 색이 칠해지지 않은 곳은 단순 값 계산만 하고 weight update 하지 않는다.
+
+$$
+    \underset{\bf{W}^{\mathcal{N}}_{\mathcal{l}}}{minimize} \, \mathcal{L}(\bf{W}^{\mathcal{N}}_{\mathcal{l}} \, ; \bf{W}^{t-1}_{\mathcal{l}} , \, \mathcal{D}_{t})
+    + \mu \| \bf{W}^{\mathcal{N}}_{\mathcal{l}} \|_1 + \gamma \sum_{\mathcal{g}} { \| \bf{W}^{\mathcal{N}}_{\mathcal{l,g}} \|_{2} }
+$$
+
+여기서 $\bf{W}^{\mathcal{N}}\_{\mathcal{l}}$는 추가된 weight를 말하고 $g \in \mathcal{G}$는 같은 feature를 묶은 weight 그룹이다.
+
+weight가 추가되면서 기존 네트워크에서 잡지 못한 task $t$의 새로운 feature를 학습하게 되어 task $t$에 대한 성능이 향상된다.
+그리고 마지막 term에 있는 group sparsity regularization 때문에 학습 도중 불필요한 weight group은 전체적으로 비활성화(0으로 수렴) 된다.
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_02.PNG"
+    height="60%" width="60%">
+    <figcaption align="center"> Network Expansion stage 2 </figcaption>
+</p>
+
+학습과정에서 비활성화된(0으로 수렴) 부분을 그림 처럼 가지치기 해주면 네트워크가 task $t$에 대해 필요한 만큼의 weight를 효율적으로 추가해 줄 수 있다.
+
 #### 3. Split & Duplication
+
+앞선 과정에서 task $t$를 잘 수행하는 network를 만들었다면 이 과정에서는 task $t-1$에서 얻은 feature들을 잊어 버리지 않도록 보존처리하는 과정이다.
+각 weight에서 catastrophic forgetting, semantic drift가 발생했는지 아닌지를 검사해서 보존할지 말지를 결정한다.
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_03.PNG"
+    height="90%" width="90%">
+    <figcaption align="center"> split & duplication 과정 </figcaption>
+</p>
+
+weight에서 semantic drift가 발생했는지 여부는 $\rho^{t}\_i = \|\| \bf{w}^{t}\_{i} - \bf{w}^{t-1}\_{i} \|\| \_{2}$을 계산해서 판단한다.
+식에서 알 수 있듯이 기존 $t-1$으로 부터 weight 값이 크게 변한 경우 $\rho^{t}\_i$값이 크게 계산되고 semantic drift가 발생했다고 간주한다.
+
+`prev_W`와 `cur_W`의 weight로 $\rho^{t}\_i$을 계산하고 그 값이 `threshold` 보다 크면 network에 그림처럼 추가되고 작으면 X표처럼 삭제된다.
+
+$\rho^{t}\_i$가 큰 weight는 재학습과정에서 의미가 변질되어 task $t-1$의 성능을 하락시킬 가능성이 높다. 이렇게 변질된 weight들은 task $t$ 학습전에 저장된
+이전 weight값들을 복사하여 현재 network에 추가해서 이전 task $t-1$의 지식을 보존한다.
+
+network의 구조가 전체적으로 변경되었기 때문에 다시 연결성을 확보하기 위해 다음식으로 재학습을 한다. 
+이미 대부분의 weight가 optimal하기 때문에 재학습 과정은 빠르게 수렴하게 된다.
+
+$$
+    \underset{\bf{W}^{t}}{minimize} \, \mathcal{L}(\bf{W}^{t} ; \mathcal{D}_{t}) + \lambda \| \bf{W}^{t} - \bf{W}^{t-1} \|^{2}_{2}
+$$
+
+#### 실제 예시
+
+784($28 \times 28$)의 이미지를 입력으로 받고 ReLU를 활성함수로 사용하고 2개의 hidden layer(312-128)를 가지는 network를 사용함. 
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_00.PNG"
+    height="100%" width="100%">
+    <figcaption align="center"> task 1 - initial </figcaption>
+</p>
+
+처음 task 1에서 $l\_1$-regularization으로 weight를 sparsity하게 만들도록 학습한다.
+
+이후 task 2가 들어오면 새로만든 layer 3으로 교체하고 다음식으로 새로만든 layer 3를 학습하여 희소하게 만든다.
+
+$$
+    \underset{\bf{W}^{t}_{L,t}}{minimize} \, {\mathcal{L}( \bf{W}^{t}_{L,t}; \, \bf{W}^{t-1}_{1:L-1}, \, \mathcal{D}_{t} ) + \mu \| \bf{W}^{t}_{L,t} \|_{1} }
+$$  
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_01.PNG"
+    height="100%" width="100%">
+    <figcaption align="center"> select weight feature </figcaption>
+</p>
+
+위 그림처럼 layer 3(classifier)부분에서 현재 task 2와 관련이 없는 부분은 앞선 학습과정에서 0으로 수렴했기 때문에 0이 아닌 부분을 선택하고
+이와 같은 index를 가진 feature를 layer 2에서도 선택한다.
+
+마찬가지로 layer 2에서 layer 3에의해 선택된 sub Layer 2에서 행으로 0-벡터가 아닌 weight를 선택하여 최종 sub layer 2를 선택한다.
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_02.PNG"
+    height="50%" width="50%">
+    <figcaption align="center"> task 1 - initial </figcaption>
+</p>
+
+layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature를 layer 1에서 선택해서 sub layer 1을 만든다.
+앞서 선택된 sub layer들로 구성된 sub-network $S$를 다음과 같이 학습 시킨다.
+
+<p align="center">
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_03.PNG"
+    height="100%" width="100%">
+    <figcaption align="center"> task 1 - initial </figcaption>
+</p>
 
 ### Experiment
 
