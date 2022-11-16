@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-15T18:00:31
+last_modified_at: 2022-11-16T09:59:33
 ---
 
 
@@ -300,7 +300,7 @@ $$
 <p align="center">
     <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_02.PNG"
     height="50%" width="50%">
-    <figcaption align="center"> task 1 - initial </figcaption>
+    <figcaption align="center"> select weight feature  </figcaption>
 </p>
 
 layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature를 layer 1에서 선택해서 sub layer 1을 만든다.
@@ -309,7 +309,7 @@ layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature
 <p align="center">
     <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_03.PNG"
     height="100%" width="100%">
-    <figcaption align="center"> task 1 - initial </figcaption>
+    <figcaption align="center"> select weight feature </figcaption>
 </p>
 
 ### Experiment
