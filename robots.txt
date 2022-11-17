@@ -7,4 +7,5 @@ Disallow: /assets/
 Disallow: /docs/
 Disallow: /test/
 
+Site: https://kimjiil.github.io/sitemap.xml
 

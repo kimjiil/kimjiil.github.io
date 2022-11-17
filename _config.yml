@@ -300,3 +300,5 @@ defaults:
       share: true
       related: true
       sitemap: true
+
+url : https://kimjiil.github.io/
