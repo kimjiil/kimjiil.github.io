@@ -13,7 +13,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-16T17:45:11
+last_modified_at: 2022-11-17T13:25:06
 ---
 
 
@@ -260,7 +260,7 @@ $$
 $$
 
 <details>
-<summary> <span style="color: #ffd33d">실제 예시 펼치기/접기</span> </summary>
+<summary> <span style="color: #4682B4">실제 예시 펼치기/접기</span> </summary>
 <div markdown="1">
 
 #### 실제 예시
@@ -371,14 +371,6 @@ layer 2에서는 layer의 모양을 똑같이 해주기 위해서 layer 2(Task $
 </div>
 </details>
 
-### Experiment
-
-1. 비교에 사용된 모델
-2. base network
-3. dataset
-
-
-
 ### Reference
 
 [https://realblack0.github.io/2020/03/22/lifelong-learning.html](https://realblack0.github.io/2020/03/22/lifelong-learning.html){:target="_blank"}
@@ -387,7 +379,7 @@ layer 2에서는 layer의 모양을 똑같이 해주기 위해서 layer 2(Task $
 ### 논문 해석
 
 <details>
-<summary> <span style="color: #ffd33d">논문 해석 펼치기/접기</span></summary>
+<summary> <span style="color: #4682B4">논문 해석 펼치기/접기</span></summary>
 <div markdown="1">
 
 #### [1] Introduction
