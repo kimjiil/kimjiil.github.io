@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-10-28T18:11:06
+last_modified_at: 2022-11-17T18:08:54
 ---
 
 <hr/>
@@ -290,8 +290,66 @@ with cupy.cuda.Device(0) as dev:
 </div>
 </details>
 
+#### operator process
 
-##### myModule
+- pytorch처럼 Tensor로 감싸고 연산자로는 내부의 data만 계산하는 과정을 따라하고 싶어서 myTensor라는 class를 만들고
+python 연산자에 의해 call되는 magic method를 재정의 해주고 연산자에 따라 binary인지 unary인지 나누었음.
+
+```python
+    def __add__(self, other):
+        return self.binary_operator_function_call(operator.add, other=other)
+    ...
+    def __neg__(self):
+        return self.unary_operator_function_call(operator.neg)
+```
+
+- 연산자가 magic method를 call하면 해당 operator를 wrapper 함수의 파라미터로 주고 해당 operator를 통해
+.data에 저장된 값을 연산하고 결과값을 새로운 myTensor를 만들어 할당해줌
+
+```python
+    def binary_operator_function_call(self, operator, other):
+        if isinstance(other, myTensor):
+            temp_data = other.data
+            if other.backward_prev:
+                temp_prev = other.backward_prev
+        else:
+            temp_data = other
+        if self.backward_prev:
+            temp_prev = self.backward_prev
+
+        _new_data = operator(self.data, temp_data)
+        _new = myTensor(_new_data)
+        _new.grad_fn = f"{operator}"
+        _new.op = self.op
+        _new.backward_fn = temp_prev
+        _new.backward_prev = temp_prev
+        return _new
+```
+
+#### backward process 
+
+- pytorch에서 마지막 loss 함수에서 나온 값에 .backward()를 해주면 자동적으로 forward의 역순으로 backward가 실행되는 과정을 구현하고 싶었음.
+
+- 이 과정을 구현하고 싶어 myTensor에 이전 Module의 backward 함수를 저장할 수 있도록 .backward_prev attribute를 사용함
+
+- Module의 forward_call 함수에서 다음과같이 Tensor가 지나갈 때 마다 이전 backward 함수를 갱신하도록 함
+
+```python
+    def forward_call(self, *args, **kwargs):
+        if args[0].backward_prev:
+            self.backward_fn = args[0].backward_prev
+        else:
+            self.backward_fn = args[0].backward_fn
+        args[0].backward_prev = self.backward
+
+        return self.forward(*args, **kwargs)
+
+    __call__: Callable[..., Any] = forward_call
+```
+
+- 모든 Layer나 sequence , tensor는 모두 최상위 myModule class를 상속받기 때문에 모든 과정에서 기록됨.
+
+##### myModule class
 
 - pytorch는 모델을 Module로 생성하고 sub module과 현재 module이 갖고있는 parameter를 저장한다. 
 - class myModule을 만들어 _modules에 sub module을 저장하고 _paramters에 parameter들을 저장한다.
@@ -300,7 +358,7 @@ with cupy.cuda.Device(0) as dev:
   - 단순히 numpy 와 cupy를 스위칭하는 형식으로 구현함.
 
   
-##### mySequential
+##### mySequential class
 
 - mySequential class는 다음과 같이 Layer들을 argument로 받고 class를 function call할 경우 자동으로
 Layer들을 순서대로 forward해준다.
@@ -349,7 +407,7 @@ class mySequential(myModule):
 - 여기서 `self.backward_fn`은 다음 순서의 모듈의 backward 함수의 주소를 갖고 있고 function call할 경우 
 그 다음 순서의 모듈 backward 함수가 call된다.
 
-##### myParameter
+##### myParameter class
 
 - 이 클래스는 Layer의 weight나 bias를 저장할때 사용한다. 현재 별다른 기능은 구현되있지않고 단순히 myTensor를 상속받아 사용한다.
 
@@ -360,7 +418,7 @@ class myParameter(myTensor):
 
 ```
 
-##### myTensor
+##### myTensor class
 
 - pytorch에서 backward와 각종 연산을 처리하기 위해서 Tensor라는 변수를 사용한다. 여기서도 backward 및 각종 연산을 처리하기 위해
 myTensor라는 class를 만들어 처리하기로 함.
@@ -500,15 +558,34 @@ Test Code 입니다.
 </div>
 </details>
 <hr/>
-:heavy_check_mark: ReLu
+:heavy_check_mark: ReLU
 <details>
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
 
+[[pytorch Document - ReLU]](https://pytorch.org/docs/stable/generated/torch.nn.ReLU.html)
+
+
+$$
+  ReLU(x) = (x)^{+} = max(0, x)
+$$
+
+- forward 함수는 max함수를 사용해서 간단하게 구현.
+
 ```python
-Test Code 입니다.
-Test Code 입니다.
-Test Code 입니다.
+    def forward(self, x: myTensor):
+        self._backward_save = x > 0
+        return self.op.maximum(0, x)
+```
+
+- backward할때 ReLU함수는 forward에서 0보다 큰 신호에 대해서만 back gradient를 전달한다. 0보다 작아 나가지 않은 
+back gradient는 뒤로 전달하지 않음(Loss를 계산하는데 전혀 영향을 주지 않았기 때문에)
+
+- forward할때 미리 back gradient mask인 self._backward_save를 계산해서 저장해놓음
+
+```python
+    def _backward(self, *args, **kwargs):
+       return self._backward_save * args[0]
 ```
 
 </div>
