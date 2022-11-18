@@ -9,13 +9,13 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-18T17:30:01
+last_modified_at: 2022-11-18T17:41:49
 ---
 
 ### Linear Layer Backpropagation
 
-linear layer는 input $X$ ($N \times D$)를 입력으로 받고 weight matrix $W$ ($D \times M$)를 가진다.
-이때 layer의 결과물로 output $Y$ ($N \times M$)를 가진다. 
+linear layer는 input $X$ ($N \times D$)를 입력으로 받고 weight matrix $W$ ($D \times M$)이라 하자
+이때 layer의 결과물로 output $Y$ ($N \times M$)가 계산되어 나온다.
 
 실제 예시를 들기 위해 아래처럼 $N=2, \; D=2, \; M=3$이라고 가정한다.
 
