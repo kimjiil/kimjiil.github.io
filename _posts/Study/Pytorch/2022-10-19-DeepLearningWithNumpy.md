@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-17T18:08:54
+last_modified_at: 2022-11-18T17:46:13
 ---
 
 <hr/>
@@ -530,10 +530,14 @@ Test Code 입니다.
 </div>
 </details>
 <hr/>
-:white_check_mark: Linear
+:heavy_check_mark: Linear
 <details>
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
+
+Linear Layer Backpropagation에 관한 증명은 다음 링크에서 설명한다.
+
+[[Linear Layer Back propagation 증명]](https://kimjiil.github.io/pytorch%20study/Backpropagation-for-a-Linear-Layer/){:target="_blank"}
 
 ```python
 Test Code 입니다.
