@@ -9,7 +9,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-18T17:41:49
+last_modified_at: 2022-11-22T09:51:06
 ---
 
 ### Linear Layer Backpropagation
@@ -320,6 +320,94 @@ $$
     \quad\quad
     \frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} W^{T}
 $$
+
+### bias 포함
+
+$$
+    X = \begin{pmatrix} 
+    x_{1,1} & x_{1,2} \\
+    x_{2,1} & x_{2,2}
+    \end{pmatrix}
+    \;\;
+    W = \begin{pmatrix}
+    w_{1,1} & w_{1,2} & w_{1,3} \\
+    w_{2,1} & w_{2,2} & w_{2,3}
+    \end{pmatrix}
+    \;\;
+    B = \begin{pmatrix}
+    b_{1,1} & b_{1,2} & b_{1,3}
+    \end{pmatrix}
+$$
+
+$$
+    \begin{split}
+    Y &= XW + B \\
+        &= \begin{pmatrix}
+            x_{1,1}w_{1,1} + x_{1,2}w_{2,1} + b_{1,1} & x_{1,1}w_{1,2} + x_{1,2}w_{2,2} + b_{1,2} & x_{1,1}w_{1,3} + x_{1,2}w_{2,3} + b_{1,3} \\
+            x_{2,1}w_{1,1} + x_{2,2}w_{2,1} + b_{1,1} & x_{2,1}w_{1,2} + x_{2,2}w_{2,2} + b_{1,2} & x_{2,1}w_{1,3} + x_{2,2}w_{2,3} + b_{1,3}
+        \end{pmatrix}
+    \end{split}
+$$
+
+위의 식$Y=XW+B$에서 보통 B앞에 broadcast matrix $C(N \times 1)$가 생략되었지만 포함되어있다. 이를 식으로 표현하면 다음과 같다.
+
+$$
+    Y = XW + \begin{pmatrix}
+                1 \\ 1 \end{pmatrix} 
+        \begin{pmatrix}
+            b_{1,1} & b_{1,2} & b_{1,3}
+        \end{pmatrix}
+$$
+
+Bias에 대한 편미분은 다음과 같고 각 원소에 대해서 chain rule을 적용하여 계산한다.
+
+$$
+    \frac{\partial L}{\partial B} = \begin{pmatrix}
+        \frac{\partial L}{\partial b_{1,1}} & \frac{\partial L}{\partial b_{1,2}} & \frac{\partial L}{\partial b_{1,3}}
+    \end{pmatrix}
+$$
+
+$$  
+    \begin{split}
+    \frac{\partial L}{\partial b_{1,1}} &=  \frac{\partial L}{\partial Y} \frac{\partial Y}{\partial b_{1,1}} \\
+        &= \begin{pmatrix}
+            \frac{\partial L}{\partial y_{1,1}} & \frac{\partial L}{\partial y_{1,2}} & \frac{\partial L}{\partial y_{1,3}} \\
+            \frac{\partial L}{\partial y_{2,1}} & \frac{\partial L}{\partial y_{2,2}} & \frac{\partial L}{\partial y_{2,3}}
+        \end{pmatrix}
+
+        \begin{pmatrix}
+            1 & 0 & 0 \\
+            1 & 0 & 0
+        \end{pmatrix} \\
+        &= \frac{\partial L}{\partial y_{1,1}} + \frac{\partial L}{\partial y_{2,1}}
+    \end{split}
+$$
+
+모든 원소에 대해서 계산하여 구하면 $\frac{\partial L}{\partial B}$는 다음과 같이 계산된다. 그리고 이를 분리하면 다음과 같다.
+
+$$
+    \begin{split}
+    \frac{\partial L}{\partial B} &= \begin{pmatrix}
+        \frac{\partial L}{\partial y_{1,1}} + \frac{\partial L}{\partial y_{2,1}} &
+        \frac{\partial L}{\partial y_{1,2}} + \frac{\partial L}{\partial y_{2,2}} &
+        \frac{\partial L}{\partial y_{1,3}} + \frac{\partial L}{\partial y_{2,3}}
+    \end{pmatrix} \\
+    &= \begin{pmatrix}
+        1 & 1
+    \end{pmatrix} 
+    \begin{pmatrix}
+            \frac{\partial L}{\partial y_{1,1}} & \frac{\partial L}{\partial y_{1,2}} & \frac{\partial L}{\partial y_{1,3}} \\
+            \frac{\partial L}{\partial y_{2,1}} & \frac{\partial L}{\partial y_{2,2}} & \frac{\partial L}{\partial y_{2,3}}
+        \end{pmatrix}
+    \end{split}
+$$
+
+위 식에서 앞의 1로 이루어진 matrix는 X와 W,B를 확장해보면 broatcast matrix $C^T$가 된다는걸 알 수 있다. 따라서 다시 표현 하면 다음과 같다.
+
+$$
+    \frac{\partial L}{\partial B} = C^{T} \frac{\partial L}{\partial Y}
+$$
+
 
 
 ### Reference

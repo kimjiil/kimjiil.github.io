@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-18T17:46:13
+last_modified_at: 2022-11-22T09:51:06
 ---
 
 <hr/>
@@ -357,6 +357,22 @@ python 연산자에 의해 call되는 magic method를 재정의 해주고 연산
 - pytorch와 마찬가지로 .to()를 호출할 경우 모든 parameter 및 module이 설정한 device에서 돌도록 함
   - 단순히 numpy 와 cupy를 스위칭하는 형식으로 구현함.
 
+- parameters 함수를 호출하면 하위 모듈에 있는 모든 weight들이 포함된 Iterator가 리턴됨.
+  - 이를 위해 childretn 함수를 호츌하여 하위 모듈이 모두 call되도록하고 각각 모듈에서 self._parameters에 param이 있을 경우 이를 yield하도록함
+  - child에서 yield되어 생성된 Iterator를 다시 상위에서 yield시켜 하위 모듈에서 불린 parameter들이 자동으로 merge 되도록 함.
+
+
+```python
+    def parameters(self):
+        # return trainable parameters iterator
+        for child in self.children():
+            params = child.parameters() #여기서 generator 리턴받음
+            for p in params:
+                yield p
+
+        for param in self._parameters:
+            yield self._parameters[param]
+```
   
 ##### mySequential class
 
@@ -535,14 +551,54 @@ Test Code 입니다.
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
 
+init 함수에서 in out의 dim을 결정하고 그에 따른 weight와 bias를 생성한다. 이때 weight의 랜덤한 범위는 xavier 공식에 따른다.
+
+```python
+class Linear(BaseLayer):
+    def __init__(self, in_features: int, out_features: int, bias: bool = True):
+        super(Linear, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+
+        _k = np.sqrt(1/in_features)
+        self.weight = myParameter(self.op.random.uniform(low=-_k, high=_k, size=(in_features, out_features)))
+        if bias:
+            self.bias = myParameter(self.op.random.uniform(low=-_k, high=_k, size=out_features))
+```
+
+forward함수에서는 bias가 True일때와 False일때를 나누어서 계산하도록 하고 backward함수를 위해 input을 저장한다.
+
+```python
+    def forward(self, x: myTensor): # N C_in -> N C_out
+        self._backward_save = x
+        if self.bias:
+            x = self.op.matmul(x, self.weight) + self.bias
+        else:
+            x = self.op.matmul(x, self.weight)
+        return x
+```
+
 Linear Layer Backpropagation에 관한 증명은 다음 링크에서 설명한다.
 
 [[Linear Layer Back propagation 증명]](https://kimjiil.github.io/pytorch%20study/Backpropagation-for-a-Linear-Layer/){:target="_blank"}
 
+$$
+  \frac{\partial Loss}{\partial W} = X^{T} \frac{\partial Loss}{\partial Y} \\
+  
+  \frac{\partial Loss}{\partial X} = \frac{\partial Loss}{\partial Y} W^{T} \\
+  
+  \frac{\partial Loss}{\partial B} = C^{T} \frac{\partial Loss}{\partial Y}
+$$
+
+$C^{T}$는 broadcast matrix로 Sum함수로 대체 가능하다.
+
 ```python
-Test Code 입니다.
-Test Code 입니다.
-Test Code 입니다.
+    def _backward(self, *args, **kwargs):
+        self._update_w = self.op.matmul(self.op.transpose(self._backward_save), args[0])
+        self._update_b = self.op.sum(args[0], axis=0)
+        _back = self.op.matmul(args[0], self.op.transpose(self.weight))
+        return _back
 ```
 
 </div>
