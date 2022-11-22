@@ -10,7 +10,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-22T09:51:06
+last_modified_at: 2022-11-22T17:57:30
 ---
 
 <hr/>
@@ -694,15 +694,48 @@ Test Code 입니다.
 </div>
 </details>
 <hr/>
-:white_check_mark: Sigmoid
+:heavy_check_mark: Sigmoid
 <details>
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
 
+forward값은 다음과 같이 계산된다.
+
+$$
+  Sigmoid(x) = \sigma (x) = \frac{1}{1 + exp(-x)}
+$$
+
+<p align="center">
+<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/sigmoid_pic_00.PNG"
+height="40%" width="40%">
+<figcaption align="center"></figcaption>
+</p>
+
+upstream gradient로 $\frac{\partial L}{\partial y}$가 들어오고 downstream gradient $\frac{\partial L}{\partial x}$를 계산해야 된다. 
+이를 chain rule로 나타내면 다음과 같다.
+
+$$
+  \frac{\partial L}{\partial x} = \frac{\partial L}{\partial y} \frac{\partial y}{\partial x}
+$$
+
+$$
+  \begin{split}
+  y &= \frac{1}{1 + exp(-x)} = \frac{1}{t}   \;\; , \, t = 1+exp(-x)\\
+  \frac{\partial y}{\partial x} &= -\frac{1}{t^{2}} \frac{\partial t}{\partial x} = \frac{1}{t^{2}} exp(-x) = \frac{exp(-x)}{(1 + exp(-x))^{2}} \\
+  &= (1-y)y
+  \end{split}
+
+$$
+
+$(1-y)y$을 downstream gradient로 보내주면 되므로 forward에서 $y$를 저장하고 이를 backward에서 upstream과 합쳐서 내려보내준다.
+
 ```python
-Test Code 입니다.
-Test Code 입니다.
-Test Code 입니다.
+    def forward(self, x: myTensor):
+        self._backward_save = 1 / (1 + self.op.exp(-x))
+        return self._backward_save
+
+    def _backward(self, *args, **kwargs):
+        return args[0] * self._backward_save * (1 - self._backward_save)
 ```
 
 </div>
@@ -716,6 +749,8 @@ Test Code 입니다.
 <details>
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
+
+
 
 ```python
 Test Code 입니다.
