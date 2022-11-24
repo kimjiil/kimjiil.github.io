@@ -11,7 +11,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-23T18:14:36
+last_modified_at: 2022-11-24T18:41:32
 ---
 
 
@@ -100,9 +100,9 @@ $$
 $$
 
 bias correction인 $\hat{v}\_{t}$와 $\hat{m}\_{t}$은 $m\_{t}, v\_{t}$가 특정 방향으로 편향되지 않도록 방향을 올바르게 바로 잡아주기 위한
-공식이다. 특정 gradient에 심하게 편향되어 업데이트가 이루어지지 않고 평균으로(고르게) weight를 주어서 모든 gradient가 공평하게 영향력을 행사했으면 좋겠다는 그런 뜻(?)이다.
+공식이다. 특정 gradient에 심하게 편향되어 업데이트가 이루어지지 않고 평균으로(고르게) weight를 주어서 모든 gradient가 공평하게 영향력을 행사했으면 좋겠다는 뜻(?)이다.
 
-실제로 알고리즘 초반인 $v\_{0}$을 0으로 초기화 하기 때문에 bias correction을 해주지 않으면 0으로 편향되서 제대로 학습되지 않을 것이다.(실제로 해보지는 않음)
+실제로 알고리즘 초반인 $v\_{0}$을 0으로 초기화 하기 때문에 bias correction을 해주지 않으면 0으로 편향되서 제대로 학습되지 않을 것이다.
 
 Adam 논문에서 해당 내용을 살펴보자 (식의 간편함을 위해 $\nabla\_{\theta} J(\theta\_{t})=g\_{t}$으로 표현한다)
 
