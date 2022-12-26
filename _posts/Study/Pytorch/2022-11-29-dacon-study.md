@@ -11,7 +11,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-26T10:29:04
+last_modified_at: 2022-12-26T10:32:41
 ---
 
 <hr/>
@@ -62,7 +62,7 @@ height="80%" width="80%">
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_01.PNG"
+<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_01.png"
 height="60%" width="60%">
 <figcaption align="center"> Train SEM Image의 평균 pixel 값, 대응되는 평균 Depth의 분포 </figcaption>
 </p>
@@ -86,7 +86,7 @@ height="80%" width="80%">
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_02.PNG"
+<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_02.png"
 height="60%" width="60%">
 <figcaption align="center"> Simulation SEM Image와 Depth Image의 평균 pixel값의 분포 </figcaption>
 </p>
@@ -113,7 +113,7 @@ simulation sem image가 실제 sem image와 같은 이미지면 단순히 simula
 
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_03.PNG"
+<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_03.png"
 height="60%" width="60%">
 <figcaption align="center"> Simulation SEM Image와 Train(Real) SEM Image의 분포 차이 </figcaption>
 </p>
