@@ -11,7 +11,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-19T18:05:23
+last_modified_at: 2022-12-26T10:29:04
 ---
 
 <hr/>
@@ -111,11 +111,13 @@ height="60%" width="60%">
 simulation sem image가 실제 sem image와 같은 이미지면 단순히 simulation sem image를 입력으로 받고 depth map을 결과로
 하는 생성모델을 만들어 학습하면 될거라고 생각했다.
 
+
 <p align="center">
 <img src="/assets/images/2022-11-29-dacon-study/dataset_fig_03.PNG"
 height="60%" width="60%">
 <figcaption align="center"> Simulation SEM Image와 Train(Real) SEM Image의 분포 차이 </figcaption>
 </p>
+
 
 simulation sem image와 train sem image의 분포를 단순히 이미지의 픽셀 평균값을 이용해서 표현해보니 위와 같다. 
 분포의 경향은 비슷하지만 값의 차이가 커서 다른 이미지로 간주하고 생성모델을 이용해 
