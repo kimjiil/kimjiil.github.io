@@ -11,7 +11,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-26T18:12:52
+last_modified_at: 2022-12-27T18:18:48
 ---
 
 <hr/>
@@ -103,7 +103,7 @@ height="60%" width="60%">
 ### Method
 
 #### 1. Basic AE Model(Tutorial)
-대회에서 주어진 Basic Code는 AutoEncoder 모델로 
+대회에서 주어진 Basic Code는 AutoEncoder 모델로 공유된 코드로 학습 진행
 
 <script src="https://gist.github.com/kimjiil/38bfd83aeeb345148a23a8530ed1cc1e.js"></script>
 
@@ -162,7 +162,7 @@ height="60%" width="60%">
 <figcaption align="center"> simulation sem/depth generator training </figcaption>
 </p>
 
-simulation sem과 depth의 대응되는 쌍에 대해 다음과 같은 Guided Loss L1`주황색 실선`을 추가하여 밝기 값에 대해서 더 잘 학습되도록 했다.
+simulation sem과 depth의 대응되는 쌍에 대해 다음과 같은 Guided Loss L1인 주황색 실선을 추가하여 밝기 값에 대해서 더 잘 학습되도록 했다.
 
 
 <p align="center">
