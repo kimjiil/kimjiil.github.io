@@ -11,13 +11,15 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-27T18:18:48
+last_modified_at: 2022-12-28T15:53:02
 ---
 
 <hr/>
 
 실험 결과 링크
-[[wandb link]](https://wandb.ai/kimjiil2013/Samsung%20sem%20CycleGan%20221216/table?workspace=user-kimjiil2013)
+[[wandb link]](https://wandb.ai/kimjiil2013/Samsung%20sem%20CycleGan%20221216/table?workspace=user-kimjiil2013){:target="_blank"}
+
+[[github link]](https://github.com/kimjiil/AIML_Competition/tree/main/2022-Samsung-AI-Challenge-3D-Metrology){:target="_blank"}
 
 <hr/>
 
@@ -176,22 +178,20 @@ height="60%" width="60%">
 
 전체적인 과정은 classifier에서 case를 분류하면 그에 대응되는 generator를 가져와 이를 통해 depth를 추론한다
 
+### Jupyter Notebook
+
+<script src="https://gist.github.com/kimjiil/3a74dd262a411dae5d95463e10d1e5c9.js"></script>
 
 
-#### why
+submission dataset을 제출한 결과 아래와 같이 대략적인 성능이 나왔다.
 
-<hr/>
+<p align="center">
+<img src="/assets/images/2022-11-29-dacon-study/cyclegan_result.PNG"
+height="100%" width="100%">
+</p>
 
-### Result
-
-<hr/>
-
-### 참고 메모용
-
-batch size와 learning rate 상관관계에 대한 정보
-
-[[블로그]](https://inhovation97.tistory.com/32){:target="_blank"}
-[[github ipynb]](https://github.com/inhovation97/PyTorch_Study/tree/main/week_8_%EC%8B%A4%EC%8A%B5){:target="_blank"}
-
-
-
+<p align="center">
+<img src="/assets/images/2022-11-29-dacon-study/leader_board_chart.PNG"
+height="100%" width="100%">
+<figcaption align="center"> 성능 리더보드 </figcaption>
+</p>
