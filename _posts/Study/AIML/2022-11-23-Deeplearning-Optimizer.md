@@ -5,7 +5,7 @@ tags:
   - Deep Learning
   - Optimizer
 categories:
-  - Pytorch Study
+  - AI/ML Study
 date: 2022-11-23
 toc: true
 toc_sticky: true

@@ -29,8 +29,8 @@ main:
     sublinks:
       - title: "Math"
         url: /study/math/
-      - title: "Pytorch"
-        url: /study/pytorch/
+      - title: "AI/ML"
+        url: /study/AI_ML/
       - title: "etc"
         url: /study/etc/
 

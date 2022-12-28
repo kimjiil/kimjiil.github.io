@@ -6,7 +6,7 @@ tags:
   - Cupy
   - Deep Learning
 categories:
-  - Pytorch Study
+  - AI/ML Study
 date: 2022-10-19
 toc: true
 toc_sticky: true

@@ -3,7 +3,7 @@ title: "Linear Layer 역전파(backpropagation)"
 tags:
   - Pytorch
 categories:
-  - Pytorch Study
+  - AI/ML Study
 date: 2022-11-18
 toc: true
 toc_sticky: true

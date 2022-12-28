@@ -1,11 +1,11 @@
 ---
-title: "Dacon Study"
+title: "Dacon Study (1) - 2022 Samsung AI Challenge 3D Metrology "
 tags:
   - Pytorch
   - Deep Learning
   - Dacon
 categories:
-  - Pytorch Study
+  - AI/ML Study
 date: 2022-11-29
 toc: true
 toc_sticky: true
@@ -16,9 +16,10 @@ last_modified_at: 2022-12-28T15:53:02
 
 <hr/>
 
-실험 결과 링크
+실험 결과 링크    
 [[wandb link]](https://wandb.ai/kimjiil2013/Samsung%20sem%20CycleGan%20221216/table?workspace=user-kimjiil2013){:target="_blank"}
 
+코드 및 자료 링크    
 [[github link]](https://github.com/kimjiil/AIML_Competition/tree/main/2022-Samsung-AI-Challenge-3D-Metrology){:target="_blank"}
 
 <hr/>
@@ -43,7 +44,7 @@ last_modified_at: 2022-12-28T15:53:02
 - Top-down으로 취득한 SEM 영상으로부터 깊이 (Depth, 깊을수록 작은 값)를 예측
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/description_image.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/description_image.PNG"
 height="80%" width="80%">
 </p>
 
@@ -58,13 +59,13 @@ height="80%" width="80%">
   - average_depth.csv : 전체 SEM 영상과 대응되는 평균 Depth
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/train_sem_image.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/train_sem_image.PNG"
 height="80%" width="80%">
 <figcaption align="center"> Train SEM Image </figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_01.png"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/dataset_fig_01.png"
 height="60%" width="60%">
 <figcaption align="center"> Train SEM Image의 평균 pixel 값, 대응되는 평균 Depth의 분포 </figcaption>
 </p>
@@ -76,19 +77,19 @@ height="60%" width="60%">
   - Depth 이미지 1개당 2개의 Simulator Hole 단위 SEM 영상이 Pair하게 매칭됩니다. (Name_itr0, Name_itr1)
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/sim_sem_image.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/sim_sem_image.PNG"
 height="80%" width="80%">
 <figcaption align="center"> Simulation SEM Image </figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/sim_depth_image.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/sim_depth_image.PNG"
 height="80%" width="80%">
 <figcaption align="center"> Simulation Depth Image </figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_02.png"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/dataset_fig_02.png"
 height="60%" width="60%">
 <figcaption align="center"> Simulation SEM Image와 Depth Image의 평균 pixel값의 분포 </figcaption>
 </p>
@@ -117,7 +118,7 @@ simulation sem image가 실제 sem image와 같은 이미지면 단순히 simula
 
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/dataset_fig_03.png"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/dataset_fig_03.png"
 height="60%" width="60%">
 <figcaption align="center"> Simulation SEM Image와 Train(Real) SEM Image의 분포 차이 </figcaption>
 </p>
@@ -132,7 +133,7 @@ simulation sem image와 대응되는 depth map 이미지는 있지만 공지에�
 대응 되는 데이터쌍이 없다.
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/cyclegan_fig_01.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/cyclegan_fig_01.PNG"
 height="60%" width="60%">
 <figcaption align="center"> Cycle Gan 구조 </figcaption>
 </p>
@@ -142,7 +143,7 @@ simulation과 train에서 대응되는 데이터쌍이 없기 때문에 unpair d
 먼저 데이터 쌍이 없는 simulation/train에 대해서는 다음과 같이 generator를 학습시켰다.
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/training_gen_simtotrain.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/training_gen_simtotrain.PNG"
 height="60%" width="60%">
 <figcaption align="center"> simulation/train generator training </figcaption>
 </p>
@@ -150,7 +151,7 @@ height="60%" width="60%">
 simulation sem/depth 데이터셋도 마찬가지로 기본적인 cycle gan loss로 학습한 결과 다음과 같이 수렴했다.
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/training_result_01.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/training_result_01.PNG"
 height="60%" width="60%">
 <figcaption align="center"> simulation sem/depth generator training result </figcaption>
 </p>
@@ -159,7 +160,7 @@ simulation sem 이미지의 분포와 실제 각 case(110, 120, 130, 140)에 대
 분포를 가진다. 하지만 실제 학습 결과 모든 case가 전체 분포를 합친 결과로 수렴했다.
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/training_gen_semtodepth.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/training_gen_semtodepth.PNG"
 height="60%" width="60%">
 <figcaption align="center"> simulation sem/depth generator training </figcaption>
 </p>
@@ -168,7 +169,7 @@ simulation sem과 depth의 대응되는 쌍에 대해 다음과 같은 Guided Lo
 
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/model structure.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/model structure.PNG"
 height="60%" width="60%">
 <figcaption align="center"> case별 학습 및 모델 개요 </figcaption>
 </p>
@@ -186,12 +187,12 @@ height="60%" width="60%">
 submission dataset을 제출한 결과 아래와 같이 대략적인 성능이 나왔다.
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/cyclegan_result.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/cyclegan_result.PNG"
 height="100%" width="100%">
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-11-29-dacon-study/leader_board_chart.PNG"
+<img src="/assets/images/2022-11-29-dacon-study-01-2022_Samsung_AI_Challenge_3D_Metrology/leader_board_chart.PNG"
 height="100%" width="100%">
 <figcaption align="center"> 성능 리더보드 </figcaption>
 </p>
