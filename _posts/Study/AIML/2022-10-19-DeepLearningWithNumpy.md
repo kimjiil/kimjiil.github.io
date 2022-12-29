@@ -12,18 +12,18 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-11-25T17:38:17
+last_modified_at: 2022-12-29T10:02:57
 ---
 
 <hr/>
 
-#### Github 링크
+### Github 링크
 
 [https://github.com/kimjiil/DeepLearningWithNumpy](https://github.com/kimjiil/DeepLearningWithNumpy){:target="_blank"}
 
 <hr/>
 
-#### Objectives
+### Objectives
 
 ##### Pytorch code
 
@@ -88,7 +88,7 @@ for i in range(epoch):
 </details>
 
 
-##### Numba, cupy, Numpy Matrix Multiplication Calc Time
+#### Numba, cupy, Numpy Matrix Multiplication Calc Time
 
 - numpy에서 그치지않고 GPU에 data를 올려 연산하는 과정까지 구현
   - GPU knernel을 사용하는 언어로 Numba, cupy, cuda-python 3가지중 하나를 선택
@@ -292,6 +292,9 @@ with cupy.cuda.Device(0) as dev:
 </div>
 </details>
 
+
+### 구현 상세
+
 #### operator process
 
 - pytorch처럼 Tensor로 감싸고 연산자로는 내부의 data만 계산하는 과정을 따라하고 싶어서 myTensor라는 class를 만들고
@@ -351,7 +354,7 @@ python 연산자에 의해 call되는 magic method를 재정의 해주고 연산
 
 - 모든 Layer나 sequence , tensor는 모두 최상위 myModule class를 상속받기 때문에 모든 과정에서 기록됨.
 
-##### myModule class
+#### myModule class
 
 - pytorch는 모델을 Module로 생성하고 sub module과 현재 module이 갖고있는 parameter를 저장한다. 
 - class myModule을 만들어 _modules에 sub module을 저장하고 _paramters에 parameter들을 저장한다.
@@ -376,7 +379,7 @@ python 연산자에 의해 call되는 magic method를 재정의 해주고 연산
             yield self._parameters[param]
 ```
   
-##### mySequential class
+#### mySequential class
 
 - mySequential class는 다음과 같이 Layer들을 argument로 받고 class를 function call할 경우 자동으로
 Layer들을 순서대로 forward해준다.
@@ -425,7 +428,7 @@ class mySequential(myModule):
 - 여기서 `self.backward_fn`은 다음 순서의 모듈의 backward 함수의 주소를 갖고 있고 function call할 경우 
 그 다음 순서의 모듈 backward 함수가 call된다.
 
-##### myParameter class
+#### myParameter class
 
 - 이 클래스는 Layer의 weight나 bias를 저장할때 사용한다. 현재 별다른 기능은 구현되있지않고 단순히 myTensor를 상속받아 사용한다.
 
@@ -436,7 +439,7 @@ class myParameter(myTensor):
 
 ```
 
-##### myTensor class
+#### myTensor class
 
 - pytorch에서 backward와 각종 연산을 처리하기 위해서 Tensor라는 변수를 사용한다. 여기서도 backward 및 각종 연산을 처리하기 위해
 myTensor라는 class를 만들어 처리하기로 함.
@@ -532,7 +535,8 @@ class myTensor(myModule):
 ```
 
 
-##### Layer 
+#### Layer 
+
 <hr/>
 :white_check_mark: Conv2d
 <details>
@@ -887,7 +891,7 @@ Test Code 입니다.
 <hr/>
 
 
-##### Opimizer
+#### Opimizer
 <hr/>
 :heavy_check_mark: Adam
 <details>
@@ -966,7 +970,7 @@ Test Code 입니다.
 </details>
 <hr/>
 
-##### Loss function
+#### Loss function
 <hr/>
 :white_check_mark: Mean Square Error
 <details>
