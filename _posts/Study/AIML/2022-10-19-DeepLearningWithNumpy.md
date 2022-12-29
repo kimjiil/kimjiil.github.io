@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-29T10:02:57
+last_modified_at: 2022-12-29T18:13:39
 ---
 
 <hr/>
@@ -294,6 +294,30 @@ with cupy.cuda.Device(0) as dev:
 
 
 ### 구현 상세
+
+#### myLib
+
+- 내부 모듈이 아닌 외부 모듈에서 Tensor 관련 연산을 할때 내부 모듈의 연산 함수를 부르기 위한 Wrapper 함수
+
+- Wrapper를 통해 현재 call한 함수의 이름으로 내부 모듈에서 getattr으로 method를 가져와 연산함
+
+- 첫번째 인자가 myTensor일 경우 해당 Tensor의 내부 모듈을 사용함
+```python
+from .Module import *
+import sys
+module_op = op()
+
+def _Warpper(name, *args, **kwargs):
+    if isinstance(args[0], myTensor):
+        return getattr(args[0].op, name)(*args, **kwargs)
+    else:
+        return getattr(module_op, name)(*args, **kwargs)
+
+def argmax(*args, **kwargs):
+    cur_func_name = sys._getframe().f_code.co_name
+    return _Warpper(cur_func_name, *args, **kwargs)
+...
+```
 
 #### operator process
 
@@ -1019,7 +1043,7 @@ Test Code 입니다.
 예를 들어 `Temp.att1 = 1`이 실행되면 python의 `__builtin__`에 정의된 `__setattr__`를 call한다.
 기본적으로 모든 Object들은 따로 재정의 하지않으면 python 내부에 정의된 함수들이 실행된다.
 
-#### Reference 
+### Reference 
 
 [https://github.com/SkalskiP/ILearnDeepLearning.py](https://github.com/SkalskiP/ILearnDeepLearning.py){:target="_blank"}
 
