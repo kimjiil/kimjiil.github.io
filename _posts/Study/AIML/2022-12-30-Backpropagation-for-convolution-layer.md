@@ -9,7 +9,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-30T16:24:43
+last_modified_at: 2022-12-30T17:00:34
 ---
 
 ### Convoluational Layer Backpropagation
@@ -69,7 +69,7 @@ $$
 backpropagation을 진행하기 위해서 다음 Layer로 전달해줘야할 gradient $\frac{\partial L}{\partial X}$와
 weight, bias를 update하기 위한 $\frac{\partial L}{\partial W}$, $\frac{\partial L}{\partial b}$을 계산해야한다.
 
-#### X에 대한 gradient $\frac{\partial L}{\partial X}$ 계산
+#### Input X에 대한 gradient $\frac{\partial L}{\partial X}$ 계산
 
 먼저  $\frac{\partial L}{\partial X}$의 $x_{ij}$에 대한 gradient matrix는 다음과 같이 표현된다.
 
@@ -123,7 +123,7 @@ height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
 
-#### W에 대한 gradient $\frac{\partial L}{\partial W}$ 계산
+#### Weight에 대한 gradient $\frac{\partial L}{\partial W}$ 계산
 
 $\frac{\partial L}{\partial W}$를 matrix로 표현하면 다음과 같다.
 
@@ -154,7 +154,8 @@ $$
 $$
 
 계산된 gradient는 $w\_{11}$와 forward convolution 과정에서 한번이라도 연관된 값과 앞선 Layer의 gradient값을 곱한 값의 합과 같다.
-X에 대한 gradient를 계산할때와 마찬가지로 forward와 동일한 순서와 stride를 가지는 convolution으로 weight gradient값이 계산된다.
+
+X에 대한 gradient를 계산할 때와 마찬가지로 forward의 동일한 순서와 stride를 가지는 convolution으로 weight gradient값이 계산된다.
 
 <p align="center">
 <img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_3.PNG"
@@ -168,6 +169,30 @@ height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
 
+#### Bias b에 대한 gradient $\frac{\partial L}{\partial b}$ 계산
+
+위에서 계산했던 W, X에 비해 bias의 gradient는 간단하게 다음과 같이 계산된다.
+
+$$
+    \begin{split}
+    \frac{\partial L}{\partial b} &= \frac{\partial L}{\partial O} \frac{\partial O}{\partial b} \\
+                                &= \sum^{(2,2)}_{i,j=(1,1)}{ \frac{\partial L}{\partial o_{ij}} \frac{\partial o_{ij}}{\partial b} } \\
+            &= \frac{\partial L}{\partial o_{11}} \frac{\partial o_{11}}{\partial b}
+                + \frac{\partial L}{\partial o_{12}} \frac{\partial o_{12}}{\partial b}
+                + \frac{\partial L}{\partial o_{21}} \frac{\partial o_{21}}{\partial b}
+                + \frac{\partial L}{\partial o_{22}} \frac{\partial o_{22}}{\partial b} \\
+
+            &= \frac{\partial L}{\partial o_{11}} \cdot 1
+                + \frac{\partial L}{\partial o_{12}} \cdot 1
+                + \frac{\partial L}{\partial o_{21}} \cdot 1
+                + \frac{\partial L}{\partial o_{22}} \cdot 1 \\
+            
+            &= \sum^{(2,2)}_{i,j=(1,1)}{ \frac{\partial L}{\partial o_{ij}} }
+
+    \end{split}
+$$
+
+모든 bias에 대한 $\frac{\partial o_{ij}}{\partial b}$이 1로 계산되므로 결국 들어온 gradient를 합한 값이 된다.
 
 ### Reference
 

@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-30T16:24:43
+last_modified_at: 2022-12-30T17:00:33
 ---
 
 <hr/>
@@ -567,7 +567,33 @@ class myTensor(myModule):
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
 
+Conv2d의 구현에 관한 증명은 [여기서](https://kimjiil.github.io/ai/ml%20study/Backpropagation-for-convolution-layer/){:target="_blank"}설명한다.
 
+$(N,C,H\_{in},W\_{in})$ 이미지에서 $(kH,kW)$의 크기를 가지는 kernel window을 움직이면서 convolution 연산을 진행해서 output $(N,C,H\_{out},W\_{out})$를 생성함.
+
+$$
+   out(N_i, C_{out_j}) = bias(C_{out_j}) + \sum^{C_{in} - 1}_{k=0}{weight(C_{out_j}, k) * input(N_i, k) }
+$$
+
+
+- Parameters
+  - kernel_size (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - max 값을 추출한 window의 크기
+  - stride (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - window를 이동시킬 거리
+  - padding (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - zero padding의 크기
+  - dilation (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - window를 이동시킬 거리를 조절하는 파라미터(감소)
+  - bias (<span style="color: #FF7F00">bool</span>, optional) - `True`이면 bias를 추가함. Default: `True`
+
+- Input : $(N,C,H\_{in},W\_{in})$ 
+- Output : $(N,C,H\_{out},W\_{out})$
+
+$$
+  H_{out} = \bigg{\lfloor} \frac{H_{in} + 2 * padding[0] - dilation[0] \times (kernel_size[0] - 1) - 1}{stride[0]} + 1\bigg{\rfloor} \\ 
+  W_{out} = \bigg{\lfloor} \frac{W_{in} + 2 * padding[1] - dilation[1] \times (kernel_size[1] - 1) - 1}{stride[1]} + 1\bigg{\rfloor}
+$$
+
+init하는 부분에서 parameter로 int단일로 들어오면 `self._set_tuple`함수로 tuple로 변경해준다. 
+
+구현된 코드는 다음과 같다.
 
 ```python
 class Conv2d(BaseLayer):
