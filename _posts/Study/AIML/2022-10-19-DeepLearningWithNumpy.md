@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-29T18:13:39
+last_modified_at: 2022-12-30T16:24:43
 ---
 
 <hr/>
@@ -562,19 +562,120 @@ class myTensor(myModule):
 #### Layer 
 
 <hr/>
-:white_check_mark: Conv2d
+:heavy_check_mark: Conv2d
 <details>
 <summary> <span style="color: #4682B4"> 구현 상세 펼치기/접기 </span> </summary>
 <div markdown="1">
 
+
+
 ```python
-Test Code 입니다.
-Test Code 입니다.
-Test Code 입니다.
+class Conv2d(BaseLayer):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size,
+                 stride=1,
+                 padding=0,
+                 dilation=1,
+                 bias=True):
+        super(Conv2d, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = self._set_tuple(kernel_size)
+        self.stride = self._set_tuple(stride)
+        self.padding = self._set_tuple(padding)
+        self.dilation = self._set_tuple(dilation)
+
+        _k = np.sqrt(1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1]))
+
+        if bias:
+            #create bias
+            self.bias = myParameter(self.op.random.uniform(low=-_k, high=_k, size=self.out_channels))
+        else:
+            self.bias = None
+
+        self.weight = myParameter(self.op.random.uniform(low=-_k, high=_k,
+                                                         size=(self.in_channels,
+                                                               self.kernel_size[0],
+                                                               self.kernel_size[1],
+                                                               self.out_channels)))
+
+    def forward(self, x: myTensor) -> myTensor:
+        self._backward_save = x
+        N, C, self.H_in, self.W_in = x.shape
+
+        self.H_out = int((self.H_in + 2 * self.padding[0] - self.dilation[0] * (self.kernel_size[0] - 1) - 1) / self.stride[0] + 1)
+        self.W_out = int((self.W_in + 2 * self.padding[1] - self.dilation[1] * (self.kernel_size[1] - 1) - 1) / self.stride[1] + 1)
+
+        self.H_padding = self.H_in + 2 * self.padding[0]
+        self.W_padding = self.W_in + 2 * self.padding[1]
+
+        padding_x = self.op.zeros((N, C, self.H_in + 2 * self.padding[0], self.W_in + 2 * self.padding[1]))
+        padding_x[:, :, self.padding[0]:self.H_padding - self.padding[0], self.padding[1]:self.W_padding - self.padding[1]] = x
+
+        output = self.op.zeros((N, self.out_channels, self.H_out, self.W_out))
+
+        for h in range(self.H_out):
+            h_start = h * self.stride[0]
+            h_end = h * self.stride[0] + self.kernel_size[0]
+            for w in range(self.W_out):
+                w_start = w * self.stride[1]
+                w_end = w * self.stride[1] + self.kernel_size[1]
+                window = padding_x[:, :, h_start:h_end, w_start:w_end] 
+                window = self.op.reshape(window, (N, self.in_channels, self.kernel_size[0], self.kernel_size[1], 1))
+               
+                _out = window * self.op.reshape(self.weight, (1, self.in_channels, self.kernel_size[0], self.kernel_size[1], self.out_channels))
+                if self.bias:
+                    _out = self.op.sum(_out, axis=(1, 2, 3)) + self.bias
+                else:
+                    _out = self.op.sum(_out, axis=(1, 2, 3))
+
+                output[:, :, h, w] = _out
+
+        return output
+
+    def _backward(self, *args, **kwargs):
+        _back_in = args[0]
+
+        N, C, self.H_in, self.W_in = self._backward_save.shape
+
+        self.weight.grad = self.op.zeros_like(self.weight)
+        if self.bias:
+            self.bias.grad = self.op.zeros_like(self.bias)
+
+        padding_x = self.op.zeros((N, C, self.H_in + 2 * self.padding[0], self.W_in + 2 * self.padding[1]))
+        _back_gradient = self.op.zeros_like(padding_x)
+
+        padding_x[:, :, self.padding[0]:self.H_padding - self.padding[0], self.padding[1]:self.W_padding - self.padding[1]] = self._backward_save
+
+        for h_i in range(self.H_out):
+            h_start = h_i * self.stride[0]
+            h_end = h_start + self.kernel_size[0]
+            for w_i in range(self.W_out):
+                w_start = w_i * self.stride[1]
+                w_end = w_start + self.kernel_size[1]
+
+                # calculate weight gradient
+                window_x = padding_x[:, :, h_start:h_end, w_start:w_end].reshape((N, self.in_channels, self.kernel_size[0], self.kernel_size[1], 1))
+                _grad = self.op.transpose(_back_in[:, :, h_i, w_i].reshape((N, self.out_channels, 1, 1, 1)), axes=(0, 4, 2, 3, 1))
+                self.weight.grad += self.op.sum(window_x * _grad, axis=0)
+
+                if self.bias:
+                    self.bias.grad += self.op.sum(_back_in[:, :, h_i, w_i], axis=0)
+
+                window_backgradient = _grad * self.weight.reshape((1, *self.weight.shape))
+                _back_gradient[:, :, h_start:h_end, w_start:w_end] += self.op.sum(window_backgradient, axis=-1)
+
+        return _back_gradient[:, :, self.padding[0]:self.H_padding - self.padding[0], self.padding[1]:self.W_padding - self.padding[1]]
 ```
+
+
 
 </div>
 </details>
+
+
 <hr/>
 :heavy_check_mark: Linear
 <details>
@@ -611,7 +712,7 @@ forward함수에서는 bias가 True일때와 False일때를 나누어서 계산�
 
 Linear Layer Backpropagation에 관한 증명은 다음 링크에서 설명한다.
 
-[[Linear Layer Back propagation 증명]](https://kimjiil.github.io/pytorch%20study/Backpropagation-for-a-Linear-Layer/){:target="_blank"}
+[[Linear Layer Back propagation 증명]](https://kimjiil.github.io/ai/ml%20study/Backpropagation-for-a-Linear-Layer/){:target="_blank"}
 
 $$
   \frac{\partial Loss}{\partial W} = X^{T} \frac{\partial Loss}{\partial Y} \\
