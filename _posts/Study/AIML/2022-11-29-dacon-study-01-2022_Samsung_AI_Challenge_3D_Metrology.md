@@ -11,13 +11,13 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2022-12-28T15:53:02
+last_modified_at: 2023-01-05T13:14:34
 ---
 
 <hr/>
 
 실험 결과 링크    
-[[wandb link]](https://wandb.ai/kimjiil2013/Samsung%20sem%20CycleGan%20221216/table?workspace=user-kimjiil2013){:target="_blank"}
+[[wandb link]](https://wandb.ai/kimjiil2013/221227_Samsung_sem?workspace=user-kimjiil2013){:target="_blank"}
 
 코드 및 자료 링크    
 [[github link]](https://github.com/kimjiil/AIML_Competition/tree/main/2022-Samsung-AI-Challenge-3D-Metrology){:target="_blank"}
