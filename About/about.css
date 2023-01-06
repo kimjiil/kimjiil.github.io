@@ -1,0 +1,65 @@
+
+.resume {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 300;
+  word-wrap: break-word;
+  word-break: keep-all;
+  line-height: 1.8
+}
+
+.blue {
+  color: #ffd33d;
+}
+
+.gray {
+  color: #ffd33d;
+}
+
+.profile-img {
+  max-height: 320px;
+}
+
+.footer-cover {
+  background-color: #252a34;
+  padding-left: 0;
+  padding-right: 0;
+  margin-top: 50px;
+  height: 80px;
+  color: #eaeaea;
+}
+
+.footer {
+  padding-top: 10px;
+}
+
+.main_body {
+  background-color: #252a34;
+}
+
+.fa-question-circle {
+  color: #eaeaea;
+}
+
+.col-12 {
+  color: #eaeaea;
+}
+
+.col-md-9 {
+  color: #eaeaea;
+}
+
+a:link {
+  color: #99CCFF;
+}
+
+a:visited {
+  color: red;
+}
+
+a:hover {
+  color: red;
+}
+
+a:active {
+  color: red;
+}
