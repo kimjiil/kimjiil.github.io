@@ -9,7 +9,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2023-01-11T17:21:17
+last_modified_at: 2023-01-11T18:01:33
 ---
 
 
@@ -41,6 +41,16 @@ $$
 
 likelihood인 $p(x|z)$가 매핑이 잘되면 likelihood와 prior의 적분합인 데이터 $p(x)$를 잘표현하게되고
 marginal likelihood인 $p(x)$의 값이 최대값을 가지면 됨
+
+---
+???
+예를들어 키($x$)를 알면 몸무게($y$)를 예측하는 task에서 데이터는 $\mathcal{X} = \lbrace (x\_{1},y\_{1}),\, (x\_{2},y\_{2}) ,\, \ldots,\, (x\_{n},y\_{n}) \rbrace$ 일때,
+
+우리가 알고 싶어하는 것은 키를 넣으면 몸무게 값이 나오는 posterior $p(y|x)$ 이다. 하지만 실제로 이 값을 알기 어려우므로
+
+baye's rule을 사용해 likelihood 인 $p(x|y)$를 사용하여 y 몸무게 일때 키 x일 확률을 비교하여 가장 높은 y를 가지는 x를 찾는다.
+
+---
 
 log는 단조함수이므로 $\log p(x)$가 최대면 $p(x)$도 최대
 
@@ -227,3 +237,5 @@ $$
         &= \frac{1}{N} \sum \bigg( \frac{(x-\hat{x})^2}{ 2 } \bigg) + \sigma_1^2 + \mu_1^2 - \log \sigma_1 - \frac{1}{2} \\
 \end{split}
 $$
+
+사실상 ELBO는 recontruction error와 $q(z\|x)$를 gaussian 분포인 $p(z)=\mathcal{N}(0, 1^2)$에 의해 regularization되는 항이 합해짐
