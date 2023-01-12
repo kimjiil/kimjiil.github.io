@@ -9,10 +9,114 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2023-01-11T18:01:33
+last_modified_at: 2023-01-12T18:17:35
+---
+
+# Variational AutoEncoder
+
+---
+
+## 문제 정의
+
+데이터는 $\mathcal{X} = \lbrace x\_{1},\, x\_{2} ,\, \ldots,\, x\_{n} \rbrace$ 일때
+
+VAE는 Data $\mathcal{X}$를 잘 표현하는 z의 분포를 찾아서 이 분포로 부터 샘플링한 z값으로 새로운(unseen) 데이터 $x$를 생성하는 것이 목표
+
+x에 대한 z의 분포인 posterior $p(z\|x)$를 찾아야된다.
+
+---
+
+## Intractable value
+
+### Evidence
+
+Maximum Likelihood Estimation(MLE)이나 Maximum A Posterior(MAP)와는 다르게 posterior인 $p(z\|x)$의 최대값만 찾으면 되는게 아니라
+전체 분포를 알아야된다.
+
+$$
+    p(z\|x) = \frac{p(x|z) p(z)}{ \int p(x|z) p(z) dz}
+$$
+
+posterior의 베이지안 방정식을 살펴보면 실제 posterior의 분포를 알기위해서 likelihood와 prior 그리고 분모인 evidence 부분을 모두 계산해야 된다.
+
+likelihood는 데이터 관찰을 통해 계산이 가능하고 $p(z)$는 VAE에서 $\mathcal{N}(0, 1^2)$으로 정의되어 쉽게 계산가능하다.
+
+하지만 분모인 evidence는 z에 대한 적분으로 전체 z에 대해 모두 계산이 되기 때문에 거의 계산이 불가능하다.
+
+### Output
+
+위에서 운이 좋게 evidence 부분을 계산해 값을 구했다고 해도 마찬가지로 output에서도 똑같은 문제가 발생한다.
+
+단순히 output을 구하면 MLE, MAP와 다를게 없기 때문에 마찬가지로 z에 따른 output에 대한 기대값을 구해야된다.
+
+
+$$
+    \mathbb{E}_{z \sim p(z|x)} \left[ y(z) \right] = \int y(z) p(z|x) dz
+$$
+
+여기서, y(z)는 output에 관한 함수임 
+
+적분식에 $p(z\|x)$이 포함되어 마찬가지로 전체 z에 대해 적분해야 되는데 계산이 거의 불가능하다.
+
+---
+
+## Variable Inference
+
+위와 같이 posterior $p(z\|x)$를 계산하는데 어려움이 많으니깐 대신 우리가 알고 있고 
+parameter $\theta$도 적은 함수인 $q(z\|\theta)$에 근사시켜 대신 구하는 방법인 변분 추론(Variable Inference)을 사용한다.
+
+두 분포가 얼마나 닮았는지는 분포의 유사도를 측정하는 KL-Divergence를 사용한다.
+
+$$
+    D_{KL} \left( q(z|\theta) || p(z|x) \right) = \int q(z|\theta) \log \frac{q(z|\theta}{p(z|x} \, dz
+$$
+
+여기서 $\theta$는 encoder 함수인 $f_{\mu}, \, f_{\sigma}$를 통해 계산된 값을 나타냄 $\theta_i = (f_{\mu}(x_i), \, f_{\sigma}(x_i)))$
+
+## Objective
+
+x에 대한 적절한 z의 분포를 찾았는지는 전체 z에 대한 likelihood를 계산해보면 된다. 이 값이 크면 클수록 x의 적절한 z분포일 확률이 높다는 뜻이다
+
+$$
+    \sum^{all}_{z \in \mathbb{Z}} likelihood \times prior = \int p(x|z) p(z) \, dz 
+$$
+
+우변은 marginal likelihood인 $p(x)$와 같다.
+
+결국 marginal likelihood인 $p(x)$을 최대화하면 된다. 하지만 위에서 언급한 것처럼 intractable value인 $p(x)$는 계산이 거의 불가능하다.
+
+그래서 대신 marginal likelihood을 계산 가능한 값으로 이루어진 Lower Bound를 찾아 Lower Bound를 최대화하는 전략인 
+Evidence Lower Bound(ELBO)를 사용해서 간접적으로 최대화한다.
+
+### Evidence Lower Bound(ELBO)
+
+ELBO를 유도하기 위해 KL-Divergence의 항상 0보다 크거나 같은 특성을 사용한다.
+
+$$
+    D_{KL} \left( q(z|\theta) || p(z|x) \right) \ge 0
+$$
+
+위의 식을 전개해보면 다음과 같다.
+
+$$
+    \begin{split}
+    D_{KL} (q(z|\theta) || p(z|x)) &= \int q(z|\theta) \log \frac {q(z|\theta) p(x)}{ p(x|z) p(z) } dz \\
+            &= \int q(z|\theta) \log p(x) dz - \int q(z|\theta) \log p(x|z) dz + \int q(z|\theta) log \frac{q(z|\theta)}{p(z)} dz \\
+            &=  \log p(x) - \mathbb{E}_{z \sim q(z|\theta)} \big[ log p(x|z) \big] + D_{KL} \big(q(z|\theta) || p(z) \big)
+    \end{split}
+$$
+
+$$
+    \log p(x) - \mathbb{E}_{z \sim q(z|\theta)} \big[ log p(x|z) \big] + D_{KL} \big(q(z|x) || p(z) \big) \ge 0 \\
+    \log p(x) \ge \mathbb{E}_{z \sim q(z|\theta)} \big[ log p(x|z) \big] - D_{KL} \big(q(z|\theta) || p(z) \big) \\
+    
+    ELBO(Evidence \; Lower \; Bound) = \mathbb{E}_{z \sim q(z|\theta)} \big[ log p(x|z) \big] - D_{KL} \big(q(z|\theta) || p(z) \big)
+$$
+
 ---
 
 
+# 초안
 
 $p(x\|z)$ 가우시안 분포인 z에서 원래 데이터인 x로 가는 매핑을 통해 새로운 데이터를 생성하는 분포를 알아야함
 
@@ -42,15 +146,6 @@ $$
 likelihood인 $p(x|z)$가 매핑이 잘되면 likelihood와 prior의 적분합인 데이터 $p(x)$를 잘표현하게되고
 marginal likelihood인 $p(x)$의 값이 최대값을 가지면 됨
 
----
-???
-예를들어 키($x$)를 알면 몸무게($y$)를 예측하는 task에서 데이터는 $\mathcal{X} = \lbrace (x\_{1},y\_{1}),\, (x\_{2},y\_{2}) ,\, \ldots,\, (x\_{n},y\_{n}) \rbrace$ 일때,
-
-우리가 알고 싶어하는 것은 키를 넣으면 몸무게 값이 나오는 posterior $p(y|x)$ 이다. 하지만 실제로 이 값을 알기 어려우므로
-
-baye's rule을 사용해 likelihood 인 $p(x|y)$를 사용하여 y 몸무게 일때 키 x일 확률을 비교하여 가장 높은 y를 가지는 x를 찾는다.
-
----
 
 log는 단조함수이므로 $\log p(x)$가 최대면 $p(x)$도 최대
 
@@ -239,3 +334,7 @@ $$
 $$
 
 사실상 ELBO는 recontruction error와 $q(z\|x)$를 gaussian 분포인 $p(z)=\mathcal{N}(0, 1^2)$에 의해 regularization되는 항이 합해짐
+
+## Reference
+
+[https://hyeongminlee.github.io/post/bnn002_mle_map/](https://hyeongminlee.github.io/post/bnn002_mle_map/)
