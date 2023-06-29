@@ -7,11 +7,15 @@
   line-height: 1.8
 }
 
-.blue {
+.head_class {
   color: #ffd33d;
 }
 
-.gray {
+.myname {
+  cololr: #eaeaea;
+}
+
+.sub_head_class {
   color: #ffd33d;
 }
 
@@ -53,7 +57,7 @@ a:link {
 }
 
 a:visited {
-  color: red;
+  color: #2552E8;
 }
 
 a:hover {
