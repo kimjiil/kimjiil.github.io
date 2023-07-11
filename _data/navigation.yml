@@ -31,6 +31,8 @@ main:
         url: /study/math/
       - title: "AI/ML"
         url: /study/AI_ML/
+      - title: "Game"
+        url: /study/game/
       - title: "etc"
         url: /study/etc/
 
