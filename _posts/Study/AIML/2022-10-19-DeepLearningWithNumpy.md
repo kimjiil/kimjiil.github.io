@@ -914,12 +914,12 @@ backward는 아까 저장된 `self._back_coord`를 사용해서 output으로 출
 ```
 
 <p align="center">
-<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/maxpool2d_00.PNG"
+<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/maxpool2d_00.webp"
 height="90%" width="90%">
 </p>
 
 <p align="center">
-<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/maxpool2d_01.PNG"
+<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/maxpool2d_01.webp"
 height="90%" width="90%">
 </p>
 
@@ -990,7 +990,7 @@ $$
 $$
 
 <p align="center">
-<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/sigmoid_pic_00.PNG"
+<img src="/assets/images/2020-10-19-DeepLearningWithNumpy/sigmoid_pic_00.webp"
 height="40%" width="40%">
 <figcaption align="center"></figcaption>
 </p>

@@ -23,7 +23,7 @@ Numpy로 Deeplearing code를 구현하면서 공부한 내용입니다.
 ---
 
 <p align="center">
-<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/conv example.PNG"
+<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/conv example.webp"
 height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
@@ -112,13 +112,13 @@ $$
 계산되는 값들을 보면 forward 과정에서 convoluation했던 순서와 동일하게 같은 stride로 backporopagation에서도 weight와 gradient값으로 convolution 연산을 하고 있다.
 
 <p align="center">
-<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_1.PNG"
+<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_1.webp"
 height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_2.PNG"
+<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_2.webp"
 height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
@@ -158,13 +158,13 @@ $$
 X에 대한 gradient를 계산할 때와 마찬가지로 forward의 동일한 순서와 stride를 가지는 convolution으로 weight gradient값이 계산된다.
 
 <p align="center">
-<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_3.PNG"
+<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_3.webp"
 height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_4.PNG"
+<img src="/assets/images/2022-12-30-Backpropagation-for-convolution-layer/back_conv_4.webp"
 height="70%" width="70%">
 <figcaption align="center"></figcaption>
 </p>

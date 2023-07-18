@@ -69,7 +69,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
     $$
     
     <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/EWC_figure_01.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/EWC_figure_01.webp"
     height="" width="">
     <figcaption align="center"> 일반적인 trasfer learning과 EWC의 차이 </figcaption>
     </p>
@@ -91,7 +91,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
     Google Deepmind에서 발표한 논문으로 deep nueral netowrk의 구조를 변형하여 catastrophic forgetting이 일어나는 것을 막은 방법이다.
     
     <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/progressive_network_process.png"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/progressive_network_process.webp"
     height="100%" width="100%">
     <figcaption align="center"> progressive network 방법 </figcaption>
     </p>
@@ -106,7 +106,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
 3. Dynamically Expandable Networks(DEN)
 
     <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.webp"
     height="100%" width="100%">
     <figcaption align="center"> DEN과 다른 lifelong learning 방법과 비교 </figcaption>
     </p>    
@@ -148,7 +148,7 @@ DEN은 다음과 같이 차례대로 3가지 과정으로 알고리즘이 구성
 3. Split & Duplication
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_02.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_02.webp"
     height="100%" width="100%">
     <figcaption align="center"> 논문에서 설명한 3가지 과정에 대한 그림 </figcaption>
 </p>
@@ -168,7 +168,7 @@ $y \in \lbrace 0,1 \rbrace$인 binary classification으로 예시를 들었다. 
 #### 1. Selective Learning
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_00.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_00.webp"
     height="100%" width="100%">
     <figcaption align="center"> build connection & selective learning </figcaption>
 </p>
@@ -206,7 +206,7 @@ Sub network $S$만으로 표현이 불가능하면 Loss가 잘 수렴하지 않�
 #### 2. Dynamic Network Expansion
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_01.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_01.webp"
     height="60%" width="60%">
     <figcaption align="center"> Network Expansion stage 1 </figcaption>
 </p>
@@ -226,7 +226,7 @@ weight가 추가되면서 기존 네트워크에서 잡지 못한 task $t$의 �
 그리고 마지막 term에 있는 group sparsity regularization 때문에 학습 도중 불필요한 weight group은 전체적으로 비활성화(0으로 수렴) 된다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_02.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_02.webp"
     height="60%" width="60%">
     <figcaption align="center"> Network Expansion stage 2 </figcaption>
 </p>
@@ -239,7 +239,7 @@ weight가 추가되면서 기존 네트워크에서 잡지 못한 task $t$의 �
 각 weight에서 catastrophic forgetting, semantic drift가 발생했는지 아닌지를 검사해서 보존할지 말지를 결정한다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_03.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/my_image_03.webp"
     height="90%" width="90%">
     <figcaption align="center"> split & duplication 과정 </figcaption>
 </p>
@@ -268,7 +268,7 @@ $$
 784($28 \times 28$)의 이미지를 입력으로 받고 ReLU를 활성함수로 사용하고 2개의 hidden layer(312-128)를 가지는 network를 사용함. 
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_00.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_00.webp"
     height="100%" width="100%">
     <figcaption align="center"> task 1 - initial </figcaption>
 </p>
@@ -283,7 +283,7 @@ $$
 $$  
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_01.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_01.webp"
     height="100%" width="100%">
     <figcaption align="center"> select weight feature </figcaption>
 </p>
@@ -304,7 +304,7 @@ $$
 layer 3와 연결성을 확보한 layer 2에서 행으로 0-벡터가 아닌 weight를 선택하여 최종 sub layer 2를 얻는다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_02.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_02.webp"
     height="50%" width="50%">
     <figcaption align="center"> select weight feature  </figcaption>
 </p>
@@ -313,7 +313,7 @@ layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature
 앞서 선택된 sub layer들로 구성된 sub-network $S$를 다음과 같이 학습 시킨다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_03.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_03.webp"
     height="100%" width="100%">
     <figcaption align="center"> select weight feature </figcaption>
 </p>
@@ -321,7 +321,7 @@ layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature
 학습이 완료된 sub-network $S$를 원래 network와 다시 합쳐준다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_04.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_04.webp"
     height="60%" width="60%">
     <figcaption align="center"> union weight </figcaption>
 </p>
@@ -329,7 +329,7 @@ layer 2에서 선택된(행으로 0-벡터가 아닌) index와 똑같은 feature
 selective retraining이후 Loss값이 threshold값보다 높으면 선택된 sub network만으로 새로운 task를 수용할 크기가 부족하다고 판단한다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_05.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_05.webp"
     height="100%" width="100%">
     <figcaption align="center"> network expansion </figcaption>
 </p>
@@ -338,7 +338,7 @@ selective retraining이후 Loss값이 threshold값보다 높으면 선택된 sub
 추가된 weight에 대해서만 group lasso regularization와 $l\_1$-regularization을 적용해서 학습한다. 
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_06.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_06.webp"
     height="100%" width="100%">
     <figcaption align="center"> 추가된 유닛 제거 </figcaption>
 </p>
@@ -350,7 +350,7 @@ layer 2의 하단 부분에서 같은 부분인 4개를 삭제한다.
 다음과 같이 catastrophic forgetting을 방지하기 위해 split & duplication 과정을 진행해준다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_07.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_07.webp"
     height="60%" width="60%">
     <figcaption align="center"> split & duplication </figcaption>
 </p>
@@ -359,7 +359,7 @@ layer 2의 하단 부분에서 같은 부분인 4개를 삭제한다.
 변이된 정도가 많이 크면 layer 1(task $T-1$)의 weight를 layer 1(task $T$)에 추가한다.
 
 <p align="center">
-    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_08.PNG"
+    <img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_08.webp"
     height="100%" width="100%">
     <figcaption align="center"> split & duplication </figcaption>
 </p>
@@ -425,7 +425,7 @@ old task의 parameter의 변화를 막는 것([Rusu et al. 2016][13_link]{:targe
 - 각각의 task t는 이전 task로 부터 서로 다른 sub-network를 사용하면서 여전히 이전 task와 sub-network의 많은 중요한 부분을 공유 한다.
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_01.webp"
 height="100%" width="100%">
 <figcaption align="center"> Figure 01. 다른 lifelong learning method와 비교 </figcaption>
 </p>
@@ -827,13 +827,13 @@ PCA로 차원수가 500까지 줄어든 데이터셋에서 제공하는 `DECAF` 
 ##### [4.2] Quantitative Evaluation
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_03_top.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_03_top.webp"
 width="100%" height="100%">
 <figcaption align="center"> figure 3 </figcaption>
 </p>
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_03_bot.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_03_bot.webp"
 width="100%" height="100%">
 <figcaption align="center"> figure 3 </figcaption>
 </p>
@@ -874,7 +874,7 @@ semantic drift가 발생할 수 있는 실시간 학습(online learning)이기 �
 ###### [4.2.1] Effect of selective retraining
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_04_ab.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_04_ab.webp"
 width="60%" height="60%">
 <figcaption align="center"> figure 4 (a), (b) </figcaption>
 </p>
@@ -902,7 +902,7 @@ DNN-Selective에서 상단 부분의 layer는 task에 따라 달라지므로 new
 ###### [4.2.2] Effect of network expansion
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_04_c.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_04_c.webp"
 width="60%" height="60%">
 <figcaption align="center"> figure 4 (c) </figcaption>
 </p>
@@ -925,7 +925,7 @@ neuron의 수를 적용하는 DEN의 성능보다는 좋지 않았다.
 ###### [4.2.3] Effect of network split/duplication and timestamped inference
 
 <p align="center">
-<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_05.PNG"
+<img src="/assets/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/paper_figure_05.webp"
 width="100%" height="100%">
 <figcaption align="center"> figure 5 </figcaption>
 </p>

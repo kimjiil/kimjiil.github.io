@@ -253,7 +253,7 @@ github.io root 폴더에 sitemap.xml 파일 추가
 ### 블로그 폰트 수정
 
 <p align="center">
-<img src="/assets/images/2022-08-19-github-blog-custom/font_specific.PNG"
+<img src="/assets/images/2022-08-19-github-blog-custom/font_specific.webp"
 hegiht="100% width=100%">
 </p>
 
