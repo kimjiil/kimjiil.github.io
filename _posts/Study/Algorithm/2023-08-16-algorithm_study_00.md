@@ -35,7 +35,7 @@ last_modified_at: 2022-12-30T17:00:33
 #### 출력
 첫째 줄에 입력으로 주어진 행렬을 곱하는데 필요한 곱셈 연산의 최솟값을 출력한다. 정답은 $2^{63}-1$ 보다 작거나 같은 자연수이다. 또한, 최악의 순서로 연산해도 연산 횟수가 263-1보다 작거나 같다.
 
-### Hu & Shing 알고리즘
+### Hu & Shing 알고리즘 Part 1
 
 #### 1. Introduce
 
@@ -99,7 +99,7 @@ $k \leqq n-2$인 k개의 행렬에서 이 lemma가 참이라고 가정하고 n -
 
 <p align="center">
 <img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_002.jpg"
-height="35%" width="35%">
+height="45%" width="45%">
 </p>
 
 곱셈 순서는 다음과 같이 나타내어 진다.
@@ -223,7 +223,7 @@ $$
 을 사용하고 어떤 분할 최소 cost을 뜻하는 *an optimum partition*을 사용한다.
 
   weight에서 정렬되지 않은 정점들을 나타내기 위해 $V_{a}, V_{b}, ...$으로 표기하여 사용하고 
-$T_{ijk}$은 어떤 임의의 3개의 정점 $V_{i}, V_{j} and V_{k}$의 weight 곱을 나타낸다고 하자.
+$T_{ijk}$은 어떤 임의의 3개의 정점 $V_{i}, V_{j}$ and $V_{k}$의 weight 곱을 나타낸다고 하자.
 
 ##### *THEOREM 1.*
 
@@ -281,7 +281,486 @@ $$
 $C(w_{1}, w_{q}, w_{y}, w_{t}, w_{x}, w_{p}, w_{3}) \leqq C(w_{2}, w_{q}, w_{y}, w_{t}, w_{x}, w_{p}, w_{3})$
 이기 때문이다.
 
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_003.jpg"
+height="80%" width="80%">
+</p>
 
+__*COROLLARY 1.*__
+
+사전에 설명한 방식으로 $V_{1}, V_{2}, ... $을 선택하는 모든 방법에서, *l-optimum partition*은 항상
+$V_{1} - V_{2}$와 $V_{1} - V_{3}$을 포함한다.
+
+*Proof.* Theorem 1과 l-optimum partition의 정의로 부터 증명됨.
+
+일단 우리는 $V_{1} - V_{2}$와 $V_{1} - V_{3}$가 항상 *l-optimum partition*에 존재한다는 것을 알았다면,
+이 사실을 (recursively)반복적으로 부분 partition에서 사용할 수 있다. 그러므로, 주어진 다각형의 l-optimum partition
+을 찾기 위해서, 가장 작은 정점을 두번째로 작은 정점과 세번째로 작은 정점을 반복적으로 연결함으로써 다각형을 하위 다각형으로 분해 할 수 있다.
+이때 각각의 하위 다각형의 가장 작은 정점이 두번째로 작은 정점과 세번째로 작은 정점 둘다 인접해야 한다.
+
+변에 의해 $V_{1}$가 $V_{2}와 V_{3}$에 인접해 있는 다각형을 기본 다각형(basic polygon)이라고 부를 것이다.
+
+__*THEOREM 2.*__  이 기본 다각형(basic polygon)의 optimum partition에 $V_{2} - V_{3}$가 존재하기 위한
+필요이지만 충분은 아닌 조건은 다음과 같다.
+
+$$
+  \frac{1}{w_{1}} + \frac{1}{w_{4}} \leqq \frac{1}{w_{2}} + \frac{1}{w_{3}}
+$$
+
+게다가, 만약 $V_{2} - V_{3}$이 l-optimum partition에 존재하지 않으면, $V_{1}, V_{4}$들은 l-optimum partition
+에서 항상 연결되어 있다.
+*Proof.* 만약 이 기본 다각형(basic polygon)의 l-optimum partition에서 $V_{2}$와 $V_{3}$이 연결되어 있지
+않다면, $V_{1}$의 차수가 3보다 크거나 같다.
+$V_{p}$이 다각형에 있고 $V_{1}$과 $V_{p}$가 l-optimum partition에서 연결되어 있다고 가정하자.
+$V_{4}$은 $V_{1}, V_{2}$과 $V_{p}$을 포함하는 하위 다각형에 있거나 혹은 $V_{1}, V_{3}$과 $V_{p}$을
+포함하는 하위 다각형에 있어야 한다. Corollary 1으로 부터 $V_{1}, V_{4}$은 하위 다각형의 l-optimum partition
+에서 연결되어 있어야하고 이것 역시 기본 다각형의 l-optimum partition에서 $V_{1}, V_{4}$은 연결되어 있어야 한다.
+
+만약, $V_{2}, V_{3}$ optimum partition에서 연결되어 있으면, $V_{2}$가 가장 작은 정점이고 $V_{4}$가 
+3번째로 작은 정점인 n-1 다각형이 된다.
+Theorem 1에 의해 $V_{2}, V_{4}$가 연결된 n-1 다각형의 optimum partition이 존재하게 된다.
+그러므로 귀납 추론에 의해  Fig. 4에 그려진 기본 다각형(basic polygon)에서 $V_{4}$과 $V_{2}$이 인접해 있다는
+것을 추론할 수 있게 된다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_004.jpg"
+height="80%" width="80%">
+</p>
+
+Fig. 4(a)에 그려진 partition의 cost는 다음과 같다.
+$$
+  T_{123} + C(w_{2}, w_{4}, ..., w_{t}, ... , w_{3})  \quad \; (7)
+$$
+그리고 Fig. 4(b)에 그려진 partition의 cost도 다음과 같이 계산된다.
+$$
+  T_{124} + C(w_{1}, w_{4}, ..., w_{t}, ... , w_{3})  \quad \; (8)
+$$
+
+Lemma 4에 따라 다음과 같이 된다.
+$$
+  C(w_{1}, w_{4}, ... , w_{t}, ..., w_{3}) 
+  \leqq
+  C(w_{2}, w_{4}, ... , w_{t}, ..., w_{3})  \quad \; (9)
+$$
+
+$V_{4}$와 $V_{3}$ 사이에 있는 정점들의 weight들은 시계방향으로 정렬되어 있기 때문에 모두 $w_{4}$보다 크거나 
+같기 때문에
+오른쪽 변과 왼쪽 변 사이의 차이는 적어도 $T_{243} - T_{143}$가 된다.
+그래서 (8)보다 (7)이 크지 않을 필요조건은 다음과 같이 2개가 된다.
+
+$$
+  T_{123} + T_{243} \leqq T_{124} + T_{134}  \\
+  or \\
+  \frac{1}{w_{1}} + \frac{1}{w_{4}} \leqq \frac{1}{w_{2}} + \frac{1}{w_{3}} 
+$$
+
+__*LEMMA 5.*__ n각형의 optimum partition에서 사전의 설$V_{x}, V_{y}, V_{z}, V_{w}$를 사각형의 정점이라고
+하자($V_{x}$와 $V_{z}$는 사각형에서 인접하지 않는다.).
+호 $V_{x} - V_{z}$가 존재할 필요 조건은 다음 (10)과 같다.
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{y}} + \frac{1}{w_{w}} \quad \; (10)
+$$
+
+*Proof.* 호 $V_{x} - V_{z}$에 의해 분할된 사각형의 cost는 다음과 같다.
+
+$$
+  T_{xyz} + T_{xzw} = w_{x} w_{y} w_{z} + w_{x} w_{z} w_{w} = w_{x}w_{z}(w_{y} + w_{w})\quad \; (11)
+$$
+
+또다른 경우인 호 $V_{y} - V_{w}$에 의해 분할된 사각형의 cost는 다음과 같다.
+
+$$
+  T_{xyw} + T_{yzw} = w_{x} w_{y} w_{w} + w_{y} w_{z} w_{w} = w_{y} w_{w} (w_{x} + w_{z})\quad \; (12)
+$$
+
+(10)을 변형 다음과 같이 전개된다.
+
+$$
+  \frac{w_{x} + w_{z}}{ w_{x} w_{z}} \geqq \frac{w_{y} + w_{w}}{ w_{y} w_{w} } \\
+  w_{y} w_{w}(w_{x} + w_{z}) \geqq w_{x} w_{z}( w_{y} + w_{w} ) \\
+  (12) \geqq (11)
+$$
+
+(10)으로 부터 $(11) \leqq (12)$을 얻는다. 
+
+(10)에서 엄격한 부등호가 성립하는 경우 필요 조건 역시 충분 조건이 된다.
+만약 (10)에서 등호가 성립하는 경우, l-optimum partition에서 $V_{x} - V_{z}$가 존재할 충분한 조건은 
+$min(x, z) < min(y, w)$이다.
+
+이 lemma 는 [3, lemma 1]의 일반화 이고 여기서 $V_{y}$는 가장 작은 정점이고 $V_{x}, V_{w}, V_{z}$들은
+연속적으로 있는 정점들이며 $w_{w}$는 $w_{x}, w_{z}$ 둘다 보다 크다.
+
+만약 partition에 있는 모든 사각형이 (10)을 만족한다면 partition은 stable 이라고 한다.
+
+__*COROLLARY 2.*__ optimum partition은 stable 하지만 stable partition은 optimum 하지 않을 수도 있다.
+
+*Proof.* optimum partition은 stable하다는 사실은 Lemma 5로 부터 유도된다. Figure 5는
+stable partition이 최적이 아닐수도 있다는 예를 보여준다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_005.jpg"
+height="80%" width="80%">
+</p>
+
+  여기서 (a)의 부분 다각형인 사각형 10 - 11 - 25 - 40 에서 호 10 - 25로 분할되므로
+$V_{x} - V_{z} = 10 - 25$이므로 
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{y}} + \frac{1}{w_{w}} \\
+  \frac{1}{10} + \frac{1}{25} \geqq \frac{1}{11} + \frac{1}{40}
+$$
+
+으로 성립하고 또다른 부븐 다각형인 10 - 25 - 40 - 12에서 호 10 - 40으로 분할되므로
+$V_{x} - V_{z} = 10 - 40$이 된다.
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{y}} + \frac{1}{w_{w}} \\
+  \frac{1}{10} + \frac{1}{40} \geqq \frac{1}{11} + \frac{1}{25}
+$$
+
+이 성립하므로 모든 사각형에서 (10)을 만족하므로 stable partition이라고 말할 수는 있지만
+optimum partition은 아니다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_005_false.jpg"
+height="30%" width="30%">
+</p>
+
+  fig 5.(b)의 최적은 알고리즘을 돌리면 위와 같이 나오는데 예시가 틀린것 같아 그림을 바꿈..
+
+  여기서 (b)의 부분 다각형인 사각형 10 - 11 - 25 - 12 에서 호 11 - 12로 분할되므로
+$V_{x} - V_{z} = 11 - 12$이므로 
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{y}} + \frac{1}{w_{w}} \\
+  \frac{1}{11} + \frac{1}{12} \geqq \frac{1}{10} + \frac{1}{25}
+$$
+
+으로 성립하고 또다른 부븐 다각형인 11 - 12 - 40 - 25에서 호 12 - 25으로 분할되므로
+$V_{x} - V_{z} = 12 - 25$이 된다.
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{y}} + \frac{1}{w_{w}} \\
+  \frac{1}{12} + \frac{1}{25} \geqq \frac{1}{11} + \frac{1}{40}
+$$
+
+으로 성립하고 각각의 사각형에 대해 $V_{y}$는 가장 작은 정점이 되며 $V_{w}$는 $V_{x}, V_{z}$보다 큰 정점이 된다.
+또한 각각의 사각형에 대해 stable 하면서 optimum이 성립한다.
+
+  n각형의 어떠한 분할에서도 모든 호(arc)는 사각형에 한개씩만 존재한다. 
+사각형의 정점들을 $V_{x}, V_{y}, V_{z}, V_{w}$이라고 하고 $V_{x} - V{z}$을 사각형을 분할하는 호라고 하자.
+이때 만약 (13)이나 (14)의 조건을 만족한다면 $V_{x} - V{z}$을 vertical arc라고 정의 한다.
+
+$$
+  min(w_{x}, w_{z}) < min(w_{y}, w_{w}) \quad \; (13) \\
+  min(w_{x}, w_{z}) = min(w_{y}, w_{w}), \quad  max(w_{x},w_{z}) \leqq max(w_{y}, w_{w}) \quad \; (14)
+$$
+
+만약 다음 조건 (15)를 만족한다면 $V_{x} - V_{z}$를 horizontal arc라고 정의 한다.
+
+$$
+  min(w_{x}, w_{z}) > min(w_{y}, w_{w}), \quad max(w_{x}, w_{z}) < max(w_{y}, w_{w}) \quad \; (15)
+$$
+
+간결성을 위해 각각의 horizontal arcs와 vertical arcs를 h-arcs, v-arcs라고 지금 부터 명명한다.
+
+__*COROLLARY 3.*__ optimum partition에 있는 모든 호(arcs)들은 v-arcs 이거나 h-arcs이다.
+
+*Proof.* $V_{x} - V_{z}$를 veritcal, horizontal 둘다 아니라고 하자. 여기에는 두 가지 경우가 존재한다.
+
+*Case 1.* $min(w_{x}, w_{z}) = min(w_{y}, w_{w})$ 과 $max(w_{x}, w_{z}) > max(w_{y}, w_{w})$;
+
+*Case 2.* $min(w_{x}, w_{z}) > min(w_{y}, w_{w})$ 과 $max(w_{x}, w_{z}) \geqq max(w_{y}, w_{w})$;
+
+두 가지 경우 모두 다, Lemma 5의 부등식 (10)을 만족 하지 않는데 이는 분할이 stable하지 않고 optimum 하지 않는다라는 것을
+암시 한다.
+
+
+__*THEOREM 3.*__ 다각형에서 인접하지 않는 임의의 두 정점을 $V_{x}$와 $V_{z}$이라 하고 
+$V_{w}$를 $V_{x}$에서 $V_{z}$가는 시계 방향으로 둘 사이의 가장 작은 정점이고 ($V_{w} \neq V_{x}, V_{w} \neq V_{z}$)
+$V_{y}$를 $V_{z}$에서 $V_{x}$가는 시계 방향으로 둘 사이의 가장 작은 정점이라고 하자 ($V_{y} \neq V_{x}, V_{y} \neq V_{z}$).
+이것은 Fig. 6에서 보여준다. 여기서 일반성을 잃지 않고 $V_{x} < V_{z}$와 $V_{y} < V_{w}$라고 가정 할 수 있다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_006.jpg"
+height="30%" width="30%">
+</p>
+
+l-optimum partition에서 h-arcs로 $V_{x} - V_{z}$가 존재할 필요 조건은 다음과 같다.
+
+$$
+  w_{y} < w_{x} \leqq w_{z} < w_{w}
+$$
+
+($V_{y}$와 $V_{w}$들의 위치가 서로 교환되어도 여전히 필요 조건을 만족한다.)
+
+*Proof.* 이는 모순에 의해서 증명된다. 만약 $w_{x} \leqq w_{y}$이면 $w_{x}$는 가장 작은 weight인 $w_{1}$
+와 같아야만 하고 $V_{x} - V_{z}$는 절대 (15)를 만족하지 못한다.
+그러므로 l-optimum partition에서 h-arcs로 $V_{x} - V{z}$가 존재하기 위해선,
+$w_{y} < w_{x} \leqq w_{z}$여야 한다. $V_{y}$는 V_{z}에서 V_{x}로 가는 시계 방향에서 
+가장 작은 정점이고 $V_{x} < V_{w}$이기 때문에 $V_{y} = V_{1}$이어야 한다.
+
+일단 $V_{3} < V_{x} < V_{z}$라고 하자. Corollary 1.으로 부터 $V_{1} - V_{2}$와 $V_{1} - V{3}$ 둘다
+l-optimum partition에 존재하고, 두 개의 호는 다각형을 하위 다각형으로 분할 한다.
+만약 $V_{x}$와 $V_{y}$이 서로 다른 하위 다각형에 있으면, 두 정점은 l-optimum partition에서 연결될 수 없다.
+일반성을 잃지 않고 다각형이 기본 다각형(basic polygon)이라고 가정할 수 있다.
+
+기본 다각형(basic polygon)에서 $V_{2} - V_{3}$ 혹은 $V_{1} - V_{4}$ 중에 하나는 l-optimum partition에서 존재한다(Theorem 2.)
+
+만약 $V_{2}, V_{3}$이 연결되어 있다면 $V_{x}$와 $V_{z}$ 둘 모두는 $V_{2}$를 가장 작은 정점으로 가지는 
+더작은 다각형에 포함된다. 
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_sol_002.jpg"
+height="35%" width="35%">
+</p>
+
+이를 똑같이 반복하여 만약 $V_{1}, V_{4}$이 연결되어 있다면 기본 다각형은 다시 2개의 하위 다각형으로 나뉘는데
+이때 $V_{x}$와 $V_{z}$가 같은 하위 다각형에 속하기 위해선 이 하위 다각형이 적어도 n-1개의 변을 가지고 있어야한다
+(다른 의미로 $V_{x} - V_{z}$는 l-optimum partition에서 절대 존재 할 수 없다).
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_sol_001.jpg"
+height="90%" width="90%">
+</p>
+
+다각형의 크기가 연속적으로 감소하는 과정에서 $V_{x} - V_{z}$의 연결을 만드는 것이 절대로 불가능 하거나
+혹은 기본 다각형(basic polygon)에서 $V_{x}$와 V_{z}가 2번쨰로 작거나 3번째로 작은 정점이 되는 것을 불가능하게 한다.
+
+$V_{m}$을 이 기본 다각형에서 가장 작은 정점이라고 하자. $V_{x} - V_{z}$가 h-arcs로서 나타나기 위해서
+$w_{x} > w_{m}$이어야 한다. Theorem 2로 부터 $V_{x} - V_{z}$(즉, $V_{2} - V_{3})$가 하위 다각형의 
+optimum partition에 존재할 필요 조건은 다음과 같다.
+
+$$
+  \frac{1}{w_{x}} + \frac{1}{w_{z}} \geqq \frac{1}{w_{m}} + \frac{1}{w_{w}}
+$$
+
+이때 $w_{x} > w_{m}$ 이기 때문에 이 부등방정식은 오직 $w_{z} < w_{w}$일때만 유효하다.
+
+__*COROLLARY 4.*__ $V_{x} - V_{z}$이 l-optimum partition에서 h-arc로서 존재하는 약한 필요 조건은
+다음과 같다.
+
+$$
+  V_{y} < V_{x} < V_{z} < V_{w}
+$$
+
+*Proof.* 이는 Theorem 3으로부터 증명된다.
+
+이 약한 필요 조건을 만족하는 어떤 호(arc)를 potential h-arc라고 부르자.
+$P$를 n각형에서 potential h-arcs들의 set이라고 하고 $H$를 l-optimum partition에서의 h-arcs의 set이라 하면
+우리는 $P \supseteq H$ 라는 결과를 얻고 여기서 포함은 적절할 수도 있다.??
+
+__*COROLLARY 5.*__ 다각형에서 $V_{w}$을 가장 큰 정점이라고 하고 $V_{x}$와 $V_{z}$가 이웃한 정점이라고 하자.
+만약 $V_{y} < V_{x}$와 $V_{y} < V_{z}$을 만족하는 $V_{y}$가 존재한다고 하면
+$V_{x} - V_{z}$는 potetial h-arc가 된다.
+
+*Proof.* 이는 Corollary 4으로 부터 직접 증명되고 여기서 $V_{x}$와 $V_{z}$ 사이에는 오직 한개의 정점만 존재한다.
+
+분할에서 두 개의 호(arc)가 모두 동시에 존재한다면 이 두 개의 호(arc)들은 compatible하다고 부른다.
+모든 정점의 weight에서 중복이 없다고 가정할때 여기서 중복이 없는 $(n-1)!$개의 permutation이 존재한다.
+예를 들어 Fig. 5(a)의 weight들 10, 11, 25, 40, 12를 $w_{1}, w_{2}, w_{3}, w_{4}, w_{5}$의 permutation에
+대응한다(여기서 $w_{1} < w_{2} < w_{3} < w_{4} < w_{5}$ 이다). 여기에는 똑같은 permutation을 갖는
+수 많은 value들이 많이 존재한다. 예를 들어 1, 16, 34, 77, 29 역시 $w_{1}, w_{2}, w_{3}, w_{4}, w_{5}$
+에 대응 되지만 이 숫자 집합의 optimum partition은 10, 11, 25, 40, 12와는 다르다.
+
+하지만 똑같은 weight permutation 조합을 가지는 모든 n각형에 있는 모든 potential h-arcs들은 compatible 하다.
+이 주목할만한 사실을 Theorem 4으로 지정한다.
+
+__*THEOREM 4.*__ 모든 potential h-arcs들은 compatible 하다.
+
+*Proof.* 이론은 모순에 의해 증명된다.
+
+$V_{x}, V_{y}, V_{z} and V_{w}$를 Theorem 3에 설명된 4개의 정점이라고 하자. 
+그러므로, 우리는 $V_{y} < V_{x} < V_{z} < V_{w}$와 $V_{x} - V_{z}$이 potential h-arc 라는 사실을 얻는다.
+Fig. 7에서 표시된 것처럼 $V_{p} - V_{q}$를 $V_{x} - V_{z}$와는 compatible하지 않는 potential h-arc라고 하자
+(동시에 존재할 수 없음).
+일반성을 잃지 않고 $V_{p} < V_{q}$라고 가정할 수 있다(증명은 $V_{q} < V_{p}$인 경우와 유사하다).
+$V_{w}$는 $V_{x}$와 $V_{z}$ 사이의 시계 방향으로 존재하는 가장 작은 정점이기 때문에
+$V_{z} < V_{w} < V_{q}$라는 사실을 얻는다. 
+그러므로, $V_{y} < V_{p} < V_{z} < V_{q}$ 혹은 $V_{y} < V_{z} < V_{p} < V_{q}$라는 두개의 정보 중의 하나를 얻을 수 있고
+두 가지 경우 모두다 Corollary 4를 침범하지 않고 $V_{p} - V_{q}$은 potential h-arc로 존재할 수 없다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_007.jpg"
+height="40%" width="40%">
+</p>
+
+potential h-arc인 $V_{x} - V_{z}$은 항상 n각형을 2개의 하위 다각형으로 분할하고 
+이 하위 다각형들 중 하나는 다음의 특성을 가진다.
+이 하위 다각형이 가지는 $V_{x}$와 $V_{z}$을 제외한 모든 정점들의 weight들은 $max(w_{x}, w_{z})$보다 작지 않다.
+이 하위 다각형을 $V_{x} - V_{z}$의 upper subpolygon으로 부른다.
+예를 들어 Fig. 7에서 $V_{x} - ... - V_{w} - ... - V_{z}$이 $V_{x} - V_{z}$의 upper subpolygon이다.
+
+Coorollary 4와 Theorem 4을 사용하여 다각형의 모든 potential h-arcs를 생성할 수 있다.
+
+$V_{x} - V_{z}$를 Corollary 5에서 정의된 호(arc)라고 하자, 즉, $V_{1} < V_{x} < V_{z} < V_{w}$이다.
+호 $V_{x} - V_{z}$은 potential h-arc이고 다각형에 있는 모든 다른 potential h-arcs들과 compatible하다.
+
+게다가, 이 upper subpolygon에서 다른 potential h-arc는 존재 하지 않는다. 여기서 $V_{w}$에 의해 잘라져 얻어지는
+n-1각형을 고려해보자. 이 n-1각형에서 $V_{w'}$은 가장 큰 정점이고 $V_{x'}$와 V_{z'}을 이웃으로 가지고 있다고 하자.
+여기서 $V_{1} < V_{x'} < V_{z'} < V_{w'}$이다.
+
+그러면 $V_{x'} - V_{z'}$은 다시 n각형에서 모든 다른 potential h-arcs들과 compatible한 potential h-arc가 되고
+생성되지 않은 이것의 upper subpolygon에 또 다른 potential h-arc는 존재 하지 않게된다.
+
+이는 심지어 $V_{w}$가 $V_{x'} - V_{z'}$의 upper subpolygon에 속해도 성립한다. 
+먄약 가장 큰 정점을 자르는 과정을 반복하면 모든 호(arc)들이 Corollary 4를 만족하는 $P$ set을 얻을 수 있다.
+l-optimum partition의 h-arcs는 이 호(arc)들의 부분 집합이 된다.
+
+  가장 큰 정점을 자르는 과정은 $O(n)$의 시간 복잡도를 가지는 알고리즘으로 만들 수 있다.
+이 알고리즘은 *one-sweep algorithm*이라고 부를 것이다. 이 알고리즘의 결과는 n-3개 arcs의 set $S$이다.
+$S$는 알고리즘을 시작할때 비어있는 상태이다.
+
+*The one-sweep algorithm*은 $V_{1}$이라고 부르는 가장 작은 정점으로 부터 시작하고 다각형을 시계 방향으로
+순회 하고 다음의 규칙을 따르는 스택에 정점의 weight를 넣는다(아마 $w_{1}$이 스택의 가장 아래에 위치 할 것이다).
+
+- (a) 스택의 top에 있는 원소를 $V_{t}$라고 하면, $V_{t-1}$는 $V_{t}$ 바로 아래에 있는 원소가 되고
+$V_{c}$는 스택에 추가될 원소라고 하자.
+만약 스택에 2개 이상의 정점이 있고 $w_{t} > w_{c}$ 이면, $S$에 $V_{t-1} - V_{c}$를 추가하고 스택에서 
+$V_{t}$를 pop한다. 
+만약 스택에 1개의 정점만 있거나 $w_{t} \leqq w_{c}$이면 스택에 $w_{c}$를 넣는다.
+위의 두 과정을 스택에 n번쨰 정점이 push될때까지 반복한다.
+- (b) 만약 스택에 3개이상의 정점이 존재하면, $S$ 에 $V_{t-1} - V_{1}$을 추가하고, 
+$V_{t}$를 스택에서 꺼내고 이 과정을 멈출떄까지 반복한다.
+
+최대 정점의 두 이웃 정점보다 작거나 같은 가중치를 가진 가장 작은 정점의 존재 여부를 확인하지 않기 때문에,
+즉, Corollary 4에서의 $V_{y}$ 정점의 존재 여부를 확인하지 않기 때문에, 
+알고리즘에 의해 생성된 모든 n-3 개의 arc가 potential h-arc은 아니다.
+하지만, $one-sweep algorithm$은 항상 n-3개의 arc set $S$를 생성한다.
+이 set $S$는 모든 potential h-arcs의 set인 $P$를 포함한다.
+역시 set $P$ 또한 n각형의 l-optimum partition에서의 모든 h-arcs의 set인 $H$를 포함한다.
+즉, $S \supseteq P \supseteq H$가 된다.
+
+예를 들어, 만약 시계방향으로 n각형 주변의 정점의 weight들을 $w_{1}, w_{2}, ..., w_{n}$ 이라 하면,
+여기서 $w_{1} \leqq w_{2} \leqq ... \leqq w_{n}$, n각형에 Corollary 4를 만족하는 호(arc)가 없고
+그러므로 이 n각형에 potential h-arcs가 없게된다. 
+
+one-sweep algorithm은 여전히 n각형의 n-3개의 호들을 생성하지만 생성된 호(arc)들 중에는 potential h-arc는
+없다.
+
+#### 3. Conclusion
+
+이 논문에서는 다각형을 분할하는 문제에 대한 몇몇개의 정리(theorem)를 설명했다. 이 정리들 중 일부는 어떤
+볼록 n각형의 optimum partition을 나타내는 특성이며, 다른 몇가지는 유일한 가장작은 사전순의 optimum partition
+이다. 이 정리들을 기반한 near-optimum partition을 찾는 $O(n)$의 알고리즘은 개발되었다[12].
+휴리스틱한 알고리즘에 의해 생성된 partition의 비용은 절대 $1 \cdot 155 C_{opt}$를 넘지 않고,
+여기서 $C_{opt}$는 다각형을 최적으로 분할하는 비용이다. 사전순으로 가장작은 유일한 optimum partition을 찾는
+$O(n \log n)$의 알고리즘은 Part 2에서 설명한다.
+
+### Hu & Shing 알고리즘 Part 2
+
+#### 1. Introduction
+
+이 논문[6]의 Part 1에서 우리는 행렬 연속 곰셉 문제를 최적 분할 문제로 변환하고 볼록 n 각형의 최적 분할에 대한
+몇가지 정리를 설명했다. Part 1에서 몇가지 정리들은 여기서 보충되고 다시 설명될 것이다.
+
+__*THEOTREM 1. *__ (Part 1에서 사전 설명된 것처럼)$V_{1}, V_{2}, ...$의 모든 선택에서,
+만약 n각형의 정점의 weight들이 다음의 조건을 만족한다면, 여기서 $3 \leqq k \leqq n$
+
+$$
+  w_{1} = w_{2} = ... = w_{k} < w_{k+1} \leqq ... \leqq w_{n}
+$$
+
+그러면 모든 n각형의 optimum partition은 $V_{1} - V_{2} - ... - V_{k}$인 k각형을 포함한다.
+게다가, 만약 위의 조건에서 $k=2$이면 즉, $w_{1} = w_{2} < w_{3} \leqq w_{4} \leqq ... \leqq w_{n}$,
+n각형의 모든 optimum partition은 $w_{3}$가 같은 weight를 가지는 어떤 정점 $V_{p}$에 대한 삼각형
+$V_{1}V_{2}V_{p}$를 포함해야만 한다.
+  여기서 만약 $w_{1} = w_{2} < w_{3} < w_{4} \leqq ... \leqq w_{n}$이라면 모든 optimum partition
+은 유일하게 $V_{3}$을 선택할 수 밖에 없기 때문에 삼각형 $V_{1}V_{2}V_{3}$를 포함해야만 한다.
+지금 여기서 3개 이상이나 그 이상의 정점들이 $w_{1}$과 같아도 우리는 n각형을 정리 1의 첫번째 부분의 k각형을
+형성함으로써 하위 다각형으로 분해가 가능하다.
+이 k각형의 모든 정점들은 같은 weight를 가지기 떄문에 k각형의 분할은 유일하지 않고 임의적이다.(어떤 방향으로 나눠도 weight가 같기때문에 같은 값이 나옴)
+$w_{1}$과 같은 weight를 정점을 2개 가진 어떤 하위 다각형에서, 정리 1의 2번째 파트를 적용할 수 있고
+더 작은 하위 다각형으로 분해 할 수 있다. 그러므로 우리는 오직 하나의 $V_{1}$을 가진 즉,
+$w_{1}$과 같은 weight를 가진 정점이 오직 1개 일때만 고려하면 된다.
+
+위의 정리 때문에, Part 1의 정리 1과 정리 3은 다음과 같이 일반화 할 수 있다.
+
+__*THEOREM 2.*__ (Part 1에서 설명된) $V_{1}, V_{2}, ...$을 선택하는 모든 방법에서, 
+만약 정점들의 weight가 다음 조건을 만족한다면, n각형의 모든 optimum partition에는 $V_{1} - V_{2}$와
+$V_{1} - V_{3}$가 존재한다.
+
+$$
+  w_{1} < w_{2} \leqq w_{3} \leqq ... \leqq w_{n}
+$$
+
+__*THEOREM 3.*__ 다각형에서 인접하지 않는 임의의 두 정점을 $V_{x}$, $V_{z}$라고 하고
+$V_{w}$을 시계 방향으로 $V_{x}$에서 $V_{z}$에 있는 가장 작은 정점이고 (V_{w} \neq V_{x}, \; V_{w} \neq V_{z})
+$V_{y}$을 시계 방향으로 $V_{z}$에서 $V_{x}$에 존재하는 가장 작은 정점이라고 하자 (V_{y} \neq V_{x}, \; V_{y} \neq V_{z}).
+이것은 Fig 1.에서 그림으로 보여준다.
+
+$V_{x} < V_{z}$이고 $V_{y} < V_{w}$라고 가정한다. 
+$V_{x} - V{z}$가 어떤 optimum partition의 h-arc로서 존재할 필요 조건은 다음과 같다.
+
+$$
+  w_{y} < w_{x} \leqq w_{z} < w_{w}
+$$
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_001_part2.jpg"
+height="35%" width="35%">
+</p>
+
+우리는 l-optimum partition을 the lexicographically smallest optimum partition의 의미로 사용한다.
+지금부터 유일한 l-optimum partition을 찾는 알고리즘에 대해 설명한다.
+
+이전 논문인 Part 1과 똑같은 notation(기호)를 사용하여 유일하게 라벨링된 n각형을 가정할 수 있다.
+partition은 fan으로 부른다. 이 fan은 다각형에서 가장 작은 정점과 모든 다른 정점이 연결된 오직 v-arc로만 구성된다.
+다각형 $V_{1} - V_{b} - V_{c} - ... - V_{n}$의 fan은 Fan $(w_{1} | w_{b}, w_{c}, ... , w_{n})$으로
+표기한다. 가장 작은 정점인 $V_{1}$을 fan의 중점이라고 부른다.
+
+만약 어떤 정점의 이웃한 양 옆의 정점들 보다 크면 이 정점을 local maximum 정점으로 정의하고
+반대로 양 옆의 정점들 보다 작으면 이 정점을 local minimum 정점으로 정의한다.
+
+만약 오직 하나의 local maximum과 오직 하나의 local minimum만 존재하면 이 다각형을 monotone 다각형으로 부른다.
+
+monotone 다각형의 l-optimum partition을 찾기 위한 $O(n)$의 알고리즘을 주고 이후
+일반적인 볼록 다각형의 l-optimum partition을 찾는 $O(n \log n)$의 알고리즘을 줄 것이다.
+
+
+#### 2. Monotone basic polygon
+
+이 섹션에서 monotone 다각형의 optimum partition을 다룰 것이다. 정리 1과 정리 2로 부터 우리는 오직 
+monotone basic polygon만 다루면 된다.
+(이 다각형은 $V_{1}$가 변(side)에 의해 $V_{2}, V_{3}$와 인접한 basic polygon이라고 불리는 다각형이다.)
+이 특수한 경우의 이해는 일반적인 볼록 다각형의 optimum partition을 찾는데에 필수적이다.
+
+monotone basic n각형인 $V_{1} - V_{2} - V_{c} - ... - V_{3}$을 고려해보자, 
+이 다각형의 fan은 $Fn (w_{1}|w_{2}, w_{c}, ... , w_{3})$ 으로 표시 되고 여기서
+가장 작은 정점인 $V_{1}$ 은 fan의 중심이 된다.
+
+fan의 정의는 또한 하위 다각형에도 잘 적용된다. 
+예를 들어, 만약 basic n각형에서 $V_{2}, V_{3}$이 연결되고 하위 n-1각형에서 $V_{2}$는 가장 작은 정점이 된다.
+n-1각형에서 모든 정점과 $V_{2}$의 연결로 인해 생성된 partition은 $Fan(w_{2} | w_{c}, ... , w_{3})$으로
+표시한다.
+
+__*LEMMA 1.*__ 만약 n각형의 l-optimum partition에서 어떠한 potential h-arc도 나타나지 않는다면, 
+l-optimum partition은 n각형의 fan이 될 수 밖에 없다.
+
+*Proof.* 생략됨. [7]에서 자세한 사항을 보면됨.
+
+potential h-arc는 다각형을 두 부분으로 나눌 것이고, 이 나눠진 부분에서 큰 정점을 포함하는 하위 다각형을
+upper subpolygon이라고 부른다.
+어떤 n각형의 두 potential h-arcs를 각각 $V_{i} - V_{j}$와 $V_{p} - V_{q}$라고 하자.
+
+만약 $V_{i} - V_{j}$ 의 upper subpolygon 이 $V_{p} - V_{q}$ 의 upper subpolygon을 포함한다면,
+$V_{p} - P_{q}$는 $V_{i} - V_{j}$ 보다 위에 있다 혹은 높다라고 말할 수 있다.
+
+$P$를 monotone basic n각형에서의 모든 potential h-arcs의 set이라고 하자.
+$P$는 적어도 n-3개의 arcs를 갖는다.
+
+__*LEMMA 2.*__ $P$에 있는 어떤 2개의 호를 $V_{i} - V_{j}$와 $V_{p} - V_{q}$라고 할때
+둘 중의 한 호는 다른 호보다 높게 있다( $V_{i} - V_{j} > V_{p} - V_{q} \quad or \quad V_{i} - V_{j} < V_{p} - V_{q}$ ). 
+
+*Proof.* [7]에서 자세한 내용이 있다.
+논문에서는 생략되어있지만 호(arc)끼리는 교차되지 않으므로 항상 어떤 호가 상위에 있을 수 밖에 없다.
+
+
+
+#### 3. The convex polygon
+
+#### 4. Conclusion
 
 ### Reference
 
