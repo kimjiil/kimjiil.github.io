@@ -756,6 +756,179 @@ __*LEMMA 2.*__ $P$에 있는 어떤 2개의 호를 $V_{i} - V_{j}$와 $V_{p} - V
 *Proof.* [7]에서 자세한 내용이 있다.
 논문에서는 생략되어있지만 호(arc)끼리는 교차되지 않으므로 항상 어떤 호가 상위에 있을 수 밖에 없다.
 
+우리는 local maximum을 항상 위에 local minimum을 항상 아래에 그리는 방법으로 monotone basic polygon을
+그림으로 그려서 potential h-arcs의 순서를 보여줄 수 있다.
+만약 $V_{i} - V_{j}$ 의 upper subpolygon이 $V_{p} - V_{q}$ 의 upper subpolygon을 포함한다면 
+potential h-arc인 $V_{p} - V_{q}$는 다른 potential h-arc인 $V_{i} - V_{j}$보다 항상 물리적으로
+위에 있다.
+
+monotone의 특성과 upper subpolygon의 정의로 부터, 만약 $V_{p} - V_{q}$가 $V_{i} - V_{j}$보다 위에 있다면
+$max(w_{i}, W_{j}) < min (w_{p}, w_{q})$임을 알 수 있다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_002_part2.jpg"
+height="35%" width="35%">
+</p>
+
+Fig 2.에 나타난 monotone basic n각형을 고려 해보자. $V_{n}$은 local maximum 정점이 되고 
+$V_{p} - V_{q}, \; V_{i} - V_{j} $는 monotone basic n각형의 potential h-arcs가 된다.
+
+2개의 potential h-arcs $V_{p} - V_{q}$와 $V_{i} - V_{j}$ 그리고
+시계 방향으로 $V_{i}$에서 $V_{p}$으로 있고 $V_{q}$에서 $V_{i}$에 있는 n각형의 변들에 의해 생성된
+subpolygon $V_{i} - ... - V_{p} - V_{q} - ... - V_{j}$은 
+간결성을 위해 $V_{p} - V_{q}$ 아래 범위와 $V_{i} - V_{j}$ 위 범위 라고 말하거나
+간단하게 $V_{i} - V_{j}$와 $V_{p} - V_{q}$사이의 subpolygon이라고 말한다.
+
+__*LEMMA 3.*__ monotone basic n각형에서 2개의 potential h-arc에 의해 범위가 정해진 어떤
+subpolygon은 그자체로 monotone polygon이 된다.
+
+*Proof.* [7]에 자세한 내용이 있음.
+
+__*LEMMA 4.*__ monotone basic n각형에서 아래 위로 있는 potential h-arcs에 의해 범위가 정해진
+subpolygon의 어떤 potential h-arc 또한 monotone basic n각형의 potential h-arc가 된다.
+
+*Proof.* [7]에 자세한 내용이 있음.
+
+지금 부터 우리가 다뤘던 것을 요약하려고 한다. 
+monotone basic n각형의 l-optimum partition에 h-arc가 없다면, 
+l-optimum partition은 fan 이어야 한다. 다른의미로, l-optimum partition에 있는 h-arcs들은 모두
+어떤하나가 다른 것 위에 있는 층으로 쌓여있다.
+local maximum $V_{n}$과 local minimum $V_{1}$을 2개의 h-arcs에 의해 없어진다면
+monotone basic n각형의 l-optimum partition은 하나 혹은 이상의 monotone subpolygon을 포함 할 것이다.
+2개의 h-arc에 의해 범위가 정해지거나 각각의 이러한 monotone subpolygon의 l-optimum partition은 fan이 된다.
+
+그러면 monotone basic polygon의 l-optimum partition을 찾는 과정에서
+오직 한개이거나 그 이상의 potential h-arcs를 포함하는 이러한 partition을 고려하기만 되거나 
+2개의 potential h-arcs의 사이에 있는 각 subpolygon들의 fan으로 분할하면 된다.
+
+이 monotone basic n각형에 적어도 제거되지 않는 n-3개의 potential h-arc가 있기 때문에,
+적어도 $2^{n-3}$개의 분할이 있고 이러한 모든 분할은 partition이 포함하는 nondegenerated potential h-arc에 의해 n-2개의 class로 나눌 수 있다.
+
+이러한 class들은 $H_{0}, H_{1}, ... , H_{n-3}$으로 표기된다. 여기서 $H$ 아래 첨자는 
+해당 class의 각 partition에 있는 nondegenerated potential h-arcs의 개수를 나타낸다.
+
+$H_{0}$의 partition에는 potential h-arc가 없다. 그러므로 class는 오직 한개의 partition으로 구성되고
+fan은 다음과 같이 된다.
+
+$$
+  Fan(w_{1} | w_{2}, ... , w_{3})
+$$
+
+class $H_{1}$에서 각 partition은 하나의 nondegenerated potential h-arc을 가진다.
+일단 potential h-arc가 정해지면, 나머지 부분의 호(arc)들은 vertical arc로 이루어져 2개의 부분 다각형마다
+하나의 팬을 형성한다.
+
+monotone basic polygon의 $H_{1}$의 2개의 전형적인 분할을 Fig. 3에 보여준다.
+Fig. 3(a)에는 한개의 nondegenerated potential h-arc인 $V_{c} - V_{i}(V_{c} < V_{i}$가 존재한다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_003_part2.jpg"
+height="70%" width="70%">
+</p>
+
+upper subpolygon의 fan은 다음과 같다.
+
+$$
+  Fan(w_{c} | w_{d}, ... , w_{i})
+$$
+
+lower subpolygon의 fan은 다음과 같다.
+
+$$
+  Fan(w_{1} | w_{2}, w_{c}, w_{i}, w_{3})
+$$
+
+Fig. 3(b)은 한개의 potential h-arc인 $V_{2} - V_{3}$가 있고 이때
+upper subpolygon의 fan은 $Fan(w_{2} \| w_{c}, ... , w_{3}$가 되고
+lower subpolygon은 degenerated fan으로 삼각형이다.
+
+Fig. 3(b)에서 분할의 cost는 다음과 같다.
+
+$$
+  w_{1}w_{2}w_{3} + w_{2} ( w_{c} w_{d} + w_{d} w_{e} + w_{e} w_{f} + w_{f} w_{g} 
+                            + w_{g} w_{h} + w_{h} w_{i} + w_{i} w_{3}) \\
+  \quad \quad \quad \quad \quad \quad \quad = w_{1} w_{2} w_{3} + w_{2}(w_{c}:w_{3})
+  
+  \quad \; (1)
+$$
+
+여기서 $w_{c}:w_{3}$ 는 $w_{c}$부터 $w_{3}$까지 시계 방향으로 인접한 원소 곱의 합을 간략하게 나타낸 기호이다.
+
+Fig. 3에 표시된 다각형의 $H_{0}$의 cost를 표시하면 다음과 같다.
+
+$$
+  Fan (w_{1} | w_{2}, ... , w_{3}) = w_{1}(w_{2} : w_{3}) \quad \; (2)
+$$
+
+(1)이 (2)보다 작을 조건은 다음과 같다.
+
+$$
+  \begin{split} 
+     (1) &< (2) \\
+    w_{1} w_{2} w_{3} + w_{2}(w_{c}:w_{3}) &< w_{1}(w_{2} : w_{3}) \\ 
+     w_{2}(w_{c}:w_{3}) &< w_{1}(w_{2} : w_{3}) -  w_{1} w_{2} w_{3} \\
+    w_{2}(w_{c}:w_{3}) &< w_{1}((w_{2} : w_{3}) -  w_{2} w_{3}) \\
+    \frac{w_{2} \cdot (w_{c} : w_{3})}{(w_{2}: w_{3}) - w_{2} \cdot w_{3}} &< w_{1} 
+  \end{split}
+$$
+
+유사하게도 Fig. 3(a)에서 $H_{0}$보다 작을 조건은 다음과 같이 전개된다.
+
+$$
+  \begin{split}
+    H_{0} \; cost &= Fan(w_{1} | w_{2}, ... , w_{3}) \\
+      &= w_{1} (w_{2}w_{c} + w_{c}w_{d} + w_{d}w_{e} + w_{e}w_{f} + w_{f}w_{g} + w_{g}w_{h}
+          + w_{h}w_{i} + w_{i}w_{3}) \\
+
+    Fig.\,3(a) \; cost &= Fan(w_{c} | w_{d}, ... , w_{i}) + w_{c}w_{1}w_{2} + w_{1}w_{3} w_{i} + w_{c}w_{i} w_{1}
+  \end{split} 
+$$
+
+$$
+\require{cancel}
+  Fig.\,3(a) \; cost < H_{0} \; cost \\
+  w_{c}(w_{d}:w_{i}) + \cancel{w_{1}w_{2}w_{c} + w_{1}w_{i} w_{3}} + w_{1}w_{i} w_{c}  < w_{1}(w_{c}:w_{i}) + \cancel{w_{1}w_{2}w_{c} + w_{1}w_{i}w_{3}} \\
+  w_{c}(w_{d}:w_{i})    < w_{1}(w_{c}:w_{i}) -   w_{1}w_{i} w_{c} \\
+  \frac{w_{c}(w_{c}:w_{i})}{w_{d}:w_{i} - w_{i}w_{c}} < w_{1} \quad \; (3)
+  
+$$
+
+  만약 최소 cost를 가진 모든 분할 사이에서 사전적순서에서 가장 작은 분할이면 
+어떤 클래스(혹은 여러 클래스)의 분할들 중에 l-optimal이라고 말할 수 있다.
+그러므로, 이 l-optimum 분할은 $H_{0}, H_{1}, ... , H_{n-3}$ 클래스들의 모든 분할중에서 l-optimal이다.
+
+Fig. 4에 보여진것처럼 오직 하나의 potential h-arc인 $V_{i} - V_{k}$를 포함하는 클래스들
+$H_{1}, H_{2}, ... , H_{n-3}$의 모든 분할들 사이에 있는 l-optimal partition이 있다고 가정하자.
+
+만약 이 l-optimal이 $H_{0}$의 fan보다 cost가 적다면, 
+이 분할(optimal)은 monotone basic n각형의 l-optimum partition이 될것이다. 
+
+오직 한개의 h-arc인 $V_{i} - V_{k}$을 가진 분할이 $H_{0}$보다 비용이 작은 조건은 다음과 같다.
+
+$$
+  \frac{w_{i} \cdot (w_{j}:w_{k})}{(w_{i}:w_{k}) - w_{i} \cdot w_{k}} < w_{1} \quad \; if \; w_{i} \leqq w_{k} \\
+
+  or \\
+
+  \frac{w_{k} \cdot (w_{i}:w_{g})}{(w_{i}:w_{k}) - w_{i} \cdot w_{k}} < w_{1} \quad \; if \; w_{k} < w_{i} \\
+  
+$$
+
+위의 2개의 부등식을 조합해 다음과 같은 결과를 얻을 수 있다.
+
+$$
+  \frac{C(w_{i}, ... , w_{k})}{(w_{i}:w_{k}) - w_{i} \cdot w_{k}} < w_{1} \quad \; (4)
+$$
+
+여기서 $C(w_{i}, ... , w_{k})$ subpolygon $w_{i} - w_{j} - ... - w_{g} - w_{k}$의 optimum partition의
+비용을 나타내고 이경우 fan의 비용과 동일하다.
+
+<p align="center">
+<img src="/assets/images/2023-08-16-algorithm_study_00/algo_fig_004_part2.jpg"
+height="35%" width="35%">
+</p>
+
+
 
 
 #### 3. The convex polygon
