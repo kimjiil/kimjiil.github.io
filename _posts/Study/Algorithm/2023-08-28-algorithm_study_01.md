@@ -74,4 +74,4 @@ height="60%" width="60%">
 
 즉, 그래프의 사이클이 존재하지 않으면서 모든 노드의 차원이 2이면 된다.
 
-testtesttest
+testtesttesdfgdfgdfgdfgdfg
