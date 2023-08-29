@@ -4,7 +4,7 @@ tags:
   - C++
 categories:
   - Algorithm
-date: 2023-08-16
+date: 2023-08-29
 toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
@@ -73,3 +73,5 @@ height="60%" width="60%">
 8 - 1 - 15 - 10 - 6 - 3 - 13 - 12 - 4 - 5 - 11 - 14 - 2 - 7 - 9
 
 즉, 그래프의 사이클이 존재하지 않으면서 모든 노드의 차원이 2이면 된다.
+
+test
