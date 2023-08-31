@@ -9,7 +9,7 @@ toc: true
 toc_sticky: true
 toc_icon: "sticky-note"
 use_math: true
-last_modified_at: 2023-08-29T17:48:18
+last_modified_at: 2023-08-31T17:50:27
 ---
 ### 행렬 곱셈 순서 3
 #### 개요
@@ -686,8 +686,8 @@ $$
 $$
 
 __*THEOREM 3.*__ 다각형에서 인접하지 않는 임의의 두 정점을 $V_{x}$, $V_{z}$라고 하고
-$V_{w}$을 시계 방향으로 $V_{x}$에서 $V_{z}$에 있는 가장 작은 정점이고 (V_{w} \neq V_{x}, \; V_{w} \neq V_{z})
-$V_{y}$을 시계 방향으로 $V_{z}$에서 $V_{x}$에 존재하는 가장 작은 정점이라고 하자 (V_{y} \neq V_{x}, \; V_{y} \neq V_{z}).
+$V_{w}$을 시계 방향으로 $V_{x}$에서 $V_{z}$에 있는 가장 작은 정점이고 $(V_{w} \neq V_{x}, \; V_{w} \neq V_{z})$
+$V_{y}$을 시계 방향으로 $V_{z}$에서 $V_{x}$에 존재하는 가장 작은 정점이라고 하자 $(V_{y} \neq V_{x}, \; V_{y} \neq V_{z})$.
 이것은 Fig 1.에서 그림으로 보여준다.
 
 $V_{x} < V_{z}$이고 $V_{y} < V_{w}$라고 가정한다. 
@@ -748,13 +748,24 @@ upper subpolygon이라고 부른다.
 $V_{p} - P_{q}$는 $V_{i} - V_{j}$ 보다 위에 있다 혹은 높다라고 말할 수 있다.
 
 $P$를 monotone basic n각형에서의 모든 potential h-arcs의 set이라고 하자.
-$P$는 적어도 n-3개의 arcs를 갖는다.
+$P$는 최대 n-3개의 arcs를 갖는다.
 
 __*LEMMA 2.*__ $P$에 있는 어떤 2개의 호를 $V_{i} - V_{j}$와 $V_{p} - V_{q}$라고 할때
 둘 중의 한 호는 다른 호보다 높게 있다( $V_{i} - V_{j} > V_{p} - V_{q} \quad or \quad V_{i} - V_{j} < V_{p} - V_{q}$ ). 
 
 *Proof.* [7]에서 자세한 내용이 있다.
 논문에서는 생략되어있지만 호(arc)끼리는 교차되지 않으므로 항상 어떤 호가 상위에 있을 수 밖에 없다.
+
+---
+
+생략된 내용
+
+모순에 의해 증명이 가능하다. 이 Lemma 2 를 만족하지 않는 P에 속한 2개의 호를 $V_{i}-V_{j}$, $V_{p}-V_{q}$라고 하자
+
+$V_{i}-V_{j}$와 $V_{p} - V_{q}$의 subpolygon들의 교집합이 공집합이거나 서로 일부만을 공유하고 있어야 한다.
+그렇
+
+---
 
 우리는 local maximum을 항상 위에 local minimum을 항상 아래에 그리는 방법으로 monotone basic polygon을
 그림으로 그려서 potential h-arcs의 순서를 보여줄 수 있다.
