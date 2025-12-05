@@ -92,6 +92,9 @@ const config: QuartzConfig = {
       Plugin.CustomOgImages(),
     ],
   },
+  staticAssets: [
+    "content/img"   // ★ symlink된 이미지 폴더 등록
+  ],
 }
 
 export default config
