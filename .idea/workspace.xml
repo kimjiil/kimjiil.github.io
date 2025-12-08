@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/img/_image_test.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/img/_무제.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/published test.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,13 +24,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "v4",
-    "last_opened_file_path": "D:/MyGithub/Obsidian/.obsidian/plugins/quartz-auto-publisher"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v4&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/MyGithub/Obsidian/.obsidian/plugins/quartz-auto-publisher&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
