@@ -7,9 +7,15 @@
     <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/content/Quantz4 Test.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/image_test.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_image_test.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_sub_content test.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_무제.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/img/_image_test.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/img/_무제.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/published test.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/sub_content/Publish Test.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/sub_content/sub_content test.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/무제.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -53,5 +59,15 @@
       <updated>1764894420256</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+      </list>
+    </option>
   </component>
 </project>
