@@ -18,7 +18,8 @@ n가지 종류의 동전이 있다. 각각의 동전이 나타내는 가치는 �
 ## 풀이
 동전의 가치가 $c_{1}, c_{2} ,..., c_{i}  ,... ,c_{n}$  n개 있을 때 i번째까지 동전을 사용해서 k를 만드는 경우의 수를 $DP(i, k)$ 라고 한다. 이때 점화식은 
 
-$$DP(i, k) = \begin{cases} 
+$$
+DP(i, k) = \begin{cases} 
 DP(i - 1, k) + DP(i, k - c_{n}) \quad, \; if \; (k-c_{n} \ge  0)  \\
 DP(i - 1, k) \quad else
 \end{cases}
