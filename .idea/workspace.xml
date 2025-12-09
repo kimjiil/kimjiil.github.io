@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="" />
+    <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_숙박 Info-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_숙박 Info-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_숙박 Info-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_숙박 Info-5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_숙박 Info.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_식당 Info-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_식당 Info.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/sub_content2/숙박 Info.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/sub_content2/식당 Info.md" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,6 +66,17 @@
         <option value="Default.Date" />
         <option value="Default.Subject" />
       </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
     </option>
   </component>
 </project>
