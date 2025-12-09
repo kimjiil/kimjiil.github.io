@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="" />
+    <list default="true" id="fb0f3369-4427-42e9-8a54-fb0eb5e72cc2" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/content/Algorithm/index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/Algorithm/백준  Gold4 - 타일 채우기.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/Algorithm/백준 Gold4 - 동전1.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/Algorithm/백준 Gold5 - 동전 2.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/Algorithm/백준 Gold5 - 동전.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/2024-07-29-17-47_distance_contours_xld.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/images/_백준  Gold4 - 타일 채우기.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/new Test/distance_contours_xld.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/new Test/index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/new Test/new tt/index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/백준  Gold4 - 타일 채우기.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/백준 Gold4 - 동전1.md" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
