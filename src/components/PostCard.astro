@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { CATEGORIES } from "../consts";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const cat = CATEGORIES[post.data.category];
+const dateStr = post.data.date.toISOString().slice(0, 10);
+---
+
+<a href={`/posts/${post.id.split("/").pop()}/`} class="card post-card">
+  <p class="card-title">{post.data.title}</p>
+  <div class="card-meta">
+    <span class="cat">[{cat?.label ?? post.data.category}]</span>
+    <span class="date">{dateStr}</span>
+  </div>
+  {
+    post.data.tags.length > 0 && (
+      <div class="card-tags">
+        {post.data.tags.slice(0, 4).map((t) => (
+          <span class="tag">#{t}</span>
+        ))}
+      </div>
+    )
+  }
+</a>
+
+<style>
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+  }
+</style>

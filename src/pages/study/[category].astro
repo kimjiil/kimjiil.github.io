@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionList from "../../components/SectionList.astro";
+import { CATEGORIES } from "../../consts";
+
+export function getStaticPaths() {
+  return Object.entries(CATEGORIES)
+    .filter(([, v]) => v.section === "study")
+    .map(([key]) => ({ params: { category: key } }));
+}
+
+const { category } = Astro.params;
+const label = CATEGORIES[category!]!.label;
+---
+
+<BaseLayout title={`Study — ${label}`} description={`Study / ${label} 카테고리 글 목록`}>
+  <SectionList section="study" activeCat={category} />
+</BaseLayout>

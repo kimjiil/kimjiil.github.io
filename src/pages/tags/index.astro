@@ -1,0 +1,96 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const tagMap = new Map<string, typeof posts>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    if (!tagMap.has(tag)) tagMap.set(tag, []);
+    tagMap.get(tag)!.push(post);
+  }
+}
+
+const tags = [...tagMap.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+---
+
+<BaseLayout title="Tags" description="태그별 포스트 모음">
+  <div class="container page-main">
+    <header class="page-header">
+      <h1 class="page-title"><span class="prompt">$</span>grep -r "#tag"</h1>
+      <p class="page-desc">태그별로 포스트를 모아봅니다</p>
+    </header>
+
+    <!-- Tag cloud -->
+    <div class="tag-cloud">
+      {
+        tags.map(([tag, tagPosts]) => (
+          <a href={`#${encodeURIComponent(tag)}`} class="tag">
+            #{tag} <span class="count">{tagPosts.length}</span>
+          </a>
+        ))
+      }
+    </div>
+
+    <!-- Grouped posts -->
+    {
+      tags.map(([tag, tagPosts]) => (
+        <section class="tag-section" id={encodeURIComponent(tag)}>
+          <h2 class="section-title">
+            <span class="prompt">#</span>
+            {tag} <span class="count mono">({tagPosts.length})</span>
+          </h2>
+          <div class="tag-grid">
+            {tagPosts.map((post) => (
+              <PostCard post={post} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 3.5rem;
+    padding: 1.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+  }
+
+  .tag-cloud .count {
+    opacity: 0.6;
+  }
+
+  .tag-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 90px;
+  }
+
+  .tag-section .count {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .tag-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .tag-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

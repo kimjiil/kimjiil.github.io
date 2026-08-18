@@ -1,18 +1,23 @@
-# Quartz v4
+# kimjiil.github.io
 
-> “[One] who works with the door open gets all kinds of interruptions, but [they] also occasionally gets clues as to what the world is and what might be important.” — Richard Hamming
+개인 블로그. [Astro](https://astro.build) 기반, 터미널 다크 테마.
 
-Quartz is a set of tools that helps you publish your [digital garden](https://jzhao.xyz/posts/networked-thought) and notes as a website for free.
-Quartz v4 features a from-the-ground rewrite focusing on end-user extensibility and ease-of-use.
+## 개발
 
-🔗 Read the documentation and get started: https://quartz.jzhao.xyz/
+```bash
+npm install
+npm run dev      # http://localhost:4321
+npm run build    # dist/ 에 정적 빌드
+```
 
-[Join the Discord Community](https://discord.gg/cRFFHYye7t)
+## 구조
 
-## Sponsors
+- `src/content/posts/{papers,study,projects}/` — 마크다운 포스트 (frontmatter: title, date, category, tags)
+- `src/consts.ts` — 네비게이션/카테고리 정의
+- `public/images/` — 포스트 이미지
+- master 브랜치 push 시 GitHub Actions로 자동 배포
 
-<p align="center">
-  <a href="https://github.com/sponsors/jackyzha0">
-    <img src="https://cdn.jsdelivr.net/gh/jackyzha0/jackyzha0/sponsorkit/sponsors.svg" />
-  </a>
-</p>
+## Credits
+
+디자인은 [sudoremove.com](https://sudoremove.com) ([sudormrf-run/web](https://github.com/sudormrf-run/web), © 2026 Jong Hyun Park, MIT-NC License)의
+터미널 다크 테마 스타일을 참고/변형했습니다. 이 블로그는 비상업적 개인 블로그입니다.

@@ -1,0 +1,201 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { CATEGORIES, SECTIONS } from "../../consts";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id.split("/").pop()! },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const cat = CATEGORIES[post.data.category];
+const section = cat ? SECTIONS[cat.section] : undefined;
+const sectionHref = cat ? `/${cat.section}` : "/";
+const dateStr = post.data.date.toISOString().slice(0, 10);
+const updatedStr = post.data.updated?.toISOString().slice(0, 10);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="post-page">
+    <div class="container">
+      <!-- Hero Header -->
+      <header class="post-header">
+        <div class="post-badges">
+          {section && <a href={sectionHref} class="badge">{section.title}</a>}
+          {cat && <span class="badge cat-badge">{cat.label}</span>}
+        </div>
+        <h1 class="post-title">{post.data.title}</h1>
+        <div class="post-meta-grid">
+          <div class="meta-item">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+            <div>
+              <span class="meta-label">작성일</span>
+              <span class="meta-value">{dateStr}</span>
+            </div>
+          </div>
+          {
+            updatedStr && (
+              <div class="meta-item">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  ></path>
+                </svg>
+                <div>
+                  <span class="meta-label">수정일</span>
+                  <span class="meta-value">{updatedStr}</span>
+                </div>
+              </div>
+            )
+          }
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <section class="post-content">
+        <div class="prose">
+          <Content />
+        </div>
+      </section>
+
+      <!-- Tags -->
+      {
+        post.data.tags.length > 0 && (
+          <div class="post-tags">
+            {post.data.tags.map((t) => (
+              <a href={`/tags#${encodeURIComponent(t)}`} class="tag">
+                #{t}
+              </a>
+            ))}
+          </div>
+        )
+      }
+
+      <!-- Back Button -->
+      <div class="back-link">
+        <a href={sectionHref}>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          목록으로 돌아가기
+        </a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-page {
+    padding: 3rem 0 5rem;
+  }
+
+  .post-page .container {
+    max-width: 860px;
+  }
+
+  .post-header {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .post-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .cat-badge {
+    background: var(--color-bg-tertiary);
+    color: var(--color-green);
+    border-color: #43d6a833;
+  }
+
+  .post-title {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    line-height: 1.35;
+    color: var(--color-text-primary);
+    margin: 0 0 1.5rem;
+    word-break: keep-all;
+  }
+
+  .post-meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-accent);
+  }
+
+  .meta-item > div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .meta-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  .meta-value {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border-light);
+  }
+
+  .back-link {
+    margin-top: 2rem;
+  }
+
+  .back-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .back-link a:hover {
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 768px) {
+    .post-header {
+      padding: 1.5rem;
+    }
+  }
+</style>

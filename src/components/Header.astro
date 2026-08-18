@@ -1,0 +1,350 @@
+---
+import { NAV_ITEMS } from "../consts";
+
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isActive = (href: string) => path === href || path.startsWith(href + "/");
+---
+
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <!-- Logo -->
+      <a href="/" class="logo">
+        <span class="logo-text">
+          kimjiil@blog:~$<span class="cursor cursor-blink">_</span>
+        </span>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <div class="nav-desktop">
+        {
+          NAV_ITEMS.map((item) =>
+            item.sublinks ? (
+              <div class:list={["nav-item", "has-sub", { active: isActive(item.href) }]}>
+                <a href={item.href} class:list={["nav-link", { active: isActive(item.href) }]}>
+                  {item.title}
+                  <svg class="chevron" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </a>
+                <div class="dropdown">
+                  <a href={item.href} class="dropdown-link all">
+                    전체 보기
+                  </a>
+                  {item.sublinks.map((sub) => (
+                    <a href={sub.href} class:list={["dropdown-link", { active: isActive(sub.href) }]}>
+                      {sub.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <a href={item.href} class:list={["nav-link", { active: isActive(item.href) }]}>
+                {item.title}
+              </a>
+            ),
+          )
+        }
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div id="mobile-menu" class="nav-mobile">
+      {
+        NAV_ITEMS.map((item) =>
+          item.sublinks ? (
+            <div class="m-group">
+              <button class:list={["nav-link", "m-group-btn", { active: isActive(item.href) }]} type="button">
+                {item.title}
+                <svg class="chevron" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div class="m-sublist">
+                <a href={item.href} class="dropdown-link all">
+                  전체 보기
+                </a>
+                {item.sublinks.map((sub) => (
+                  <a href={sub.href} class:list={["dropdown-link", { active: isActive(sub.href) }]}>
+                    {sub.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <a href={item.href} class:list={["nav-link", { active: isActive(item.href) }]}>
+              {item.title}
+            </a>
+          ),
+        )
+      }
+    </div>
+  </div>
+</header>
+
+<script>
+  const btn = document.getElementById("mobile-menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  btn?.addEventListener("click", () => {
+    btn.classList.toggle("active");
+    menu?.classList.toggle("active");
+  });
+
+  // 모바일: 그룹 버튼 클릭 시 소메뉴 펼침/접힘
+  document.querySelectorAll<HTMLButtonElement>(".m-group-btn").forEach((groupBtn) => {
+    groupBtn.addEventListener("click", () => {
+      groupBtn.parentElement?.classList.toggle("open");
+    });
+  });
+</script>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #0d030fd9;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+  }
+
+  .cursor {
+    color: var(--color-accent);
+  }
+
+  .cursor-blink {
+    animation: blink 1.1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .nav-item {
+    position: relative;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    padding: 0.45rem 0.8rem;
+    border-radius: var(--radius-md);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast);
+  }
+
+  .nav-link:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-tertiary);
+  }
+
+  .nav-link.active {
+    color: var(--color-accent);
+    background: var(--color-accent-light);
+  }
+
+  .chevron {
+    opacity: 0.6;
+    transition: transform var(--transition-fast);
+  }
+
+  /* ===== Desktop dropdown ===== */
+  .dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.4rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast),
+      visibility var(--transition-fast);
+  }
+
+  /* hover 또는 키보드 포커스로 열림 */
+  .has-sub:hover .dropdown,
+  .has-sub:focus-within .dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .has-sub:hover .chevron,
+  .has-sub:focus-within .chevron {
+    transform: rotate(180deg);
+  }
+
+  /* 버튼과 드롭다운 사이 hover 끊김 방지 */
+  .dropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 8px;
+  }
+
+  .dropdown-link {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    padding: 0.45rem 0.8rem;
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast);
+  }
+
+  .dropdown-link:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-tertiary);
+  }
+
+  .dropdown-link.active {
+    color: var(--color-accent);
+    background: var(--color-accent-light);
+  }
+
+  .dropdown-link.all {
+    color: var(--color-accent);
+    border-bottom: 1px dashed var(--color-border-light);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    margin-bottom: 0.15rem;
+  }
+
+  /* ===== Mobile ===== */
+  .mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .mobile-menu-btn span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--color-text-primary);
+    border-radius: 2px;
+    transition:
+      transform var(--transition-base),
+      opacity var(--transition-base);
+  }
+
+  .mobile-menu-btn.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-btn.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .nav-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0 1rem;
+    border-top: 1px solid var(--color-border-light);
+  }
+
+  .nav-mobile.active {
+    display: flex;
+  }
+
+  .m-group-btn {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .m-sublist {
+    display: none;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.25rem 0 0.35rem 1rem;
+  }
+
+  .m-group.open .m-sublist {
+    display: flex;
+  }
+
+  .m-group.open .chevron {
+    transform: rotate(180deg);
+  }
+
+  @media (max-width: 768px) {
+    .nav-desktop {
+      display: none;
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+    }
+  }
+</style>
