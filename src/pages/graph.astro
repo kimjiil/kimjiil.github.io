@@ -1,0 +1,100 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { buildGraphData } from "../lib/graphData";
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const graphData = buildGraphData(posts);
+---
+
+<BaseLayout title="Graph" description="포스트 연결 그래프 뷰">
+  <div class="container page-main">
+    <header class="page-header">
+      <h1 class="page-title"><span class="prompt">$</span>tree --graph</h1>
+      <p class="page-desc">
+        섹션 · 카테고리 · 포스트의 연결을 한눈에. 점선은 태그를 공유하는 글입니다.
+        드래그로 이동, 휠로 확대/축소, 노드 클릭으로 이동합니다.
+      </p>
+    </header>
+
+    <div class="graph-wrap">
+      <canvas id="graph-canvas"></canvas>
+      <div class="legend mono">
+        <span><i class="dot s-papers"></i>Paper Review</span>
+        <span><i class="dot s-study"></i>Study</span>
+        <span><i class="dot s-projects"></i>Projects</span>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script type="application/json" id="graph-data" set:html={JSON.stringify(graphData)} />
+
+<script>
+  import { initForceGraph } from "../scripts/forceGraph";
+
+  const data = JSON.parse(document.getElementById("graph-data")!.textContent!);
+  const canvas = document.getElementById("graph-canvas") as HTMLCanvasElement;
+  initForceGraph(canvas, data, { labelMode: "full" });
+</script>
+
+<style>
+  .graph-wrap {
+    position: relative;
+    background:
+      radial-gradient(circle at 30% 20%, #fd731808, transparent 50%),
+      radial-gradient(circle at 75% 80%, #5fadfe08, transparent 50%),
+      var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+
+  #graph-canvas {
+    display: block;
+    width: 100%;
+  }
+
+  .legend {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    background: #0d030fb3;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-light);
+    pointer-events: none;
+  }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .s-papers {
+    background: #fd7318;
+  }
+
+  .s-study {
+    background: #43d6a8;
+  }
+
+  .s-projects {
+    background: #5fadfe;
+  }
+</style>

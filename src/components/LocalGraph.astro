@@ -1,0 +1,78 @@
+---
+import type { GraphData } from "../lib/graphData";
+
+interface Props {
+  data: GraphData;
+  centerId: string;
+}
+
+const { data, centerId } = Astro.props;
+---
+
+<div class="local-graph">
+  <h2 class="side-title mono"><span class="prompt">#</span> Graph</h2>
+  <div class="local-graph-wrap">
+    <canvas data-local-graph data-center={centerId}></canvas>
+    <a href="/graph" class="expand mono" title="전체 그래프 보기">⤢</a>
+  </div>
+  <script type="application/json" data-local-graph-data set:html={JSON.stringify(data)} />
+</div>
+
+<script>
+  import { initForceGraph } from "../scripts/forceGraph";
+
+  document.querySelectorAll<HTMLCanvasElement>("canvas[data-local-graph]").forEach((canvas) => {
+    const json = canvas.closest(".local-graph")?.querySelector("script[data-local-graph-data]");
+    if (!json?.textContent) return;
+    initForceGraph(canvas, JSON.parse(json.textContent), {
+      centerId: canvas.dataset.center,
+      labelMode: "mini",
+      enableZoomPan: false,
+      initialScale: 0.75,
+      height: () => 240,
+    });
+  });
+</script>
+
+<style>
+  .side-title {
+    font-size: 0.82rem;
+    color: var(--color-text-primary);
+    margin: 0 0 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .side-title .prompt {
+    color: var(--color-accent);
+    margin-right: 0.3rem;
+  }
+
+  .local-graph-wrap {
+    position: relative;
+    background:
+      radial-gradient(circle at 30% 20%, #fd731808, transparent 60%),
+      var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+  }
+
+  .expand {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    line-height: 1;
+  }
+
+  .expand:hover {
+    color: var(--color-accent);
+  }
+</style>

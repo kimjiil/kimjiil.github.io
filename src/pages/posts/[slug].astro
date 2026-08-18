@@ -1,7 +1,10 @@
 ---
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
+import LocalGraph from "../../components/LocalGraph.astro";
 import { CATEGORIES, SECTIONS } from "../../consts";
+import { buildLocalGraphData } from "../../lib/graphData";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts", ({ data }) => !data.draft);
@@ -12,89 +15,106 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+
+const slug = post.id.split("/").pop()!;
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const localGraph = buildLocalGraphData(allPosts, slug);
 
 const cat = CATEGORIES[post.data.category];
 const section = cat ? SECTIONS[cat.section] : undefined;
 const sectionHref = cat ? `/${cat.section}` : "/";
 const dateStr = post.data.date.toISOString().slice(0, 10);
 const updatedStr = post.data.updated?.toISOString().slice(0, 10);
+const tocHeadings = headings.filter((h) => h.depth <= 4);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
   <article class="post-page">
-    <div class="container">
-      <!-- Hero Header -->
-      <header class="post-header">
-        <div class="post-badges">
-          {section && <a href={sectionHref} class="badge">{section.title}</a>}
-          {cat && <span class="badge cat-badge">{cat.label}</span>}
-        </div>
-        <h1 class="post-title">{post.data.title}</h1>
-        <div class="post-meta-grid">
-          <div class="meta-item">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              ></path>
-            </svg>
-            <div>
-              <span class="meta-label">작성일</span>
-              <span class="meta-value">{dateStr}</span>
+    <div class="container post-container">
+      <div class="post-grid">
+        <div class="post-main">
+          <!-- Hero Header -->
+          <header class="post-header">
+            <div class="post-badges">
+              {section && <a href={sectionHref} class="badge">{section.title}</a>}
+              {cat && <span class="badge cat-badge">{cat.label}</span>}
             </div>
-          </div>
-          {
-            updatedStr && (
+            <h1 class="post-title">{post.data.title}</h1>
+            <div class="post-meta-grid">
               <div class="meta-item">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   ></path>
                 </svg>
                 <div>
-                  <span class="meta-label">수정일</span>
-                  <span class="meta-value">{updatedStr}</span>
+                  <span class="meta-label">작성일</span>
+                  <span class="meta-value">{dateStr}</span>
                 </div>
+              </div>
+              {
+                updatedStr && (
+                  <div class="meta-item">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      ></path>
+                    </svg>
+                    <div>
+                      <span class="meta-label">수정일</span>
+                      <span class="meta-value">{updatedStr}</span>
+                    </div>
+                  </div>
+                )
+              }
+            </div>
+          </header>
+
+          <!-- Main Content -->
+          <section class="post-content">
+            <div class="prose">
+              <Content />
+            </div>
+          </section>
+
+          <!-- Tags -->
+          {
+            post.data.tags.length > 0 && (
+              <div class="post-tags">
+                {post.data.tags.map((t) => (
+                  <a href={`/tags#${encodeURIComponent(t)}`} class="tag">
+                    #{t}
+                  </a>
+                ))}
               </div>
             )
           }
-        </div>
-      </header>
 
-      <!-- Main Content -->
-      <section class="post-content">
-        <div class="prose">
-          <Content />
-        </div>
-      </section>
-
-      <!-- Tags -->
-      {
-        post.data.tags.length > 0 && (
-          <div class="post-tags">
-            {post.data.tags.map((t) => (
-              <a href={`/tags#${encodeURIComponent(t)}`} class="tag">
-                #{t}
-              </a>
-            ))}
+          <!-- Back Button -->
+          <div class="back-link">
+            <a href={sectionHref}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              목록으로 돌아가기
+            </a>
           </div>
-        )
-      }
+        </div>
 
-      <!-- Back Button -->
-      <div class="back-link">
-        <a href={sectionHref}>
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-          목록으로 돌아가기
-        </a>
+        <!-- Right Sidebar: TOC + Local Graph -->
+        <aside class="post-side">
+          <div class="side-sticky">
+            {tocHeadings.length > 0 && <TableOfContents headings={tocHeadings} />}
+            <LocalGraph data={localGraph} centerId={`p:${slug}`} />
+          </div>
+        </aside>
       </div>
     </div>
   </article>
@@ -105,8 +125,34 @@ const updatedStr = post.data.updated?.toISOString().slice(0, 10);
     padding: 3rem 0 5rem;
   }
 
-  .post-page .container {
+  .post-container {
+    max-width: 1240px;
+  }
+
+  .post-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .post-main {
+    min-width: 0;
     max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .post-side {
+    min-width: 0;
+  }
+
+  .side-sticky {
+    position: sticky;
+    top: 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
   }
 
   .post-header {
@@ -191,6 +237,21 @@ const updatedStr = post.data.updated?.toISOString().slice(0, 10);
 
   .back-link a:hover {
     color: var(--color-accent);
+  }
+
+  @media (max-width: 1024px) {
+    .post-grid {
+      grid-template-columns: 1fr;
+    }
+
+    /* 모바일/태블릿: 사이드바는 본문 아래에 그래프만 표시 */
+    .post-side {
+      order: 2;
+    }
+
+    .side-sticky {
+      position: static;
+    }
   }
 
   @media (max-width: 768px) {

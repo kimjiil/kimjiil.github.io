@@ -1,0 +1,112 @@
+---
+import type { MarkdownHeading } from "astro";
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const minDepth = Math.min(...headings.map((h) => h.depth));
+---
+
+<nav class="toc" aria-label="목차">
+  <h2 class="side-title mono"><span class="prompt">#</span> Navigation</h2>
+  <ul>
+    {
+      headings.map((h) => (
+        <li style={`--indent: ${h.depth - minDepth}`}>
+          <a href={`#${h.slug}`} data-toc-slug={h.slug}>
+            {h.text}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  // 스크롤 스파이: 현재 보이는 헤딩의 목차 항목 하이라이트
+  const links = document.querySelectorAll<HTMLAnchorElement>(".toc a[data-toc-slug]");
+  if (links.length > 0) {
+    const bySlug = new Map<string, HTMLAnchorElement>();
+    links.forEach((a) => bySlug.set(a.dataset.tocSlug!, a));
+
+    let activeLink: HTMLAnchorElement | null = null;
+    const setActive = (slug: string) => {
+      const link = bySlug.get(slug);
+      if (!link || link === activeLink) return;
+      activeLink?.classList.remove("active");
+      link.classList.add("active");
+      activeLink = link;
+    };
+
+    const headings = [...bySlug.keys()]
+      .map((slug) => document.getElementById(slug))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const onScroll = () => {
+      let current = headings[0];
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top <= 110) current = h;
+        else break;
+      }
+      if (current) setActive(current.id);
+    };
+    document.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+</script>
+
+<style>
+  .toc {
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  .side-title {
+    font-size: 0.82rem;
+    color: var(--color-text-primary);
+    margin: 0 0 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .side-title .prompt {
+    color: var(--color-accent);
+    margin-right: 0.3rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--color-border-light);
+  }
+
+  li {
+    padding-left: calc(0.85rem + var(--indent) * 0.8rem);
+  }
+
+  a {
+    display: block;
+    padding: 0.22rem 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+    border-left: 2px solid transparent;
+    margin-left: calc(-1px - 0.85rem - var(--indent) * 0.8rem);
+    padding-left: calc(0.85rem + var(--indent) * 0.8rem);
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  a:hover {
+    color: var(--color-text-primary);
+  }
+
+  a.active {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+</style>

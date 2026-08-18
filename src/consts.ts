@@ -41,6 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
       { title: "Reinforcement Learning", href: "/projects/reinforcement-learning-project" },
     ],
   },
+  { title: "Graph", href: "/graph" },
   { title: "Tags", href: "/tags" },
   { title: "About", href: "/about" },
 ];
