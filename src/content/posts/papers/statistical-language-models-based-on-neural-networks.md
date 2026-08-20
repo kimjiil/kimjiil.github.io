@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]Statistical Language Models Based on Neural Networks (Mikolov 박사논문)"
+title: "[word2vec 계보 ①] Statistical Language Models Based on Neural Networks (Mikolov 박사논문, 2012)"
 date: 2026-08-21
 category: deep-learning-paper
 tags:

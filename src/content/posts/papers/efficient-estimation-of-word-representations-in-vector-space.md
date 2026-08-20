@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]Efficient Estimation of Word Representations in Vector Space (word2vec)"
+title: "[word2vec 계보 ②] Efficient Estimation of Word Representations in Vector Space (word2vec, 2013.1)"
 date: 2026-08-21
 category: deep-learning-paper
 tags:

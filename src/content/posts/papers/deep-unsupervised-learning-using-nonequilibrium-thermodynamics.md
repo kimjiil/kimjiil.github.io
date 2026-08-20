@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]Deep Unsupervised Learning using Nonequilibrium Thermodynamics"
+title: "[Diffusion 계보 ①] Deep Unsupervised Learning using Nonequilibrium Thermodynamics (2015)"
 date: 2023-01-17
 updated: 2026-08-18
 category: deep-learning-paper

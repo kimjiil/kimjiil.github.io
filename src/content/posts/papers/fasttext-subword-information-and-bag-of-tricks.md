@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]fastText — Enriching Word Vectors with Subword Information & Bag of Tricks"
+title: "[word2vec 계보 ④] fastText — Subword Information & Bag of Tricks (2016-17)"
 date: 2026-08-21
 category: deep-learning-paper
 tags:

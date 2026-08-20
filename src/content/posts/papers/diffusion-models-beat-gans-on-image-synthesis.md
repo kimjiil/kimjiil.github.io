@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]Diffusion Models Beat GANs on Image Synthesis"
+title: "[Diffusion 계보 ②] Diffusion Models Beat GANs on Image Synthesis (2021)"
 date: 2022-08-19
 updated: 2026-08-18
 category: image-generation-paper

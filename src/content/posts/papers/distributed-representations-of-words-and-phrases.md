@@ -1,5 +1,5 @@
 ---
-title: "[논문 리뷰]Distributed Representations of Words and Phrases and their Compositionality"
+title: "[word2vec 계보 ③] Distributed Representations of Words and Phrases (negative sampling, 2013.10)"
 date: 2026-08-21
 category: deep-learning-paper
 tags:
