@@ -14,302 +14,503 @@ tags:
 </span>
 
 <a href="https://www.fit.vutbr.cz/~imikolov/rnnlm/thesis.pdf" target="_blank"><b>[PDF]</b></a>
-, <b><span style="color: #F2AA4C">Language Model</span></b>, Tomáš Mikolov (PhD Thesis, Brno University of Technology, 2012)
+, <b><span style="color: #F2AA4C">Language Model</span></b>, Tomáš Mikolov (PhD Thesis, Brno University of Technology, 2012, 133p)
 
 ### <span style="color: #ffd33d">Summary</span>
 
-word2vec의 저자 Mikolov의 박사논문으로, **RNN 기반 언어모델(RNNLM)** 을 체계화한 문서다.
-n-gram(백오프 스무딩) 시대의 통계 언어모델을 신경망으로 대체하면서:
+word2vec의 저자 Mikolov의 박사논문. **RNN 기반 언어모델(RNNLM)** 을 제안하고, 당시 존재하던 거의 모든
+고급 언어모델 기법과 정면 비교/조합해서 다음을 보였다.
 
-- Elman 스타일의 **simple RNN으로 언어모델을 학습**하면 (truncated) BPTT만으로도 당시 최강이던
-modified Kneser-Ney 5-gram을 perplexity에서 크게 이긴다는 것을 보였고,
-- softmax 출력층의 $O(V)$ 병목을 **class 기반 분해**로 $O(\sqrt{V})$ 수준까지 줄이는 기법,
-dynamic evaluation, 모델 조합 등 실전 기법들을 정리했으며,
-- 무엇보다 학습된 **hidden state와 단어 벡터가 문법적/의미적 규칙성을 담는다**는 관찰을 남겼다.
+- Penn Treebank에서 KN5 baseline perplexity **141.2 → 79.4** (모든 기법 조합, 이후 78.8까지) — 당시까지
+보고된 최고 기록의 2배가 넘는 entropy 개선.
+- WSJ 음성인식에서 WER **상대 21~24% 감소** — "언어모델 연구 역사상 최고 수준"의 개선폭.
+- **학습 데이터가 커질수록 n-gram 대비 개선폭이 오히려 커진다**는 관찰 (기존 고급 기법들은 반대였음).
+- 출력층 class 분해, gradient clipping, dynamic evaluation, RNN+ME 조인트 학습(RNNME) 같은
+실전 기법들과 오픈소스 RNNLM toolkit.
 
-이 마지막 관찰과 "복잡도 병목이 어디에 있는가"에 대한 분석이 다음 해
-[word2vec (CBOW/Skip-gram)](/posts/efficient-estimation-of-word-representations-in-vector-space/)으로 직결된다.
-word2vec 계보의 출발점이라 이 리뷰 시리즈의 1편으로 읽는 것을 추천.
-
-<hr/> <!-- 수평선 -->
-
-### <span style="color: #ffd33d">[1] 배경 — 통계 언어모델과 n-gram의 한계</span>
-
-#### <span style="color: #4682B4">1.1 언어모델이 푸는 문제</span>
-
-- 언어모델의 목표는 단어 시퀀스에 확률을 부여하는 것이다. chain rule로 분해하면
-"지금까지의 히스토리가 주어졌을 때 다음 단어의 확률"들의 곱이 된다.
-
-$$
-    P(w_1, w_2, ..., w_T) = \prod_{t=1}^{T}{P(w_t \,|\, w_1, ..., w_{t-1})}
-$$
-
-- 히스토리 전체를 조건으로 쓰는 것은 불가능하므로(가능한 히스토리의 수가 $V^{t-1}$로 폭발),
-어떤 식으로든 히스토리를 **동치류(equivalence class)로 압축**해야 한다. 언어모델의 역사는 사실상
-"히스토리를 어떻게 압축할 것인가"의 역사다.
-- 평가는 perplexity(PPL)로 한다. 테스트 데이터에 대한 cross-entropy $H$의 지수 형태로,
-"모델이 매 단어에서 평균적으로 몇 개의 후보 사이에서 고민하는가"로 읽으면 된다. 낮을수록 좋다.
-
-$$
-    PPL = 2^{H} = 2^{-\frac{1}{T}\sum_{t=1}^{T}{\log_2{P(w_t|w_{1 \cdots t-1})}}}
-$$
-
-- 단, 논문 전체에서 반복되는 주장: **PPL 개선은 그 자체로는 의미가 없고, 다운스트림(음성인식 WER 등)
-개선으로 증명해야 한다.** 실제로 이 논문의 모든 주요 실험은 PPL과 WER을 같이 보고한다.
-
-#### <span style="color: #4682B4">1.2 n-gram과 스무딩</span>
-
-- n-gram 모델은 히스토리를 "마지막 $n-1$개 단어"로 압축한다.
-
-$$
-    P(w_t|w_{1 \cdots t-1}) \approx P(w_t|w_{t-n+1 \cdots t-1})
-    = \frac{count(w_{t-n+1}, ..., w_t)}{count(w_{t-n+1}, ..., w_{t-1})}
-$$
-
-- 카운트가 0인 조합이 무수히 많으므로(4-gram만 되어도 대부분의 조합은 학습 데이터에 없음)
-**스무딩**이 필수다. 낮은 차수의 분포와 섞거나(interpolation), 없으면 낮은 차수로 물러난다(back-off).
-  - 이 계열의 완성형이 **modified Kneser-Ney(KN) 스무딩**이고, 논문 전체에서 비교 대상 베이스라인은
-KN 스무딩된 5-gram(**KN5**)이다.
-- n-gram의 근본적 한계 두 가지:
-  1. **일반화 불가**: 단어가 원자적 심볼이라서 "cat을 본 문맥"이 "dog"의 확률 추정에 아무 도움이 안 된다.
-"party will be on Monday"를 봤어도 "party will be on Friday"의 확률은 오르지 않는다.
-  2. **긴 문맥 불가**: $n$을 키우면 파라미터가 지수적으로 늘고 카운트는 더 희소해진다. 실전은 3~5가 한계.
-- 이를 보완하는 고전 기법들이 각자 존재했다 — **cache 모델**(최근 나온 단어는 또 나온다),
-**class 기반 모델**(단어를 품사/클러스터로 묶어 일반화), **structured LM**(구문 정보 이용),
-**maximum entropy 모델**(임의 feature 결합). 논문의 관점: RNN의 hidden state는 이것들이 하던 일을
-**상당 부분 하나의 메커니즘으로 포섭**한다. (실험적으로도 RNNLM과 cache를 결합하면 이득이 남아있긴 하지만
-n-gram+cache 조합보다 이득 폭이 작다 — 이미 일부를 흡수하고 있다는 간접 증거)
-
-#### <span style="color: #4682B4">1.3 Feedforward NNLM (Bengio 2003)</span>
-
-- NNLM[1]은 히스토리 압축을 **학습된 연속 표현**으로 한다. 마지막 $n-1$개 단어를 각각 $D$차원 벡터로
-projection 하고, concat 해서 hidden layer를 거쳐 softmax로 다음 단어를 예측한다.
-
-$$
-    y = softmax\Big( V\,\tanh\big( H\,[C_{w_{t-n+1}}; \cdots; C_{w_{t-1}}] + b \big) \Big)
-$$
-
-- $C \in \mathbb{R}^{V \times D}$가 공유 임베딩 테이블이다. **비슷한 문맥에서 등장한 단어는 비슷한 벡터를 갖게 되고,
-그 벡터를 통해 확률 질량이 자동으로 일반화된다** — n-gram의 한계 1번이 해결된다.
-- 하지만 여전히 **고정 윈도우**($n-1$개)라는 한계 2번이 남는다. 그리고 계산량이 커서 당시에는 소규모 데이터에서만
-쓸 수 있었다.
+이 논문의 복잡도 분석(병목은 $H \times H$와 $H \times V$)과 class 분해가 이듬해
+[word2vec](/posts/efficient-estimation-of-word-representations-in-vector-space/)의 설계로 직결되므로,
+word2vec 계보의 1편으로 읽는다. 리뷰는 논문 챕터 구성(1~9장)을 그대로 따라간다.
 
 <hr/> <!-- 수평선 -->
 
-### <span style="color: #ffd33d">[2] RNNLM — 네트워크 뜯어보기</span>
+### <span style="color: #ffd33d">[Ch.1] Introduction</span>
 
-#### <span style="color: #4682B4">2.1 구조</span>
+- 저자의 출발점은 놀랍게도 실용이 아니라 **AI다**. Turing test보다 정밀한 지능 측정으로 Shannon의
+"Entropy of printed English"(Shannon game)를 든다 — **"언어를 이해하는 능력 ≈ 문맥에서 다음 단어를
+예측하는 능력"** 이라고 가정하면, 언어모델의 품질(entropy)이 곧 지능의 형식적 측정이 된다는 것.
+  - Shannon의 실험: 사람은 n-gram보다 훨씬 예측을 잘하고, 문맥이 길어질수록 격차가 벌어진다.
+- 물론 텍스트만 읽어서 사람 수준의 이해에 도달하는 건 비현실적으로 어렵다고 인정하면서, 실용 가치
+(기계번역, 음성인식)로 연구를 정당화한다.
+- 논문의 목표 선언: "여전히 사실상 SOTA로 남아있는 단순 n-gram 모델을 넘어서는 새 기법을 만들고,
+표준 데이터셋들에서 광범위한 실증으로 증명한다."
+- **Claims of the Thesis** (1.3절, 논문이 주장하는 기여 그대로):
+  1. simple RNN 기반 통계 언어모델의 개발
+  2. 기본 RNNLM의 확장들 — unigram 빈도 기반 class, **신경망+ME 모델 조인트 학습**,
+학습 데이터 정렬에 의한 적응, 테스트 데이터 처리 중 학습(dynamic evaluation)
+  3. 실험 재현이 가능한 오픈소스 **RNNLM toolkit**
+  4. PTB / WSJ / NIST RT04 / 데이터 압축·기계번역에서의 새 SOTA
+  5. NNLM 성능 분석 (hidden 크기, 데이터 증가의 영향)
+  6. 전통적 접근의 한계에 대한 논의와 미래 연구 방향
 
-- Elman network(simple RNN) 그대로다. 입력은 현재 단어의 one-hot $w(t) \in \mathbb{R}^{V}$과
-직전 hidden state $s(t-1) \in \mathbb{R}^{H}$이다.
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[Ch.2] Overview of Statistical Language Modeling</span>
+
+#### <span style="color: #4682B4">2.1 평가 — Perplexity와 WER</span>
+
+- 언어모델은 chain rule로 시퀀스에 확률을 부여하고, 평가는 perplexity(PPL)로 한다.
 
 $$
-    \begin{split}
-    s(t) &= \sigma\big( U\,w(t) + W\,s(t-1) \big) \\
-    y(t) &= softmax\big( V\,s(t) \big)
-    \end{split}
+    PPL = 2^{-\frac{1}{K}\sum_{i=1}^{K}{\log_2{P(w_i|w_{1 \cdots i-1})}}}
 $$
 
-- $\sigma$는 sigmoid, $y(t)$가 다음 단어의 확률분포 $P(w_{t+1}|w_t, s(t-1))$이다.
-- 파라미터를 하나씩 보면:
-  - $U \in \mathbb{R}^{H \times V}$: one-hot과의 곱은 **열 하나를 뽑는 것**이므로 $U$의 각 열이 사실상
-단어 임베딩이다. "임베딩 lookup"이라는 현대 표준 구현과 동일하다.
-  - $W \in \mathbb{R}^{H \times H}$: recurrent 행렬. 히스토리 압축을 담당한다.
-  - $V \in \mathbb{R}^{V \times H}$: 출력(softmax) 행렬. 이게 계산량의 지배항이다. (아래 2.4)
-- NNLM과의 결정적 차이: 문맥 윈도우가 고정 $n-1$개가 아니라, $s(t)$가 **이론상 무한한 과거를 재귀적으로 압축**한다.
-히스토리 동치류를 사람이 정의하는 게 아니라 데이터가 학습한다.
-- hidden 크기는 $H = 30{\sim}500$ 수준 (2012년 스케일). 데이터가 클수록 $H$도 커져야 이득이 유지된다.
+- "단어 하나를 평균 8bit로 인코딩하면 PPL은 $2^8 = 256$" — cross entropy의 지수 형태다.
+- 재밌는 지적: **"PPL 상대 개선률(%)로 보고하는 관행은 잘못됐다.**" 같은 30% PPL 감소라도
+시작점에 따라 entropy 감소가 51%~4.7%로 전혀 다르다 (논문 Table 2.1). 그래서 이 논문은
+주요 비교를 **entropy 감소율**로 보고한다.
 
-#### <span style="color: #4682B4">2.2 학습 — SGD와 Truncated BPTT</span>
+| PPL | 30% 감소 후 | Entropy [bits] | 감소 후 | Entropy 감소율 |
+|---|---|---|---|---|
+| 2 | 1.4 | 1 | 0.49 | 51% |
+| 100 | 70 | 6.64 | 6.13 | 7.7% |
+| 2000 | 1400 | 10.97 | 10.45 | 4.7% |
 
-- loss는 다음 단어에 대한 cross-entropy $-\log{y_{w_{t+1}}(t)}$이고, plain SGD로 학습한다.
-- 학습 스케줄이 소박하지만 구체적으로 적혀 있다 (이후 RNNLM toolkit의 기본값):
-  - 초기 learning rate $\alpha = 0.1$, 매 epoch 마다 validation entropy 확인.
-  - 개선이 없으면 **learning rate를 절반으로** 줄이며 계속, 또 개선이 없으면 종료. (보통 10~20 epoch 내 수렴)
-  - 명시적 regularization은 거의 안 쓴다 — 큰 데이터에서는 overfitting보다 underfitting이 문제라는 입장.
-- gradient는 **BPTT(BackPropagation Through Time)** 로 계산하되, 전체 히스토리로 펼치지 않고
-$\tau = 5$ 스텝 정도만 펼치는 **truncated BPTT**를 사용한다. 그리고 매 단어마다 unfold 하는 대신
-10~20 단어마다 묶어서 backprop 하면(block mode) 계산 효율이 좋아진다.
+- 언어에 확률을 쓰는 것 자체에 대한 Chomsky의 유명한 반박("문장의 확률이라는 개념은 어떤 해석으로도
+전혀 쓸모없다", 1969)을 인용하고 — 실용적 성공(ASR/MT)으로 이미 반박됐다고 받아친다.
+(6장에서 이 문장을 직접 실험으로 재반박한다. 아래 참고)
+- 이론적 근거로 **Solomonoff의 Algorithmic Probability**까지 끌고 온다: 모든 가능한 모델의 예측을
+description length로 가중 평균하는 것이 최적 예측이라는 (계산 불가능한) 이론 —
+**뒤에 나올 "모델 전부 조합" 실험의 이론적 정당화**로 쓰인다. Mahoney의 "압축 = 언어모델링" 관점과
+Hutter Prize도 같은 맥락에서 소개.
+- WER(word error rate)은 $WER = \frac{S+D+I}{N}$ (치환+삭제+삽입). PPL과 WER 각각의 장단점을
+목록으로 정리하고, "PPL 2% 개선 + WER 0.3% 개선을 SOTA라고 주장하는 논문들"을 명시적으로 비판한다.
+
+#### <span style="color: #4682B4">2.2 N-gram 모델</span>
+
+- 최대우도 추정 $P(A|H) = \frac{C(HA)}{C(H)}$은 못 본 조합에서 0이 되므로 스무딩이 필수.
+Good-Turing(GT)과 **modified Kneser-Ney(KN)** 를 표준으로 사용하며, KN이 일관되게 최강이다.
+- n-gram의 진짜 약점을 예문으로 보여준다:
+  - 장거리 패턴: `THE SKY ABOVE OUR HEADS IS BLUE` — SKY와 BLUE의 관계는 사이에 뭐가 끼든 유지되지만,
+끼는 단어의 변형이 지수적으로 많아 n-gram은 각 변형을 전부 봐야 한다.
+  - 단어 유사성: `PARTY WILL BE ON <MONDAY/TUESDAY>`만 보고는 `... ON FRIDAY`에 의미있는 확률을 못 준다.
+- 결론: n-gram이 SOTA인 이유는 더 나은 기법이 없어서가 아니라, **더 나은 기법들이 계산적으로 비싸고
+개선폭이 애플리케이션 성공에 결정적이지 않았기 때문** — 그래서 이 논문의 상당 부분이 속도 트릭이다.
+
+#### <span style="color: #4682B4">2.3 고급 기법들 개관</span>
+
+논문은 이후 4장에서 전부 실측 비교하므로, 여기서 각 기법의 성격과 비판을 미리 정리한다.
+
+| 기법 | 아이디어 | 논문의 평가 |
+|---|---|---|
+| Cache LM | 최근 나온 단어는 또 나온다 (동적 n-gram 보간) | PPL은 크게 줄지만(~20%) WER 개선은 의문 — ASR에서는 히스토리 자체가 오염되어 오류가 잠긴다(lock-in) |
+| Class 기반 | 단어를 클래스로 묶어 희소성 해소 | 작은 데이터에서 WER에 효과적, 데이터 커지면 이득 소멸 |
+| Structured LM | CFG 파스 트리로 문장 구조 모델링 | 장거리 패턴의 정공법이지만 복잡도/모호성/언어 의존성 문제 |
+| Decision Tree / Random Forest | 히스토리에 일반적 질문을 하는 트리들 | 좋은 트리 찾기가 어렵고 데이터 커지면 이득 감소 |
+| Maximum Entropy (ME) | $P(w\|h) = \frac{e^{\sum_i{\lambda_i f_i(w,h)}}}{Z(h)}$ 임의 feature 결합 | = 로지스틱 회귀. **"hidden layer 없는 신경망"** — 이 관찰이 6장 RNNME의 복선 |
+| NNLM | 히스토리를 저차원 연속 공간으로 projection | 자동 클러스터링 + 다단계 유사도. 이 논문의 주인공 |
+
+- Jelinek의 유명한 농담("언어학자를 해고할 때마다 인식률이 올라간다")을 인용하며 — 범용 학습 기법이
+task 특화 기법을 이기는 패턴을 지적한다.
+
+#### <span style="color: #4682B4">2.4 실험 세팅 예고</span>
+
+- 재현성에 대한 강한 문제의식: 사설 데이터셋, 약한 baseline, 재현 불가능한 실험을 나열하며 비판하고,
+표준 셋업(PTB / WSJ / RT04 / MS Sentence Completion)만 사용 + toolkit 공개를 원칙으로 삼는다.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[Ch.3] Neural Network Language Models</span>
+
+#### <span style="color: #4682B4">3.1 Feedforward NNLM (Bengio 2003)</span>
+
+- 구조: 이전 $n-1$개 단어를 1-of-V 인코딩 → 공유 projection 행렬 $P$로 저차원 투영(위치별로 같은 행렬)
+→ tanh/sigmoid hidden (100~300) → 전체 vocabulary에 대한 출력층.
+  - 수치 감각: $V = 50K$, 5-gram이면 입력이 20만 binary 중 4개만 1. 30차원 projection이면
+projection layer는 $30 \times 4 = 120$차원.
+- 당시의 비용 현실: Bengio의 원 실험은 **40개 CPU로 1 epoch에 1주일** (14M 단어, 18K vocab,
+hidden 60으로 제한). 그래도 5 epoch 후 n-gram 대비 PPL ~20% 개선 — 잠재력은 분명했다.
+- Mikolov 자신의 대안 FF 구조(bigram NNLM을 먼저 학습해 그 표현으로 n-gram NNLM 학습)도 소개 —
+성능은 Bengio 구조와 거의 동일. (이 "표현을 먼저 배우고 얹는다" 2단계 관점이 word2vec의 씨앗)
+
+#### <span style="color: #4682B4">3.2 RNNLM — 제안 모델</span>
+
+- 핵심 차이: FF는 히스토리가 여전히 "직전 $n-1$개 단어"지만, RNN은 **히스토리의 표현 자체를 데이터에서
+학습**한다. hidden state가 전체 과거를 압축하므로 이론상 무제한 문맥.
+- 또 하나의 결정적 장점: **가변 위치 패턴**. "히스토리 어딘가에 나왔던 단어"에 의존하는 패턴을
+FF로 표현하려면 위치마다 파라미터가 따로 들고, 그 위치별 학습 예시도 따로 필요하다.
+RNN은 hidden state에 그냥 기억하면 된다.
+- 구조는 Elman network 그대로:
+
+$$
+    s(t) = f\big( U\,w(t) + W\,s(t-1) \big)
+    ,\qquad
+    y(t) = g\big( V\,s(t) \big)
+$$
+
+- $f$: sigmoid, $g$: softmax. **bias는 안 쓴다** — 유의미한 개선이 없어서 Occam's razor로 제거했다는
+각주가 논문 스타일을 잘 보여준다.
+- 1 step 계산량:
+
+$$
+    O = H \times H + H \times V = H \times (H + V)
+$$
+
+#### <span style="color: #4682B4">3.3 학습 알고리즘 (논문에서 가장 공들인 부분)</span>
+
+- plain SGD + cross entropy. 출력층 오차는 깔끔하게 (정답 − 예측):
+
+$$
+    e_o(t) = d(t) - y(t)
+$$
+
+- "MSE를 쓰는 건 흔한 실수다 — 돌아는 가지만 entropy/WER 관점에서 suboptimal" 이라고 명시.
+- **Learning rate 스케줄**: 시작 $\alpha = 0.1$. validation entropy 개선이 **0.3% 미만**이 되면
+그때부터 매 epoch 절반으로 줄이고, 또 개선 없으면 종료. 보통 8~20 epoch.
+- 가중치 초기화는 $\mathcal{N}(0, 0.1)$, L2 regularization $\beta = 10^{-6}$ (거의 장식 수준 —
+큰 데이터에서는 overfitting보다 underfitting이 문제라는 입장).
+- 업데이트 식 (출력층 → hidden → 입력/recurrent 순서로 전부 명시돼 있다):
+
+$$
+    V(t+1) = V(t) + s(t)\,e_o(t)^{\top}\alpha - V(t)\beta
+$$
+
+$$
+    e_h(t) = d_h\big( e_o(t)^{\top}V,\; t \big)
+    ,\qquad
+    d_{hj}(x, t) = x\,s_j(t)\,(1-s_j(t))
+$$
+
+$$
+    U(t+1) = U(t) + w(t)\,e_h(t)^{\top}\alpha - U(t)\beta
+    ,\qquad
+    W(t+1) = W(t) + s(t-1)\,e_h(t)^{\top}\alpha - W(t)\beta
+$$
+
+- $w(t)$는 one-hot이므로 $U$ 업데이트는 **활성 뉴런의 열 하나만** 갱신하면 된다 (임베딩 lookup의 학습 버전).
 
 <details>
-<summary> <span style="color: #ffd33d">BPTT gradient 유도 + vanishing/exploding 분석 펼치기/접기</span> </summary>
+<summary> <span style="color: #ffd33d">3.3.1 BPTT — 시간 펼침, vanishing/exploding, clipping 펼치기/접기</span> </summary>
 
-- 시간축으로 펼친 네트워크에서 $W$는 모든 시점에 공유되므로, loss $L = \sum_t{L_t}$의 gradient는
-각 시점 기여분의 합이다.
-
-$$
-    \frac{\partial L}{\partial W} = \sum_{t}{\sum_{k \le t}{
-        \frac{\partial L_t}{\partial y(t)}
-        \frac{\partial y(t)}{\partial s(t)}
-        \left( \prod_{j=k+1}^{t}{\frac{\partial s(j)}{\partial s(j-1)}} \right)
-        \frac{\partial s(k)}{\partial W}
-    }}
-$$
-
-- 출력층에서 시작하는 오차는 softmax + cross-entropy 조합이라 깔끔하게 (예측 − 정답)이 된다.
+- 일반 BP로만 학습하면 네트워크는 "다음 단어 예측"만 최적화할 뿐, **hidden state에 미래에 유용할 정보를
+저장하려는 노력을 하지 않는다** — 장거리 정보가 남는 건 설계가 아니라 운이다.
+- BPTT의 아이디어: $N$ step 동안 쓰인 RNN은 **hidden layer가 $N$개인 deep feedforward 네트워크**
+(recurrent 행렬은 전부 동일)로 볼 수 있다. 이 펼친 네트워크에 일반 gradient descent를 적용한다.
+- 오차의 시간 역전파는 재귀식 하나다:
 
 $$
-    \frac{\partial L_t}{\partial (Vs(t))} = y(t) - d(t)
-    \qquad (d(t): \text{정답 one-hot})
+    e_h(t-\tau-1) = d_h\big( e_h(t-\tau)^{\top}W,\; t-\tau-1 \big)
 $$
 
-- 시점을 거슬러 올라가는 항이 Jacobian의 곱이다. sigmoid RNN이면
+- 펼친 스텝들의 gradient를 **한 번에 합산해서** 업데이트한다 (스텝마다 갱신하면 불안정):
 
 $$
-    \frac{\partial s(j)}{\partial s(j-1)} = diag\big( s(j)\odot(1-s(j)) \big)\,W
+    U(t+1) = U(t) + \sum_{z=0}^{T}{w(t-z)\,e_h(t-z)^{\top}\alpha} - U(t)\beta
+    ,\qquad
+    W(t+1) = W(t) + \sum_{z=0}^{T}{s(t-z-1)\,e_h(t-z)^{\top}\alpha} - W(t)\beta
 $$
 
-- 이 Jacobian 곱의 스펙트럼 norm이 1보다 작으면 gradient가 지수적으로 소멸(vanishing), 크면 폭발(exploding)한다.
-sigmoid의 미분 최대값이 $1/4$이므로 $\|W\|$가 4 이하이면 소멸 쪽으로 밀리는 구조다.
-- 논문의 실전 해법:
-  - **exploding** → gradient 성분이 임계값(예: 15)을 넘으면 잘라내는 **clipping**. 이게 없으면 학습이 수시로 발산한다.
-  - **vanishing** → 근본 해결은 못 한다. truncated BPTT($\tau=5$)로 "어차피 먼 과거의 gradient는 소멸하니
-짧게만 펼치자"는 실용적 타협을 하고, 장거리 정보는 (당시 실험하던) 추가 feature나 cache 결합으로 보충한다.
-- 이 미해결 지점이 이후 LSTM 기반 LM(Sundermeyer 2012, Graves 2013)이 표준이 되는 이유고,
-더 멀리는 "경로 길이를 아예 $O(1)$로 만들자"는 [Transformer](/posts/attention-is-all-you-need/)의
-문제의식으로 이어진다. $\blacksquare$
+- gradient는 시간을 거슬러 가며 빠르게 **소멸(vanish)** 하고 드물게 **폭발(explode)** 한다[Bengio 1994].
+그래서 실전은 **truncated BPTT** — 단어 LM은 $\tau \approx 5$ 스텝 펼침이면 충분하다.
+(흥미로운 관찰: $\tau=5$로도 네트워크는 5 스텝 이상 정보를 저장하도록 학습될 수 있고,
+$\tau=1$(일반 BP)로도 4-gram 수준의 문맥은 배운다)
+- 매 단어마다 펼치지 않고 **10~20 단어마다 묶어서**(block mode) 역전파하면 복잡도에서 $T$항이
+사실상 사라진다.
+- **Exploding 해법 = gradient clipping**: hidden 뉴런에 누적되는 오차 gradient를 $[-15, 15]$로 자른다.
+"이것 없이는 큰 데이터에서 RNNLM 학습이 아예 불가능하다." 수치 안정성을 위해 double precision 권장.
+- Vanishing은 미해결로 남긴다 — 이 지점이 이후 LSTM 채택, 그리고 경로 길이 $O(1)$을 내세운
+[Transformer](/posts/attention-is-all-you-need/)로 이어지는 문제의식이다. $\blacksquare$
 
 </details>
 
 <hr/> <!-- 수평선 -->
 
-#### <span style="color: #4682B4">2.3 Vocabulary 처리</span>
+#### <span style="color: #4682B4">3.4 확장들</span>
 
-- 전체 vocabulary를 그대로 쓰지 않고, 빈도가 임계값 이하인 단어를 전부 `<unk>` 토큰 하나로 병합한다.
-(PTB 세팅은 vocab 10K로 고정하는 것이 관례가 됐고, 이 논문의 실험 세팅이 이후 논문들의 표준 벤치마크 세팅으로 굳어졌다)
-- `<unk>`의 확률은 rare 단어들의 개수로 나눠서 재분배한다 — n-gram과 공정하게 비교하기 위한 처리.
-
-#### <span style="color: #4682B4">2.4 Class 기반 출력층 — softmax 병목 해결</span>
-
-- 학습/추론 계산량의 지배항은 출력층 $V\,s(t)$의 $H \times V$ 곱이다. ($V$는 수만~수십만)
-- 단어를 **빈도 기반으로** $C$개의 class에 배정한다. unigram 확률의 누적 분포를 균등 분할하는
-frequency binning이라 별도 클러스터링 학습이 필요 없다. 확률은 2단계로 분해된다.
+- **3.4.1 Vocabulary truncation**: 희귀 단어를 하나의 클래스로 합치거나(Bengio), 최빈 $S$개만 신경망이
+다루고 나머지는 n-gram에 맡기는 shortlist(Schwenk, $S$=2K까지). 빠르지만 **정확도 손실이 크다.**
+- **3.4.2 출력층 Factorization (class 분해)** — 이 논문의 대표 속도 트릭.
 
 $$
-    P(w_{t+1}|s(t)) = P\big(c(w_{t+1})\,|\,s(t)\big) \times P\big(w_{t+1}\,|\,c(w_{t+1}),\,s(t)\big)
+    P(w_{t+1}|s(t)) = P\big(c_i\,|\,s(t)\big) \times P\big(w_i\,|\,c_i,\,s(t)\big)
 $$
-
-- class 분포($C$개) 하나와, 해당 class 안의 단어 분포(평균 $V/C$개) 하나만 softmax 하면 된다.
-학습 시에도 정답 단어가 속한 class의 단어들만 업데이트하면 된다.
 
 <details>
-<summary> <span style="color: #ffd33d">최적 class 수가 sqrt(V)임을 증명 + 정확도 손실 논의 펼치기/접기</span> </summary>
+<summary> <span style="color: #ffd33d">Frequency binning class 분해 + 최적 class 수 증명 펼치기/접기</span> </summary>
 
-- 출력층 계산량은 $f(C) = H\cdot C + H\cdot\frac{V}{C}$에 비례한다. $C$로 미분해서 0으로 두면
+- Goodman이 ME 모델 가속에 쓰던 트릭의 신경망 이식이다. class 분포($C$개) softmax 하나 +
+해당 class 내 단어들($V'$개) softmax 하나만 계산한다.
+- **class 배정은 학습 없이 unigram 빈도만으로** 한다(frequency binning): 누적 unigram 확률을
+균등 분할. 고빈도 단어는 소수 정예 class에, 희귀 단어는 큰 class에 들어가지만 어차피 드물게 접근된다.
+- 출력층 계산량 $f(C) = H \cdot C + H \cdot \frac{V}{C}$를 $C$로 미분하면
 
 $$
     \frac{df}{dC} = H - H\frac{V}{C^2} = 0
-    \quad\Rightarrow\quad C^2 = V
     \quad\Rightarrow\quad C = \sqrt{V}
 $$
 
-- 이때 계산량은 $2H\sqrt{V}$로, 원래 $HV$ 대비 $\frac{\sqrt{V}}{2}$배 빨라진다.
-$V = 10^5$면 약 **158배** 속도 향상이다.
-- 공짜는 아니다 — 빈도 기반 class 배정은 의미와 무관한 강제 분해라서 PPL이 약간 나빠진다.
-논문 실험 기준으로 전체 softmax 대비 PPL 손실은 수 % 수준, 대신 학습 시간이 수십 배 줄어들므로
-같은 시간에 더 큰 모델/데이터를 돌리는 쪽이 항상 이득이었다.
-- 이 "출력을 트리/계층으로 쪼갠다"는 아이디어를 극한(이진 트리, 깊이 $\log_2 V$)까지 밀면
-[word2vec](/posts/efficient-estimation-of-word-representations-in-vector-space/)의 hierarchical softmax가 된다. $\blacksquare$
+- 최적점에서 $2H\sqrt{V}$ — 원래 $HV$ 대비 $\frac{\sqrt{V}}{2}$배 빨라진다. 실측으로 **15~30배 speedup**,
+10만 단어 이상 vocabulary에서는 그 이상. 정확도 손실은 작다 (4장 실측).
+- 변형: 빈도에 **제곱근을 씌운 뒤** binning 하면 접근 비용이 더 균형잡혀 추가 speedup (Povey 제안).
+- 이 트릭이 [word2vec](/posts/efficient-estimation-of-word-representations-in-vector-space/)의
+hierarchical softmax($O(\log V)$)로, 또 [fastText 분류기](/posts/fasttext-subword-information-and-bag-of-tricks/)의
+라벨 트리로 이어진다. $\blacksquare$
 
 </details>
 
 <hr/> <!-- 수평선 -->
 
-#### <span style="color: #4682B4">2.5 Dynamic Evaluation</span>
-
-- 보통 LM은 학습 후 고정된 채 평가되는데, 논문은 **테스트 중에도 방금 처리한 텍스트로 모델을
-계속 업데이트**하는 dynamic evaluation을 제안한다. (learning rate를 작게 고정하고 1 pass SGD)
-- 효과는 cache 모델과 유사하다 — 문서 안에서 반복되는 주제/고유명사에 빠르게 적응한다.
-다만 cache가 "그 단어 자체"만 기억하는 반면, dynamic RNN은 **연속 공간에서 적응**하므로
-유사 단어에도 확률이 퍼진다.
-- static/dynamic 두 버전은 성질이 달라서 **조합하면 서로 보완**된다. (아래 결과 표)
-- 지금 관점에서 보면 test-time adaptation / online learning의 초기 사례다.
-
-#### <span style="color: #4682B4">2.6 모델 조합 (Combination)</span>
-
-- 서로 다른 초기화/하이퍼파라미터로 학습한 RNNLM 여러 개와 n-gram(KN5, cache 포함)을
-**선형 보간(linear interpolation)** 으로 섞는다.
-
-$$
-    P(w|h) = \sum_{m}{\lambda_m P_m(w|h)}, \qquad \sum_m{\lambda_m} = 1
-$$
-
-- 가중치 $\lambda$는 validation에서 EM으로 최적화. 신경망 LM은 실행마다 다른 로컬 미니마에 도달해서
-**앙상블 이득이 특히 크다**는 것을 실험으로 보인다.
-- 결합 대상: static RNN들 + dynamic RNN들 + KN5 + cache + (maximum entropy 모델 등) — 논문의
-최종 수치는 전부 이런 대규모 조합에서 나온다.
+- **3.4.3 n-gram 근사**: RNNLM에서 **텍스트를 대량 샘플링해서 그 위에 n-gram을 학습**하면, 신경망 코드
+한 줄 없이 디코더에 RNN의 지식 일부를 넣을 수 있다. (무한 샘플 + 무한 차수면 이론상 등가)
+- **3.4.4 Dynamic evaluation**: 테스트 데이터를 처리하면서 $\alpha = 0.1$ 고정으로 1 pass 학습을 계속한다.
+cache와 달리 **연속 공간에서 적응**하므로 유사 단어에도 확률이 퍼진다. 위험: 모호한 데이터가 계속 들어오면
+**자기 가중치를 덮어써서 잊어버릴 수 있다** — 그래서 (잊지 않는) static 모델과의 보간이 중요하다.
+- **3.4.5 NNLM 조합**: 초기화만 다른 RNN 여러 개의 출력 평균. Solomonoff ALP의 실용 근사라는
+해석을 달아둔다. 실전 지침: "가능한 큰 모델을 여러 개 만들어 균등 가중으로 섞어라."
 
 <hr/> <!-- 수평선 -->
 
-### <span style="color: #ffd33d">[3] Results</span>
+### <span style="color: #ffd33d">[Ch.4] PTB에서의 비교와 조합 — 논문의 하이라이트</span>
 
-#### <span style="color: #4682B4">3.1 Penn Treebank (PPL)</span>
+- 셋업: PTB sections 0-20 학습(930K), 21-22 valid(74K), 23-24 test(82K), vocab 10K, OOV는 전부 `<unk>`.
+이 전처리가 이후 10년간 LM 벤치마크 표준이 된다.
+- 비교 원칙에 대한 잔소리가 길다(사설 데이터, 약한 baseline, 재현 불가 비판 + "실험은 재현 가능해야 하고
+코드를 공개해야 한다"는 제안) — 그리고 실제로 당시 존재하던 기법 대부분을 저자/원저자 구현으로 모아서
+**단일 셋업에서 전부 실측**했다. (논문 Table 4.1 발췌)
 
-- 표준 세팅: PTB 930K 학습 토큰, vocab 10K. 대표 결과 흐름은 다음과 같다. (논문 수치 기준, 근사값)
+| 모델 | 단독 PPL | +KN5 | +KN5+cache |
+|---|---|---|---|
+| 3-gram Good-Turing (GT3) | 165.2 | - | - |
+| **KN5 (baseline)** | **141.2** | - | - |
+| KN5 + cache | 125.7 | - | - |
+| PAQ8o10t (범용 압축기!) | 131.1 | - | - |
+| Maximum Entropy 5-gram | 142.1 | 138.7 | 124.5 |
+| Random forest LM | 131.9 | 131.3 | 117.5 |
+| Structured LM | 146.1 | 125.5 | 114.4 |
+| Within/across sentence LM | 116.6 | 110.0 | 108.7 |
+| Log-bilinear LM | 144.5 | 115.2 | 105.8 |
+| Feedforward NNLM | 140.2 | 116.7 | 106.6 |
+| Syntactical NNLM (당시 최고 기록) | 131.3 | 110.0 | 101.5 |
+| **RNNLM (제안)** | **124.7** | **105.7** | **97.5** |
+| Dynamic RNNLM | 123.2 | 102.7 | 98.0 |
+| Static RNN 20개 조합 | 102.1 | 95.5 | 89.4 |
+| Dynamic RNN 조합 | 101.0 | 92.9 | 90.0 |
 
-| 모델 | Perplexity |
+- 읽는 포인트:
+  - **단일 모델로 RNNLM이 전부 이긴다** (124.7). 심지어 구문 파서 feature를 쓰는 Syntactical NNLM보다 좋다.
+  - **범용 압축기 PAQ가 PPL 131**로 웬만한 LM 기법보다 좋다는 것도 재밌는 발견 — "압축 = LM"의 실증이자,
+PAQ의 hash 기반 구조가 6장 RNNME의 모티브가 된다.
+  - cache와 결합해도 RNN의 이득이 대부분 남는다(97.5) → **RNN의 개선은 cache류 장거리 정보가 아니라
+"짧은 문맥의 더 나은 표현"에서 온다**는 분석. (Bengio의 vanishing gradient 이론과 일치)
+- **BPTT ablation** (Figure 4.1): BPTT 스텝 1(일반 BP) → 5~8로 늘리면 PPL이 ~10% 개선.
+"모델 4개 평균 vs 4개 조합"과 비교해서, BPTT의 이득은 앙상블로 대체 안 되는 정보라는 것도 확인.
+- **조합 실험의 결론들**:
+  - NN 계열 전부 조합: 105.8 → dynamic RNN 추가: 100.2 → 전 기법 조합: **93.2**.
+  - 최종 전체 조합 (Table 4.5): **PPL 83.5.** 가중치를 보면 RNN 계열이 0.63으로 지배하고,
+KN5·ME·log-bilinear·FFNN 등 다수 기법의 가중치가 **0** — RNN이 그들이 담던 정보를 포섭한다.
+  - RNN들만 빼고 조합하면 92.0 — 그래도 이전 기록(107)보다 좋지만, RNN이 담는 정보가
+다른 어떤 기법으로도 안 잡힌다는 것을 보여준다.
+  - greedy 추가 실험 (Table 4.6): dynamic RNN 조합(101.0) → +KN5+cache(90.0) → +static RNN(86.2)
+→ +문장경계 LM(84.8) → +랜덤포레스트(84.0). **상위 2~3개 기법이면 거의 끝**이라는 실용 결론.
+  - adaptive 보간(가중치를 테스트 중 동적 추정) + 큰 학습률 dynamic RNN까지: **79.4**,
+이후 6장의 RNNME까지 넣어 **78.8 (KN5 대비 entropy 11.8% 감소)**.
+- 4장 결론의 한 문장이 이후 10년을 예언한다: *"feature와 전문가 지식에 집중하는 기법보다
+모델링(학습) 자체에 집중하는 기법이 이긴다."*
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[Ch.5] Wall Street Journal 음성인식 실험</span>
+
+#### <span style="color: #4682B4">5.1 JHU 셋업 — 고급 기법들과 WER 비교</span>
+
+- NYT 37M 토큰 학습, 20K vocab, 100-best rescoring (oracle WER 6.1/9.5%).
+
+| 모델 | Dev WER | Eval WER |
+|---|---|---|
+| KN5 (baseline) | 12.2% | 17.2% |
+| Discriminative LM | 11.5% | 16.9% |
+| Joint (structured) LM | - | 16.7% |
+| Static RNN | 10.3% | 14.5% |
+| Adapted RNN | 9.7% | 14.2% |
+| **RNN 3개 보간** | **9.5%** | **13.9%** |
+
+- 경쟁 고급 기법들이 WER 2~3% 상대 감소에 그칠 때 RNN은 **상대 ~20% 감소.**
+- **데이터 스케일링 실험** (Table 5.2) — 이 논문에서 가장 중요한 그래프:
+
+| 학습 토큰 | KN5 PPL | +RNN PPL | KN5 WER | +RNN WER | Entropy 개선 | WER 개선 |
+|---|---|---|---|---|---|---|
+| 223K | 415 | 333 | - | - | 3.7% | - |
+| 675K | 390 | 298 | 15.6% | 13.9% | 4.5% | 10.9% |
+| 2.2M | 331 | 251 | 14.9% | 12.9% | 4.8% | 13.4% |
+| 6.4M | 283 | 200 | 13.6% | 11.7% | 6.1% | 14.0% |
+| **37M** | 212 | 133 | 12.2% | 10.2% | **8.7%** | **16.4%** |
+
+- Goodman의 관찰("고급 기법의 이득은 데이터가 커지면 사라진다")과 정반대로,
+**RNN의 상대 이득은 데이터가 커질수록 커진다.** 단, hidden 크기도 같이 키워야 한다는 조건이 붙는다.
+
+#### <span style="color: #4682B4">5.2 Kaldi 셋업 — 재현 가능한 최고 기록</span>
+
+- 오픈소스 Kaldi로 1000-best rescoring. 모델은 6장의 RNNME (hash 2G, 1~4gram feature).
+
+| 모델 | Eval92 WER | Eval93 WER |
+|---|---|---|
+| KN5 (no cutoff) | 12.0% | 16.6% |
+| RNNME-10 | 11.9% | 16.3% |
+| RNNME-80 | 10.4% | 14.9% |
+| RNNME-320 | 9.8% | 14.2% |
+| **RNNME 조합 + 적응** | **9.15%** | **13.11%** |
+
+- KN5 대비 **절대 2.9~3.5%p, 상대 21~24% WER 감소** — "통계 언어모델링 분야에서 아마도 최고 기록".
+- 문장 단위 정확도로 보면 더 극적: 27.6% → 39.9% (상대 37~45% 향상).
+- **hidden 10개짜리 RNNME도 baseline을 이긴다**는 것이 RNNME 구조의 힘 (6장에서 설명).
+- n-gram 근사 실험: RNNME-480에서 **150억 단어를 샘플링**해 5-gram을 만들면 WER 12.0→11.4%.
+원본 개선의 20~30%만 건지지만, 디코더에 신경망 코드 없이 넣을 수 있다.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[Ch.6] 대규모 학습 전략과 RNNME</span>
+
+- 무대: NIST RT04 Broadcast News, IBM Attila 인식기(판별 학습 음향모델), **학습 400M 토큰, vocab 82K** —
+"아마도 당시까지 학습된 가장 큰 신경망 언어모델".
+
+#### <span style="color: #4682B4">6.2~6.4 복잡도 줄이기 + 데이터 선택/정렬</span>
+
+- 복잡도 $I \times W \times (H \times H + H \times V)$의 각 항을 줄이는 전략을 하나씩 검토:
+epoch 수($I$), 토큰 수($W$), vocab($V$), hidden($H$), 병렬화. ("작은 hidden으로 큰 데이터"는
+안 통한다는 것을 뒤에서 보인다)
+- **데이터 선택/정렬 (curriculum)**: 전체를 40K 문장씩 560 청크로 나누고, 청크별 2-gram으로 dev PPL을
+측정 → PPL 600 이상(노이즈/중복) 청크는 버리고(403M→318M), 나머지를 **out-of-domain부터 in-domain
+순서로 정렬**해서 학습한다.
+  - 이유가 깔끔하다: online SGD에서 마지막에 본 데이터가 사실상 더 큰 가중치를 갖는다 + incremental
+learning(쉬운 것 먼저) 효과.
+  - 결과: 표준 shuffled SGD 대비 **PPL 약 10% 추가 감소**, 7 epoch로 수렴.
+- 대형 RNN 결과 (Table 6.3): RNN-320이 되어야 KN4(PPL 140)와 비슷해지고, RNN-640은 116 (KN4와 보간 시 102).
+lattice rescoring에서 RNN-640: WER 13.11% → 12.05%, 3모델 조합으로 **11.70%** (model M 12.49%보다 좋음).
+
+#### <span style="color: #4682B4">6.6 RNNME — RNN과 Maximum Entropy의 조인트 학습</span>
+
+- 2장의 복선 회수: **ME 모델 = hidden layer 없는 신경망** (입력→출력 직접 연결). 그러면 RNN에
+직접 연결(direct connections)을 추가하고 **같은 SGD로 조인트 학습**하면 되지 않나? — 이게 RNNME다.
+
+<details>
+<summary> <span style="color: #ffd33d">Hash 기반 class ME 구현 (n-gram feature를 해시로) 펼치기/접기</span> </summary>
+
+- n-gram ME의 full feature 파라미터 수는 $V^N$ — trigram에 $V = 100K$면 $(10^5)^3$으로 불가능하다.
+- 그런데 입력 관점에서 보면 "직전 두 단어의 조합"은 **한 시점에 정확히 뉴런 하나만 활성**이다.
+따라서 전체 행렬 대신, n-gram 히스토리를 해시 함수로 고정 크기 배열에 매핑한다.
+
+$$
+    g(w_{t-2}, w_{t-1}) = \big( w_{t-2} \times P_1 \times P_2 + w_{t-1} \times P_1 \big)\; \%\; SIZE
+$$
+
+$$
+    P(w|h) = \frac{e^{\sum_{i}{\lambda_i f_i(g(h),\,w)}}}{\sum_{w}{e^{\sum_{i}{\lambda_i f_i(g(h),\,w)}}}}
+$$
+
+- **충돌은 감수한다** — 같은 버킷에 여러 히스토리가 겹치면 빈번한 feature가 값을 지배하므로,
+작은 해시는 pruned 모델처럼 동작한다. (해시 크기 하나로 메모리↔정확도를 조절하는 다이얼이 된다)
+- 이 발상의 직접적 출처는 압축 프로그램 PAQ(Mahoney)다. 그리고 이 해시 트릭은 이후
+[fastText](/posts/fasttext-subword-information-and-bag-of-tricks/)의 n-gram 버킷 해싱으로 그대로 이어진다.
+- 학습은 RNN 부분과 완전히 동일한 SGD/학습률/정규화 — ME는 그냥 "RNN의 직접 연결 가중치"일 뿐이다.
+출력 class 분해도 같이 적용된다. $\blacksquare$
+
+</details>
+
+<hr/> <!-- 수평선 -->
+
+- **해시 크기의 효과** (RNN-80+ME, eval PPL): 해시 0 → 183, $10^6$ → 176, $10^8$ → 136, $10^9$ → **123**
+(KN4 보간 시 113). 8GB 메모리를 쓰는 대신 baseline(140)을 크게 이긴다.
+- **왜 잘 되는가**: 직접 연결(ME)이 n-gram급 단순 패턴을 담당하므로, **hidden layer는 n-gram이 못 담는
+보완 정보에만 집중**할 수 있다. RNN 단독은 단순 패턴 표현에 파라미터를 낭비한다.
+  - RNNME-40이 RNN-320과 비슷한 WER — recurrent 가중치를 $40^2$개만 학습하고도 $320^2$개짜리 성능.
+  - 후속 실험(1~4gram feature + 8G 해시): RNNME-0(hidden 0!)이 eval PPL 137로 이미 KN4(140)를 이기고,
+RNNME-40은 117까지 간다.
+- **데이터가 커질 때의 거동** (Figure 6.12): hidden 고정이면 RNN의 이득은 데이터 증가와 함께 줄어들지만,
+**RNNME는 완만하게 유지**된다. RNNME-20이 RNN-80보다 낫다. → "수십억 단어 스케일에서는 신경망을
+어떤 형태든 n-gram과 조인트로 학습하는 것이 필수" 라는 결론.
+- **Chomsky 재반박 실험** (6.6.4): `colorless green ideas sleep furiously`(문법적) vs
+`furiously sleep ideas green colorless`(비문). 학습 데이터에 두 문장의 bigram이 하나도 없는데도
+RNN-640은 문법적인 문장에 **37,000배 높은 확률**을 준다 (n-gram은 거의 구분 못 함).
+"완전히 새로운 문장의 문법성도 통계 모델이 구분할 수 있다"는 직접 증명.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[Ch.7] Additional Experiments — 범용성 증명</span>
+
+- **기계번역**: IWSLT05 중→영 BLEU 48.7 → **51.2** (300-best rescoring), NIST MT05 33.0 → 34.7.
+MT 데이터는 괄호 짝맞춤 같은 n-gram이 못 잡는 패턴이 많아 PPL 개선이 ASR보다 크다
+(RNNME-160: 110 → 80, dynamic 결합 시 58).
+- **데이터 압축**: RNNLM toolkit에 arithmetic coding을 붙여 실제 압축기를 만들었다.
+정규화된 뉴스 텍스트 1.7GB 기준:
+
+| 압축기 | bits per character |
 |---|---|
-| KN5 (baseline) | 141 |
-| KN5 + cache | 125 수준 |
-| 단일 RNNLM | 124 수준 |
-| RNNLM 앙상블 (다수) | 102 수준 |
-| **RNN 앙상블 + dynamic + KN5+cache 등 전부 조합** | **80 밑으로** |
+| gzip -9 | 2.72 |
+| PAQ8o10t -8 (당시 최강 범용 압축기) | 1.28 |
+| RNNME-40 | 1.24 |
+| **RNNME-200** | **1.21** |
 
-- 당시까지 보고된 PTB 최저 PPL을 큰 폭으로 경신했다. 개별 모델의 개선폭보다 **이질적인 모델들의 조합**이
-만드는 개선폭이 크다는 것, 그리고 RNNLM이 조합 안에서 가장 큰 기여를 한다는 것이 핵심 메시지.
-- 데이터를 늘려가며 측정하면 **n-gram의 이득은 빠르게 포화되는데 RNNLM의 이득은 계속 유지**된다 —
-"데이터가 커질수록 신경망 LM의 상대 우위가 커진다"는, 이후 10년을 관통하는 관찰이다.
-
-#### <span style="color: #4682B4">3.2 음성인식 (WER)</span>
-
-- 실제 효용 증명: 음성인식기의 1차 디코딩이 내놓은 n-best/lattice를 RNNLM으로 **rescoring** 한다.
-(RNN은 히스토리가 무한이라 lattice에 직접 넣기 어려우므로 n-best 리스트 재채점이 실용적)
-- WSJ(Wall Street Journal) 세팅에서 KN 베이스라인 대비 **WER 10~20% 상대 감소**, NIST RT05 등
-더 큰 실전 세팅에서도 일관된 개선을 보였다.
-- "PPL 개선이 WER 개선으로 이어지는가"라는 오래된 회의론에 대해, 신경망 LM은 **된다**는 것을
-보인 초기 사례로 자주 인용된다.
-
-#### <span style="color: #4682B4">3.3 부산물 — RNNLM Toolkit과 단어 벡터</span>
-
-- 논문과 함께 공개한 **RNNLM toolkit**이 이후 연구들의 표준 베이스라인 구현이 됐다.
-- 그리고 부산물로 남긴 관찰 하나가 역사를 바꾼다: $U$의 열벡터(단어 임베딩)들을 보면
-**문법적/의미적으로 비슷한 단어가 가깝게 모여 있고, 벡터 차이가 관계를 담는다.**
-같은 시기 후속 논문(NAACL 2013 [4])에서 이 벡터들로 다음을 보였다.
-
-$$
-    v_{king} - v_{man} + v_{woman} \approx v_{queen}
-$$
-
-- "LM을 잘 만들기 위한 부산물"이던 벡터가 그 자체로 가치있다는 이 관찰이,
-다음 논문에서 **벡터 학습 자체를 목적**으로 삼는 발상 전환으로 이어진다.
+  - 1.21bpc는 **Shannon의 영어 entropy 상한 추정치(1.3bpc)보다 낮다.**
+- **Microsoft Sentence Completion Challenge**: 문장의 핵심 단어 하나를 5지선다로 고르는 태스크
+(50M 토큰 학습). random 20% / KN5 40.0% / RNNME-300 49.3% / 고빈도 단어 필터링 모델과 조합 **55.4%**
+(사람은 91%). — 이 태스크가 이듬해 [word2vec 논문](/posts/efficient-estimation-of-word-representations-in-vector-space/)의
+평가에 다시 등장한다.
+- **형태가 풍부한 언어**: PTB의 각 토큰에 랜덤 2bit를 붙이는 재밌는 실험 — n-gram은 entropy가 +3bit
+나빠지지만 RNN은 +2.5bit만 나빠진다 (클러스터링으로 유사성을 복원). 체코어 강의 ASR에서 KN4 70.7% →
+NN LM **75.0%** 단어 정확도.
 
 <hr/> <!-- 수평선 -->
 
-### <span style="color: #ffd33d">[4] 계보 — 어디서 왔고 어디로 갔나</span>
+### <span style="color: #ffd33d">[Ch.8~9] Towards Intelligent Models & Conclusion</span>
+
+- 8장은 AI 에세이에 가깝다. 요약하면:
+  - 신경망의 비선형은 **IF문**이다 — "작고 빨간 것은 사과"는 가중합으로 표현 불가.
+깊이가 늘면 IF의 중첩이 늘어 지수적으로 적은 규칙으로 패턴을 표현한다.
+  - 그러나 고정 깊이 모델은 "가변 길이 루프/재귀"를 못 담고, RNN도 매 스텝 hidden 전체를 접근해야 해서
+"필요할 때만 메모리를 읽는" 실제 프로그램과 다르다.
+  - 유전 프로그래밍(GP) 실험담: SGD보다 수십 배 느리지만, **SGD로는 못 배우는 패턴**(1bit를 100 step
+기억하기)을 GP는 배운다. SGD+GP 결합을 future work로 제안.
+  - `APPLE IS APPLE, BALL IS BALL, ... NOVEL IS ???` — 사람은 `X Y X` 패턴을 즉시 일반화하지만
+n-gram/FSM은 원리적으로 불가능. **"점점 복잡해지는 패턴 학습 태스크를 정의하고 제한된 자원으로 풀게
+하자"** 는 연구 로드맵 제안. (지금 보면 synthetic benchmark/curriculum 연구의 예고편)
+- 9장 결론 (논문이 스스로 꼽은 것):
+  - RNN LM은 SGD+BPTT로 안정적으로 학습 가능하고, 단순 class 분해로 크게 가속된다.
+  - PTB/WSJ/RT04에서 신기록. **데이터가 커질수록 이득도 커진다** (단, hidden도 커져야).
+  - RNNME는 수십억 단어 스케일의 열쇠.
+  - 미공개 결과 하나: 같은 정확도 기준으로 RNNLM은 pruning+압축된 n-gram보다 **10배 작다.**
+  - future work 중 "character/subword/word/phrase 등 **여러 시간 스케일의 RNN**" 언급 — subword는
+[fastText](/posts/fasttext-subword-information-and-bag-of-tricks/)에서, 나머지는 이후 연구들에서 실현된다.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">계보 — 어디서 왔고 어디로 갔나</span>
 
 #### <span style="color: #4682B4">영향 받은 것</span>
 
-- **← Bengio NNLM (2003)**: "단어 = 연속 벡터" + "신경망으로 LM"이라는 뼈대. 이 논문은 고정 윈도우를
-recurrence로 바꿔 히스토리 압축까지 학습하게 만든 것.
-- **← Elman (1990)**: simple RNN 구조 자체.
-- **← Goodman (2001)**: class 기반 출력 분해로 속도를 버는 아이디어 (2.4의 직접적 선행).
-- **← cache/class/maxent 계열 고전 LM들**: RNNLM이 "무엇을 흡수해야 하는가"의 목표 명세 역할.
+- **← Bengio NNLM (2003)**: "단어 = 연속 벡터 + 신경망 LM" 뼈대. 이 논문은 고정 윈도우를 recurrence로
+바꿔 히스토리 압축까지 학습하게 만들었다.
+- **← Elman (1990)**: simple RNN 구조와 인공 문법 학습 실험.
+- **← Goodman (2001)**: class 분해 속도 트릭 (3.4.2의 직접 선행) + "기법들을 함께 연구해야 한다"는
+방법론적 비판.
+- **← Shannon / Solomonoff / Mahoney(PAQ)**: "예측 = 압축 = 지능" 관점과 hash 기반 모델(→RNNME).
 
 #### <span style="color: #4682B4">후속 연구에 준 영향</span>
 
-- **→ [word2vec 1편 (2013.1)](/posts/efficient-estimation-of-word-representations-in-vector-space/)**:
-이 논문에서 직접 이어지는 부분이 세 가지다.
-  1. **복잡도 분석**: 학습 비용의 지배항이 (hidden 곱셈 $H \times H$ + softmax $H \times V$)라는 이 논문의 분석이,
-"그럼 비선형 hidden layer를 아예 없애고 log-linear로 가자"는 CBOW/Skip-gram 설계의 출발점이 된다.
-word2vec 논문의 복잡도 표에서 RNNLM의 $Q = H \times H + H \times V$가 바로 이 논문의 모델이다.
-  2. **계층적 출력**: 2.4의 class 분해($O(\sqrt{V})$)가 Huffman 트리 hierarchical softmax($O(\log V)$)로 일반화된다.
-  3. **표현의 규칙성**: 3.3의 관찰이 "임베딩이 부산물이 아니라 목표"라는 관점 전환과
-analogy 평가 지표의 탄생으로 이어진다.
-- **→ RNN 학습 전반**: gradient clipping은 이후 모든 RNN/LSTM 학습의 기본기가 됐고 (Pascanu 2013이
-이론 정리), vanishing 문제의 실증은 LSTM LM 채택과, 더 멀리는 경로 길이 $O(1)$을 내세운
-[Transformer](/posts/attention-is-all-you-need/)의 motivation으로 이어진다.
-- **→ 벤치마크 문화**: 이 논문의 PTB 전처리 세팅(930K/10K vocab)이 이후 10년간 LM 논문의 표준 벤치마크가 됐고,
-"LM 개선은 다운스트림(WER)으로 증명한다"는 실증 스타일도 함께 정착했다.
+- **→ [word2vec 계보 ② (2013.1)](/posts/efficient-estimation-of-word-representations-in-vector-space/)**:
+세 가지가 직결된다.
+  1. **복잡도 분석**: 병목이 $H \times H$(RNN)와 $H \times V$(softmax)라는 이 논문의 분석이,
+"비선형 hidden을 아예 제거한 log-linear 모델"(CBOW/Skip-gram)의 설계 근거가 된다.
+word2vec 논문의 복잡도 표에 이 논문의 RNNLM이 비교 대상으로 그대로 등장한다.
+  2. **계층적 출력**: class 분해($O(\sqrt{V})$)가 Huffman hierarchical softmax($O(\log V)$)로 일반화.
+  3. **표현의 규칙성**: 이 논문의 부산물이던 단어 벡터의 규칙성(NAACL 2013에서 king−man+woman≈queen으로
+정식화)이 "벡터 학습 자체가 목표"라는 관점 전환과 analogy 평가의 탄생으로 이어진다.
+- **→ RNN 학습 실무**: gradient clipping은 모든 RNN/LSTM 학습의 기본기가 됐고(Pascanu 2013이 이론 정리),
+vanishing의 실증은 LSTM LM(Sundermeyer 2012)과, 멀리는 경로 길이 $O(1)$의
+[Transformer](/posts/attention-is-all-you-need/)로 이어진다.
+- **→ 벤치마크/평가 문화**: PTB 930K/10K 셋업이 표준 벤치마크로 굳었고, "PPL이 아니라 entropy로,
+그리고 다운스트림(WER)으로 증명하라"는 실증 스타일을 남겼다.
+- **→ RNNME의 유산**: "신경망 + 희소 n-gram feature 조인트"는 이후 대규모 시스템들의 wide & deep 계열
+설계에서 반복되고, hash 트릭은 [fastText](/posts/fasttext-subword-information-and-bag-of-tricks/)로 이어진다.
 
 <hr/> <!-- 수평선 -->
 
@@ -318,6 +519,7 @@ analogy 평가 지표의 탄생으로 이어진다.
 - [1] Y. Bengio et al., "A Neural Probabilistic Language Model" (JMLR 2003)
 - [2] T. Mikolov et al., "Recurrent neural network based language model" (Interspeech 2010)
 - [3] T. Mikolov et al., "Extensions of recurrent neural network language model" (ICASSP 2011)
-- [4] T. Mikolov et al., "Linguistic Regularities in Continuous Space Word Representations" (NAACL 2013)
-- [5] J. Goodman, "Classes for fast maximum entropy training" (2001)
-- [6] R. Pascanu et al., "On the difficulty of training recurrent neural networks" (ICML 2013)
+- [4] T. Mikolov et al., "Strategies for Training Large Scale Neural Network Language Models" (ASRU 2011)
+- [5] T. Mikolov et al., "Linguistic Regularities in Continuous Space Word Representations" (NAACL 2013)
+- [6] Y. Bengio et al., "Learning Long-Term Dependencies with Gradient Descent is Difficult" (1994)
+- [7] J. Goodman, "A bit of progress in language modeling" (2001)
