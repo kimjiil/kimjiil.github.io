@@ -21,144 +21,80 @@ tags:
 
 **word2vec의 첫번째 논문.** CBOW와 Skip-gram을 처음 제안했다. 핵심 발상의 전환은 두 가지다.
 
-1. **임베딩을 부산물이 아니라 목표로**: 언어모델을 잘 만들려다 벡터를 얻는 게 아니라,
-좋은 단어 벡터 자체를 최대한 싸게 배우는 것이 목적이다. 그래서 품질 평가도 perplexity가 아니라
-**단어 유추(analogy) 테스트** — vector("King") − vector("Man") + vector("Woman") ≈ vector("Queen") — 로 한다.
-2. **비선형 hidden layer 제거**: [Mikolov 박사논문](/posts/statistical-language-models-based-on-neural-networks/)의
-복잡도 분석에 따르면 NNLM의 비용 지배항은 hidden layer 곱셈과 softmax다.
-둘 다 제거/완화한 **log-linear 모델**(CBOW, Skip-gram) + hierarchical softmax로,
-같은 하드웨어에서 다룰 수 있는 데이터가 수백 배 커진다 (1.6B 단어를 하루 안에 학습).
+1. **임베딩을 부산물이 아니라 목표로**: 언어모델을 잘 만들다 벡터를 얻는 게 아니라, 좋은 단어 벡터
+자체를 최대한 싸게 배우는 것이 목적이다. 평가도 perplexity가 아니라 직접 만든 **단어 유추(analogy)
+테스트셋** — vector("King") − vector("Man") + vector("Woman") ≈ vector("Queen") — 으로 한다.
+2. **비선형 hidden layer 제거**: [계보 ① 박사논문](/posts/statistical-language-models-based-on-neural-networks/)의
+복잡도 분석(병목 = $N \times D \times H$ 또는 $H \times H$)을 이어받아, 그 병목 항을 아예 제거한
+**log-linear 모델** 둘을 설계했다. 그 결과 1.6B 단어를 하루 안에 학습한다 (기존 NNLM류는 수백M 단어,
+50~100차원이 한계였다).
 
-결과적으로 "표현력이 낮은 모델 × 훨씬 많은 데이터"가 "표현력 높은 모델 × 적은 데이터"를 이긴다는 것을 보였고,
-이 트레이드오프 감각이 이후 NLP 전반의 상식이 된다.
+결과적으로 1000차원 Skip-gram(6B 단어)이 analogy 정확도 65.6%로 NNLM(50.8%)을 크게 이기면서 학습은
+수 배 빠르다. "표현력이 낮은 모델 × 훨씬 많은 데이터"가 이긴다는 이 트레이드오프 감각이 이후 NLP의
+상식이 된다. 리뷰는 논문 섹션 구성을 그대로 따라간다.
 
 <hr/> <!-- 수평선 -->
 
 ### <span style="color: #ffd33d">[1] Introduction</span>
 
-- 당시 NLP 시스템 대부분은 단어를 원자적 심볼(vocabulary의 인덱스)로 취급했다. 단어 사이의 유사성 개념이 없다.
-  - 이 선택에도 이유는 있었다 — 단순함, 강건함, 그리고 **"많은 데이터 위의 단순한 모델이 적은 데이터 위의
-복잡한 모델을 이긴다"** 는 관찰 (n-gram의 성공).
-  - 하지만 한계가 명확한 영역이 있다. 음성인식/기계번역용 도메인 데이터는 크기가 제한적이어서,
-단순히 데이터를 더 붓는 것으로는 개선이 안 된다. **표현 자체가 일반화를 도와야 한다.**
-- 신경망 기반 분산 표현(distributed representation)은 이미 NNLM[1]과
-[RNNLM](/posts/statistical-language-models-based-on-neural-networks/)에서 n-gram을 이기고 있었다.
-문제는 **비용** — 기존 구조로는 수십억 단어 코퍼스, 수백만 vocabulary를 다룰 수 없었다.
-- 이 논문의 목표 선언:
-  1. **수십억 단어, 수백만 vocabulary**에서 고품질 단어 벡터를 학습하는 기법을 만든다.
-  2. 품질은 "비슷한 단어가 가깝다"를 넘어 **다중의 유사도(multiple degrees of similarity)** 로 측정한다 —
-단어는 의미적으로도, 문법적으로도(명사 어미, 시제 등) 동시에 비슷할 수 있다.
-  3. **벡터 산술의 규칙성**을 평가 지표로 승격한다: vector("King") − vector("Man") + vector("Woman")이
-vector("Queen")에 가장 가까우면 정답.
-- 선행 연구 정리: NNLM(Bengio 2003)은 임베딩+비선형 hidden으로 LM을 학습, 이후 "임베딩을 먼저 배우고
-NNLM을 그 위에 얹는" 2단계 접근(Collobert & Weston 2008 포함)이 나왔다. 이 논문은 그 첫 단계
-"임베딩 학습"만을 떼어내 극단적으로 단순화/확장한 것이다. LSA/LDA 같은 카운트 기반 방법과 비교하면,
-LSA는 벡터 산술 규칙성이 약하고 LDA는 큰 데이터에서 비용이 폭발한다.
+#### <span style="color: #4682B4">1.1 Goals of the Paper</span>
+
+- 당시 NLP 시스템 대부분은 단어를 원자적 단위(vocabulary 인덱스)로 취급했다 — 단어 사이의 유사성 개념이 없다.
+  - 이 선택에도 이유는 있다: 단순함, 강건함, 그리고 "많은 데이터의 단순한 모델이 적은 데이터의 복잡한
+모델을 이긴다"는 관찰. n-gram은 실제로 수조(trillions) 단어까지 학습되고 있었다.
+  - 하지만 한계가 온 영역들이 있다 — ASR의 in-domain 전사 데이터는 수백만 단어 수준, 많은 언어의 MT
+코퍼스는 수십억 단어 이하. **"단순 기법의 스케일업으로는 더 못 가는 상황에서는 고급 기법으로 가야 한다."**
+- 목표 선언: **수십억 단어 + 수백만 vocabulary**에서 고품질 단어 벡터를 학습하는 기법.
+당시까지 그 규모로 학습된 아키텍처는 없었다 (수억 단어 + 50~100차원이 최대).
+- 품질의 정의가 이 논문의 독창점이다. "비슷한 단어가 가깝다"를 넘어 **multiple degrees of similarity** —
+단어는 의미로도, 문법(어미, 시제)으로도 동시에 비슷할 수 있다.
+- 그리고 **벡터 산술**: 이전 연구(NAACL 2013 [20])에서 발견된
+vector("King") − vector("Man") + vector("Woman") ≈ vector("Queen") 현상을,
+이 논문은 **최적화 대상**으로 승격한다 — "이런 선형 규칙성을 보존하도록 새 아키텍처를 설계하고,
+그걸 재는 종합 테스트셋을 만든다."
+
+#### <span style="color: #4682B4">1.2 Previous Work</span>
+
+- 연속 벡터 표현의 역사는 길다 (Hinton의 distributed representation 1986, Elman 1990, Rumelhart backprop).
+- **Bengio NNLM (2003)**: linear projection + 비선형 hidden으로 단어 벡터와 언어모델을 **동시에** 학습.
+- **Mikolov의 이전 작업 (석사논문 2007, ICASSP 2009)**: 벡터를 **단일 hidden layer 신경망으로 먼저 배우고**,
+그 위에 NNLM을 얹는 2단계 방식 — **이 논문은 그 구조의 직접 확장으로, "벡터를 배우는 첫 단계"만
+떼어내 극단적으로 단순화한 것이다.** (논문이 스스로 밝히는 출처)
+- Collobert & Weston(2008), Turian(2010), Huang(2012), Mnih 등의 공개 벡터들이 존재했지만
+전부 학습 비용이 훨씬 비쌌다 — 4.3절에서 이들과 전부 정면 비교한다.
 
 <hr/> <!-- 수평선 -->
 
 ### <span style="color: #ffd33d">[2] Model Architectures — 복잡도 프레임워크</span>
 
-- 논문은 모든 모델의 학습 비용을 다음 형태로 통일해서 비교한다. ($E$: epoch 수, $T$: 토큰 수, $Q$: 토큰당 연산량)
+- LSA/LDA 같은 카운트 기반도 있지만, **선형 규칙성 보존은 신경망 계열이 LSA보다 낫고**, LDA는 큰 데이터에서
+비용이 폭발하므로 신경망 계열에 집중한다.
+- 모든 모델의 학습 비용을 통일된 형태로 정의한다.
 
 $$
     O = E \times T \times Q
 $$
 
-- 보통 $E = 3{\sim}50$, $T$는 최대 10억 이상. 모든 모델은 SGD + backprop으로 학습한다.
-- 목표는 **accuracy를 유지하면서 $Q$를 극단적으로 줄이는 것**이다.
+- $E$: epoch 수(보통 3~50), $T$: 학습 토큰 수(최대 10억+), $Q$: 모델별 토큰당 연산량.
+전부 SGD + backprop으로 학습. **목표: 정확도를 유지하면서 $Q$를 최소화.**
 
-#### <span style="color: #4682B4">2.1 NNLM의 Q</span>
+#### <span style="color: #4682B4">2.1 Feedforward NNLM의 Q</span>
 
-- 구조: 이전 $N$개 단어의 임베딩($D$차원)을 concat → hidden($H$) → softmax($V$).
+- 구조: 이전 $N$개 단어 1-of-V 인코딩 → 공유 projection 행렬로 $N \times D$ projection layer →
+비선형 hidden $H$ → 전체 vocabulary 출력.
 
 $$
     Q = N \times D + N \times D \times H + H \times V
 $$
 
-- 각 항의 크기감(전형적으로 $N=10$, $D=500{\sim}2000$, $H=500{\sim}1000$):
-  - $N \times D$: projection lookup, 미미함.
-  - $N \times D \times H$: **hidden layer 곱셈. 전형적 세팅에서 수백만 연산/토큰.**
-  - $H \times V$: naive하게는 최대 항이지만, hierarchical softmax로 $H \times \log_2{V}$까지 줄일 수 있다.
-- 즉 softmax를 계층화하고 나면 **남는 병목은 비선형 hidden layer**다.
-
-#### <span style="color: #4682B4">2.2 RNNLM의 Q</span>
-
-- [박사논문](/posts/statistical-language-models-based-on-neural-networks/)의 모델. projection layer가 없고
-hidden이 recurrent로 연결된다.
-
-$$
-    Q = H \times H + H \times V
-$$
-
-- 마찬가지로 $H \times V$는 계층화로 $H \times \log_2{V}$가 되고, **병목은 $H \times H$** recurrent 곱셈이다.
-
-#### <span style="color: #4682B4">2.3 병렬 학습 인프라</span>
-
-- Google의 분산 학습 프레임워크 **DistBelief** 위에서 같은 모델의 replica를 50~100개 띄우고,
-중앙 파라미터 서버에 비동기 gradient 업데이트를 보내는 방식으로 학습했다.
-- optimizer는 **Adagrad** (adaptive learning rate) + mini-batch 비동기 SGD.
-- 이 인프라 덕분에 "6B 단어 코퍼스 × 1000차원" 같은 실험이 가능했다. (DistBelief는 이후 TensorFlow의 전신)
-
-<hr/> <!-- 수평선 -->
-
-### <span style="color: #ffd33d">[3] New Log-linear Models</span>
-
-- 설계 원리: **비선형 hidden layer를 포기**하는 대신 데이터를 훨씬 많이 먹인다.
-"신경망보다 정밀하게 표현하지는 못해도, 훨씬 많은 데이터를 효율적으로 학습할 수 있는 단순한 모델"이라는
-명시적 트레이드오프 선택이다.
-- 학습도 2단계 관점: 이 단순한 모델로 벡터를 먼저 배우고, 필요하면 그 벡터 위에 NNLM 등을 얹으면 된다.
-
-#### <span style="color: #4682B4">3.1 CBOW (Continuous Bag-of-Words)</span>
-
-- **주변 단어들로 중심 단어를 예측**한다. 앞 4개 + 뒤 4개의 문맥 단어 임베딩을 **평균**내고
-(순서 무시 — 그래서 bag-of-words), 그 평균 벡터로 중심 단어를 분류한다.
-
-$$
-    \bar{v} = \frac{1}{N}\sum_{-N/2 \le j \le N/2,\; j \ne 0}{v_{w_{t+j}}}
-    ,\qquad
-    P(w_t\,|\,context) = \frac{\exp\big({v'_{w_t}}^{\top}\bar{v}\big)}{\sum_{w=1}^{V}{\exp\big({v'_w}^{\top}\bar{v}\big)}}
-$$
-
-- NNLM과 비교하면: concat → **평균** (projection 행렬 공유 + 위치 정보 포기), 비선형 hidden → **제거**.
-- 토큰당 연산량:
-
-$$
-    Q = N \times D + D \times \log_2{V}
-$$
-
-- 입력 임베딩 $v$와 출력 임베딩 $v'$ 두 벌을 쓴다는 것도 포인트 (최종적으로 $v$를 단어 벡터로 사용).
-- 이름이 "Bag-of-Words"인 이유: 고전 BoW처럼 순서를 버리지만, **연속(continuous) 분산 표현**을 쓴다는 차이.
-
-#### <span style="color: #4682B4">3.2 Continuous Skip-gram</span>
-
-- CBOW의 반대 방향. **중심 단어로 주변 단어 각각을 예측**한다.
-
-$$
-    \frac{1}{T}\sum_{t=1}^{T}{\sum_{-C \le j \le C,\; j \ne 0}{\log{P(w_{t+j}\,|\,w_t)}}}
-    ,\qquad
-    P(w_O|w_I) = \frac{\exp\big({v'_{w_O}}^{\top}v_{w_I}\big)}{\sum_{w=1}^{V}{\exp\big({v'_w}^{\top}v_{w_I}\big)}}
-$$
-
-- 윈도우 $C$를 키우면 벡터 품질이 좋아지지만 학습 쌍이 늘어난다. 트릭: 각 중심 단어마다 실제 윈도우를
-$[1, C]$에서 **랜덤 샘플링** — 멀리 있는 단어는 확률적으로 덜 뽑히므로, 거리에 반비례하는 가중치를
-공짜로 얻는다. ($C = 10$이면 평균 5)
-- 토큰당 연산량 ($C$: 최대 거리):
-
-$$
-    Q = C \times (D + D \times \log_2{V})
-$$
-
-- CBOW vs Skip-gram의 성질 차이 (결과에서 확인됨):
-  - CBOW: 학습이 빠르고 **문법(syntactic) 관계에 강함**. 문맥을 평균내므로 smoothing 효과.
-  - Skip-gram: 느리지만 **의미(semantic) 관계와 희귀 단어에 강함**. (중심, 문맥) 쌍 하나하나가
-개별 학습 신호라 희귀 단어도 자기 몫의 업데이트를 받는다.
-
-#### <span style="color: #4682B4">3.3 Hierarchical Softmax</span>
-
-- 두 모델 모두 분모의 $V$항 합이 남아있는데, 이걸 **Huffman 이진 트리** 기반 hierarchical softmax로
-$\log_2$ 스케일로 줄인다. 빈도가 높은 단어일수록 트리에서 짧은 경로를 받으므로 기대 경로 길이는
-$\log_2(\text{unigram perplexity})$ 수준까지 내려간다.
+- 전형적 수치: $N = 10$, projection $500{\sim}2000$, $H = 500{\sim}1000$.
+- 지배항은 $H \times V$지만 이건 **hierarchical softmax로 $\log_2$ 스케일로** 줄일 수 있다. 그러면
+**남는 병목은 $N \times D \times H$** — 비선형 hidden layer다.
+- 논문이 쓰는 hierarchical softmax는 **Huffman 이진 트리** 기반: 빈도 높은 단어에 짧은 코드가 붙어서
+balanced tree의 $\log_2{V}$보다도 적은, 약 $\log_2(\text{unigram perplexity})$개의 출력만 평가하면 된다.
+(vocab 100만이면 balanced 대비 약 2배 추가 speedup)
+  - 빈도 기반 class가 잘 동작한다는 근거로 [박사논문](/posts/statistical-language-models-based-on-neural-networks/)의
+frequency binning을 인용한다 — class 분해($O(\sqrt{V})$) → Huffman 트리($O(\log V)$)로의 진화.
 
 <details>
 <summary> <span style="color: #ffd33d">hierarchical softmax 정의 + 확률 합 1 증명 + gradient 업데이트 유도 펼치기/접기</span> </summary>
@@ -170,144 +106,249 @@ $$
     P(w|w_I) = \prod_{j=1}^{L(w)-1}{\sigma\Big( \big[\!\big[ n(w,j+1) = ch(n(w,j)) \big]\!\big] \cdot {v'_{n(w,j)}}^{\top} v_{w_I} \Big)}
 $$
 
-- $ch(n)$은 $n$의 (임의로 고정한) 왼쪽 자식이고, $[\![x]\!]$는 $x$가 참이면 $+1$, 거짓이면 $-1$이다.
-즉 각 내부 노드에서 "왼쪽으로 갈 확률 $\sigma(z)$ / 오른쪽으로 갈 확률 $\sigma(-z)$"의 이진 분기다.
-
-- **합이 1이 되는 증명**: $\sigma(z) + \sigma(-z) = 1$이므로 각 내부 노드에서 두 자식으로 가는 확률 합이 1이다.
-잎 전체의 합은 트리를 아래에서 위로 접으면서 계산하면 — 형제 잎 두 개의 확률 합은 부모까지의 경로 확률과 같고,
-이를 반복하면 루트에서 1이 된다.
+- $ch(n)$은 $n$의 (고정된) 왼쪽 자식, $[\![x]\!]$는 참이면 $+1$/거짓이면 $-1$.
+각 내부 노드에서 "왼쪽 $\sigma(z)$ / 오른쪽 $\sigma(-z)$"의 이진 분기다.
+- **합이 1이 되는 증명**: $\sigma(z) + \sigma(-z) = 1$이므로 각 내부 노드에서 두 자식으로 가는 확률 합이 1.
+잎에서 루트로 트리를 접으면서 계산하면 형제 잎 확률 합 = 부모까지의 경로 확률이 되고, 반복하면 루트에서 1.
 
 $$
     \sum_{w \in leaves}{P(w|w_I)} = 1 \qquad \blacksquare
 $$
 
-- **gradient 유도**: 경로의 한 노드에 대한 항을 $L_j = -\log{\sigma(s_j z_j)}$로 쓰자.
-($s_j = \pm 1$: 분기 방향, $z_j = {v'_{n_j}}^{\top}v_{w_I}$)
+- **gradient**: 경로의 한 노드 항을 $L_j = -\log{\sigma(s_j z_j)}$ ($s_j = \pm 1$,
+$z_j = {v'_{n_j}}^{\top}v_{w_I}$)로 쓰면 $\frac{\partial L_j}{\partial z_j} = -s_j\,\sigma(-s_j z_j)$이고, 업데이트는
 
 $$
-    \frac{\partial L_j}{\partial z_j} = -s_j\,\sigma(-s_j z_j) = \sigma(s_j z_j) - 1 \;\; \text{(부호 } s_j\text{ 반영 형태)}
-$$
-
-- 따라서 업데이트는 (learning rate $\eta$):
-
-$$
-    v'_{n_j} \leftarrow v'_{n_j} - \eta\,\big(\sigma(s_j z_j)-1\big)\,s_j\, v_{w_I}
+    v'_{n_j} \leftarrow v'_{n_j} + \eta\, s_j\,\sigma(-s_j z_j)\, v_{w_I}
     ,\qquad
-    v_{w_I} \leftarrow v_{w_I} - \eta\sum_{j}{\big(\sigma(s_j z_j)-1\big)\,s_j\,v'_{n_j}}
+    v_{w_I} \leftarrow v_{w_I} + \eta\sum_{j}{s_j\,\sigma(-s_j z_j)\,v'_{n_j}}
 $$
 
-- 단어 하나 학습에 **경로 위의 $L(w)-1$개 노드 벡터만** 업데이트하면 된다. $V = 10^6$이어도 20개 내외다.
-- 이 구조는 [박사논문](/posts/statistical-language-models-based-on-neural-networks/)의
-class 분해($O(\sqrt{V})$)를 트리 깊이 극한($O(\log V)$)까지 밀어붙인 것이다. $\blacksquare$
+- 단어 하나 학습에 경로 위 $L(w)-1$개 노드만 업데이트 — vocab 100만이어도 20개 내외다. $\blacksquare$
 
 </details>
 
 <hr/> <!-- 수평선 -->
 
-### <span style="color: #ffd33d">[4] 평가 — Analogy Task</span>
+#### <span style="color: #4682B4">2.2 RNNLM의 Q</span>
 
-#### <span style="color: #4682B4">4.1 테스트셋 구성</span>
+- [계보 ①](/posts/statistical-language-models-based-on-neural-networks/)의 모델. projection layer가 없고
+recurrent 행렬이 hidden을 자기 자신과 연결해 short-term memory를 만든다.
 
-- 논문이 직접 만든 **Semantic-Syntactic Word Relationship test set**:
-의미 관계 5종 8,869문항 + 문법 관계 9종 10,675문항. 관계 종류와 예시:
+$$
+    Q = H \times H + H \times V
+$$
+
+- $H \times V$는 마찬가지로 hierarchical softmax로 줄이면, **병목은 $H \times H$.**
+
+#### <span style="color: #4682B4">2.3 병렬 학습 (DistBelief)</span>
+
+- Google의 분산 프레임워크 **DistBelief** 위에서 같은 모델의 replica를 100개 이상 띄우고, 중앙 파라미터
+서버로 gradient를 비동기 동기화한다. optimizer는 mini-batch async SGD + **Adagrad**.
+- 이 인프라가 4.4절의 "6B 단어 × 1000차원" 실험을 가능하게 한다. (DistBelief는 TensorFlow의 전신)
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[3] New Log-linear Models</span>
+
+- 설계 선언이 명확하다: *"복잡도의 대부분은 비선형 hidden layer에서 온다. 신경망을 매력적으로 만드는 게
+바로 그것이지만, 우리는 **데이터를 더 정밀하게 표현하지는 못해도 훨씬 많은 데이터를 효율적으로 학습할 수
+있는 더 단순한 모델**을 탐색하기로 했다."*
+- 구조는 이전 2단계 방식(벡터 먼저, NNLM 나중)의 1단계만 남긴 것이다.
+
+#### <span style="color: #4682B4">3.1 Continuous Bag-of-Words (CBOW)</span>
+
+- NNLM에서 **비선형 hidden을 제거**하고, projection layer를 모든 단어가 **공유**한다(행렬만이 아니라
+위치까지) — 즉 문맥 단어들의 벡터가 **평균**되어 하나의 위치로 투영된다. 순서가 사라지므로
+bag-of-words인데, 연속 표현을 쓰므로 **Continuous** BOW.
+- **미래 단어도 사용한다**: 앞 4개 + 뒤 4개 단어로 가운데 단어를 맞추는 log-linear 분류기가 최적이었다.
+
+$$
+    Q = N \times D + D \times \log_2{V}
+$$
+
+- NNLM의 $N \times D \times H$ 항이 통째로 사라졌다. 수치로 보면 ($N=8$, $D=640$, $H=640$, $V=10^6$ 기준)
+NNLM의 $Q \approx 330$만 → CBOW $Q \approx 1.8$만. **약 180배.**
+
+#### <span style="color: #4682B4">3.2 Continuous Skip-gram</span>
+
+- CBOW의 반대: **현재 단어를 입력으로, 같은 문장 안의 주변 단어들을 각각 예측**한다.
+- 범위 $C$를 키우면 벡터 품질이 좋아지지만 비용이 는다. 트릭: 각 단어마다 $R \in [1, C]$를 랜덤으로 뽑아
+앞 $R$개 + 뒤 $R$개만 정답으로 쓴다 — **먼 단어일수록 덜 샘플링되므로 거리 반비례 가중치를 공짜로**
+얻는다. 실험은 $C = 10$ (평균 $R=5.5$).
+
+$$
+    Q = C \times (D + D \times \log_2{V})
+$$
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[4] Results</span>
+
+#### <span style="color: #4682B4">4.1 Task Description — Semantic-Syntactic Word Relationship test set</span>
+
+- 기존 논문들의 평가는 "France와 비슷한 단어 표"를 보여주고 직관에 호소하는 수준이었다. 이 논문은
+**의미 5종 + 문법 9종, 총 19,544문항**(8,869 + 10,675)의 테스트셋을 직접 만들었다. (논문 Table 1)
 
 | 유형 | 관계 | 예시 |
 |---|---|---|
-| Semantic | 수도-국가 | Athens : Greece = Oslo : Norway |
-| Semantic | 국가-통화 | Angola : kwanza = Iran : rial |
+| Semantic | 흔한 수도-국가 | Athens : Greece = Oslo : Norway |
+| Semantic | 모든 수도-국가 | Astana : Kazakhstan = Harare : Zimbabwe |
+| Semantic | 통화 | Angola : kwanza = Iran : rial |
 | Semantic | 주-도시 | Chicago : Illinois = Stockton : California |
-| Semantic | 성별 | brother : sister = grandson : granddaughter |
-| Syntactic | 형용사-부사 | apparent : apparently = rapid : rapidly |
+| Semantic | 남-여 | brother : sister = grandson : granddaughter |
+| Syntactic | 형용사→부사 | apparent : apparently = rapid : rapidly |
+| Syntactic | 반의 접두 | possibly : impossibly = ethical : unethical |
 | Syntactic | 비교급 | great : greater = tough : tougher |
 | Syntactic | 최상급 | easy : easiest = lucky : luckiest |
 | Syntactic | 현재분사 | think : thinking = read : reading |
+| Syntactic | 국적 형용사 | Switzerland : Swiss = Cambodia : Cambodian |
 | Syntactic | 과거형 | walking : walked = swimming : swam |
-| Syntactic | 복수형 | mouse : mice = dollar : dollars |
+| Syntactic | 명사 복수 | mouse : mice = dollar : dollars |
+| Syntactic | 동사 3인칭 | work : works = speak : speaks |
 
-- 풀이 방식: $x = v_b - v_a + v_c$를 계산하고 **cosine 최근접 단어**를 찾는다.
-정확히 그 단어여야 정답 — 동의어도 오답 처리하는 엄격한 채점이라 100%는 사실상 불가능하다.
+- 풀이: $X = v_{biggest} - v_{big} + v_{small}$을 계산하고 cosine 최근접 단어를 찾는다 (질문 단어 제외).
+- 채점은 **정확히 그 단어여야 정답** — 동의어도 오답. 형태 정보가 입력에 없으므로 100%는 애초에 불가능하다고
+명시한다. (이 한계 지적이 [fastText](/posts/fasttext-subword-information-and-bag-of-tricks/)의 출발점이 된다)
 
-#### <span style="color: #4682B4">4.2 차원 × 데이터 스케일링</span>
+#### <span style="color: #4682B4">4.2 Maximization of Accuracy — 차원 × 데이터 격자 실험</span>
 
-- CBOW로 차원(50~600)과 데이터(24M~783M 토큰)를 격자로 바꿔가며 정확도를 측정했다.
-  - **차원만** 키우거나 **데이터만** 키우면 금방 수확 체감이 온다.
-  - **둘을 같이** 키워야 정확도가 계속 오른다. (가장 작은 세팅 ~13% → 가장 큰 세팅 60%대 중반)
-- "임베딩은 50~100차원이면 충분하다"던 당시 통념을 깨고, **300~600차원 + 대규모 데이터** 조합을
-표준으로 만든 실험이다.
+- Google News 6B 토큰, vocab 최빈 100만. 먼저 30K vocab 제한 부분집합으로 CBOW의 차원×데이터 격자를
+전부 돌렸다. (논문 Table 2, 정확도 %)
 
-#### <span style="color: #4682B4">4.3 아키텍처 비교 (같은 데이터, 640차원)</span>
+| 차원 \ 데이터 | 24M | 49M | 98M | 196M | 391M | 783M |
+|---|---|---|---|---|---|---|
+| 50 | 13.4 | 15.7 | 18.6 | 19.1 | 22.5 | 23.2 |
+| 100 | 19.4 | 23.1 | 27.8 | 28.7 | 33.4 | 32.2 |
+| 300 | 23.2 | 29.2 | 35.3 | 38.6 | 43.7 | 45.9 |
+| 600 | 24.0 | 30.1 | 36.5 | 40.8 | 46.6 | **50.4** |
 
-| 모델 | Semantic 정확도 | Syntactic 정확도 |
-|---|---|---|
-| RNNLM 벡터 | 9% | 36% |
-| NNLM 벡터 | 23% | 53% |
-| CBOW | 24% | **64%** |
-| **Skip-gram** | **55%** | 59% |
+- 표의 메시지: **차원만 키우거나(왼쪽 열 아래로) 데이터만 키우면(첫 행 오른쪽으로) 금방 수확 체감**이 오고,
+**둘을 같이 키워야**(대각선) 계속 오른다. "데이터는 크게, 차원은 50~100"이라는 당시 관행을 정면 반박.
+- 학습 세팅: 3 epoch, 시작 learning rate **0.025를 선형 감소**시켜 마지막에 0 도달.
 
-- RNNLM 벡터(계보 ①의 부산물)가 가장 약하고, 새 모델 둘이 NNLM을 이긴다 —
-**비선형 hidden 없이도 (오히려 없어서 데이터를 더 먹여서) 벡터 품질이 더 좋다.**
-- Skip-gram의 semantic 55%는 NNLM(23%)의 2배가 넘는다. CBOW는 syntactic 특화.
-- 학습 시간까지 보면 차이가 더 극적이다: NNLM 계열은 분산 인프라로 며칠 걸리던 것이
-CBOW/Skip-gram은 **하루 안에**(같은 데이터) 끝난다.
+#### <span style="color: #4682B4">4.3 아키텍처 비교</span>
 
-#### <span style="color: #4682B4">4.4 Epoch vs 데이터 트레이드오프</span>
+- **같은 데이터(LDC 320M 단어, 82K vocab), 같은 640차원**으로 4개 아키텍처 정면 비교. 비교 대상 RNNLM은
+단일 CPU로 **8주** 걸려 학습된 모델이다. (논문 Table 3)
 
-- 같은 계산 예산이면 "같은 데이터 3 epoch"보다 **"2배 데이터 1 epoch"이 더 좋다.**
-- 학습 세팅: 시작 learning rate 0.025를 학습 진행에 따라 **선형 감소**시켜 마지막에 0에 수렴.
-이 스케줄과 "epoch을 늘리기보다 데이터를 늘려라"는 지침이 word2vec 툴킷의 기본값으로 이어진다.
+| 아키텍처 | Semantic [%] | Syntactic [%] | MSR 문법 테스트셋 [%] |
+|---|---|---|---|
+| RNNLM | 9 | 36 | 35 |
+| NNLM | 23 | 53 | 47 |
+| CBOW | 24 | **64** | **61** |
+| **Skip-gram** | **55** | 59 | 56 |
+
+- 해석 (논문 서술 그대로):
+  - RNN 벡터는 주로 문법 쪽에서만 쓸만하다. NNLM이 RNN보다 나은 건 벡터가 비선형 hidden에 직접
+연결되기 때문.
+  - **CBOW는 문법에서 최강**, 의미는 NNLM 수준. **Skip-gram은 의미에서 압도적**(55 vs 23),
+문법도 NNLM보다 낫다.
+- **공개 벡터들과의 비교** (논문 Table 4, full vocab 전체 정확도): Collobert-Weston 11.0%,
+Turian 2.1%, Mnih 8.8%, Mikolov RNNLM(640d) 24.6%, Huang 12.3% 대비 —
+**Skip-gram 300d/783M 단어가 53.3%.** 심지어 저자들의 6B NNLM(100d, 50.8%)보다 좋다.
+- **Epoch vs 데이터** (논문 Table 5): 같은 모델로 "3 epoch × 783M"(53.3%, 3일)보다
+**"1 epoch × 1.6B"(53.8%, 2일)가 낫다.** → "epoch을 돌리지 말고 데이터를 늘려라."
+
+#### <span style="color: #4682B4">4.4 대규모 분산 학습</span>
+
+- DistBelief에서 replica 50~100개 + Adagrad로 6B 전체를 학습. (논문 Table 6)
+
+| 모델 | 차원 | 데이터 | Sem | Syn | **Total** | 학습 비용 (days × cores) |
+|---|---|---|---|---|---|---|
+| NNLM | 100 | 6B | 34.2 | 64.5 | 50.8 | 14 × 180 |
+| CBOW | 1000 | 6B | 57.3 | 68.9 | 63.7 | 2 × 140 |
+| **Skip-gram** | **1000** | 6B | 66.1 | 65.1 | **65.6** | 2.5 × 125 |
+
+- NNLM은 100차원에 14일×180코어. 새 모델들은 **1000차원**을 2~2.5일에 학습하고 정확도도 15%p 높다.
+(1000차원 NNLM은 "너무 오래 걸려서 완료 불가"라는 각주가 붙어있다)
 
 #### <span style="color: #4682B4">4.5 Microsoft Sentence Completion Challenge</span>
 
-- 문장에서 빈칸에 들어갈 단어를 5지선다로 고르는 태스크. Skip-gram 단독으로는 48% 수준
-(당시 LSA 계열과 비슷)이지만, **RNNLM과 점수를 결합하면 58.9%로 당시 SOTA**를 달성했다.
-- Skip-gram이 잡는 정보와 LM이 잡는 정보가 상보적이라는 증거로 제시된다.
+- [계보 ①](/posts/statistical-language-models-based-on-neural-networks/) 7장에 나왔던 그 벤치마크
+(1040문장, 5지선다). Skip-gram 640d를 50M 단어로 학습하고, **빈칸 단어를 입력으로 문장의 나머지 단어들을
+예측한 점수 합**으로 문장을 고른다.
 
-<hr/> <!-- 수평선 -->
-
-### <span style="color: #ffd33d">[5] 학습된 관계의 예시</span>
-
-- 대규모(783M 단어, 300차원) Skip-gram 벡터로 "관계 벡터"를 뽑아 적용한 예시들. (논문 Table 8 발췌)
-
-| 관계 (a : b) | c → 모델의 답 |
+| 방법 | 정확도 [%] |
 |---|---|
-| France : Paris | Italy → Rome, Japan → Tokyo, Florida → Tallahassee |
-| big : bigger | small → larger, cold → colder |
-| Miami : Florida | Baltimore → Maryland, Dallas → Texas |
-| Einstein : scientist | Messi → midfielder, Picasso → painter |
-| Sarkozy : France | Berlusconi → Italy, Merkel → Germany |
-| copper : Cu | zinc → Zn, gold → Au |
-| Microsoft : Windows | Google → Android, IBM → Linux |
+| 4-gram | 39 |
+| 평균 LSA 유사도 | 49 |
+| Log-bilinear | 54.8 |
+| RNNLM 조합 (당시 SOTA) | 55.4 |
+| Skip-gram 단독 | 48.0 |
+| **Skip-gram + RNNLMs** | **58.9** |
 
-- 완벽하지 않다는 것도 그대로 보여준다 (Einstein → Messi가 "midfielder"로 연결되는 식의 어긋남).
-논문 추정으로 이 용례의 정확도는 60% 수준.
-- 응용 제안: 관계 예시 여러 쌍의 차이 벡터를 **평균**내면 관계 벡터가 안정화되어 정확도가 10%p가량 오른다.
-out-of-list 단어 찾기, 오탈자 감지 같은 파생 응용도 언급된다.
+- Skip-gram 단독은 LSA 수준이지만, **RNNLM과 점수가 상보적**이라 가중 결합하면 새 SOTA.
+(Skip-gram이 잡는 정보 ≠ LM이 잡는 정보라는 증거)
 
 <hr/> <!-- 수평선 -->
 
-### <span style="color: #ffd33d">[6] 계보 — 어디서 왔고 어디로 갔나</span>
+### <span style="color: #ffd33d">[5] Examples of the Learned Relationships</span>
+
+- 최고 모델(Skip-gram 300d/783M)로 관계 벡터를 적용한 예시. (논문 Table 8 발췌)
+
+| 관계 | 예시 1 | 예시 2 | 예시 3 |
+|---|---|---|---|
+| France − Paris | Italy: Rome | Japan: Tokyo | Florida: Tallahassee |
+| big − bigger | small: larger | cold: colder | quick: quicker |
+| Miami − Florida | Baltimore: Maryland | Dallas: Texas | Kona: Hawaii |
+| Einstein − scientist | Messi: midfielder | Mozart: violinist | Picasso: painter |
+| Sarkozy − France | Berlusconi: Italy | Merkel: Germany | Koizumi: Japan |
+| copper − Cu | zinc: Zn | gold: Au | uranium: plutonium |
+| Microsoft − Windows | Google: Android | IBM: Linux | Apple: iPhone |
+| Microsoft − Ballmer | Google: Yahoo | IBM: McNealy | Apple: Jobs |
+| Japan − sushi | Germany: bratwurst | France: tapas | USA: pizza |
+
+- 정직한 자평: 이 표를 exact match로 채점하면 약 60% — 틀리는 것도 그대로 보여준다
+(Einstein−scientist가 Messi를 "midfielder"로, Google:Yahoo 같은 어긋남).
+- 개선 트릭: 관계 예시를 1개가 아니라 **10개의 차이 벡터 평균**으로 만들면 정확도가 **절대 10%p** 오른다.
+- 파생 응용: 리스트에서 이질적 단어 고르기(평균 벡터에서 가장 먼 것) — 지능검사 유형 문제.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">[6~7] Conclusion & Follow-Up Work</span>
+
+- 결론: 인기있는 신경망 모델(FF/RNN)보다 **훨씬 단순한 구조로 더 좋은 벡터**를 학습할 수 있다.
+낮은 복잡도 덕에 더 큰 데이터에서 고차원 벡터가 가능하고, DistBelief면 **1조 단어 + 무제한 vocab**도
+가능할 것 — "이전 최고 결과보다 몇 자릿수 큰 규모".
+- SemEval-2012 관계 유사도 태스크에서 RNN 벡터가 이미 이전 최고 대비 Spearman 상관 +50%를 만든 사례,
+감성분석/패러프레이즈 응용, Knowledge Base 사실 확장/검증과 MT에의 진행 중 실험도 언급.
+- **7절 Follow-Up Work** (v3에서 추가): 논문 공개 후 **단일 머신 멀티스레드 C++ 코드 공개** —
+"전형적 하이퍼파라미터로 **시간당 수십억 단어**" 학습. 100B 단어로 학습한 140만 개 entity 벡터도 공개.
+후속작은 NIPS 2013에 — 그게 [계보 ③](/posts/distributed-representations-of-words-and-phrases/)이다.
+- 공개된 그 코드가 바로 `word2vec` 툴킷이고, 임베딩의 대중화는 사실상 이 코드 공개가 만들었다.
+
+<hr/> <!-- 수평선 -->
+
+### <span style="color: #ffd33d">계보 — 어디서 왔고 어디로 갔나</span>
 
 #### <span style="color: #4682B4">영향 받은 것</span>
 
-- **← [Mikolov 박사논문 (2012)](/posts/statistical-language-models-based-on-neural-networks/)**:
-  1. $O = E \times T \times Q$ 복잡도 분석은 박사논문의 "병목은 hidden × softmax" 진단을 그대로 계승 —
-CBOW/Skip-gram은 그 진단에서 병목 항을 지워서 만든 모델이다. (2.2의 $Q$식이 곧 박사논문의 RNNLM)
-  2. hierarchical softmax는 박사논문의 class 분해를 이진 트리로 일반화한 것.
-  3. "단어 벡터에 규칙성이 있다"는 박사논문/NAACL 2013의 관찰이, 이 논문에서 아예 **평가 지표(analogy)** 로 승격됐다.
-- **← Bengio NNLM (2003)**: 임베딩 + softmax라는 뼈대. 이 논문은 여기서 비선형만 걷어낸 것에 가깝다.
-- **← DistBelief/Adagrad**: 대규모 비동기 분산 학습 인프라가 실험 스케일을 가능하게 했다.
+- **← [계보 ① Mikolov 박사논문 (2012)](/posts/statistical-language-models-based-on-neural-networks/)**:
+  1. $O = E \times T \times Q$ 복잡도 분석은 박사논문의 병목 진단($N \times D \times H$, $H \times H$,
+$H \times V$)의 연장이고, 2.1~2.2절의 NNLM/RNNLM $Q$식이 그대로 그 모델들이다.
+  2. Huffman hierarchical softmax는 박사논문의 frequency binning class 분해("빈도만으로 class를 만들어도
+잘 된다")를 트리 극한까지 민 것 — 논문이 [16]으로 직접 인용한다.
+  3. analogy 평가 자체가 박사논문 벡터의 규칙성 관찰(NAACL 2013 [20])에서 왔고, 4.5절 MSR 문장완성도
+박사논문 7장의 벤치마크 재사용이다.
+- **← Mikolov 석사논문(2007)/ICASSP 2009**: "벡터를 단순 모델로 먼저 배운다"는 2단계 구조의 1단계가
+CBOW/Skip-gram의 직접 원형 (논문 1.2절이 명시).
+- **← Bengio NNLM (2003)**, Hinton distributed representation (1986), **← DistBelief/Adagrad** 인프라.
 
 #### <span style="color: #4682B4">후속 연구에 준 영향</span>
 
-- **→ [word2vec 계보 ③ (2013.10)](/posts/distributed-representations-of-words-and-phrases/)**: 같은 해에 저자들이 직접
-Skip-gram을 개량한다 — hierarchical softmax를 **negative sampling**으로 교체하고, subsampling과 phrase 학습을 추가.
-오늘날 "word2vec"이라 불리는 알고리즘(SGNS)은 그 논문에서 완성된다.
-- **→ GloVe (2014)**: "예측 기반(word2vec) vs 카운트 기반(LSA)" 논쟁을 촉발했고, GloVe는 그 절충으로 등장한다.
-- **→ 사전학습 임베딩 시대**: "대규모 비지도 코퍼스로 표현을 먼저 배우고 다운스트림에 전이한다"는 워크플로를
-NLP의 표준으로 만들었다. 이 흐름이 ELMo → BERT/GPT([Transformer](/posts/attention-is-all-you-need/) 기반)의
-"문맥적 임베딩"으로 진화하는데, 그 출발점의 정적(static) 임베딩이 바로 이 논문이다.
-- **→ 평가 문화**: analogy 테스트셋과 "벡터 산술" 데모는 임베딩 품질 평가의 표준이자,
-표현학습을 대중적으로 알린 상징이 됐다.
+- **→ [계보 ③ (2013.10)](/posts/distributed-representations-of-words-and-phrases/)**: 같은 해 저자들이
+Skip-gram의 hierarchical softmax를 **negative sampling**으로 교체하고 subsampling/phrase를 추가 —
+오늘날의 "word2vec"(SGNS)이 완성된다.
+- **→ [계보 ④ fastText (2016-17)](/posts/fasttext-subword-information-and-bag-of-tricks/)**: 4.1절이 스스로
+지적한 한계("형태 정보가 입력에 없다")를 문자 n-gram으로 푼 직계 후속. CBOW 구조는 fastText 분류기로
+재활용된다.
+- **→ GloVe (2014)**: "예측 기반 vs 카운트 기반" 논쟁을 촉발했고 GloVe가 그 절충으로 등장.
+- **→ 사전학습-전이 패러다임**: "대규모 비지도 코퍼스로 표현을 먼저 배우고 태스크에 전이"가 NLP 표준
+워크플로가 됐다. 정적 벡터의 한계는 ELMo → [Transformer](/posts/attention-is-all-you-need/) 기반
+BERT/GPT의 문맥적 임베딩으로 이어진다.
+- **→ 평가 문화**: 이 논문의 analogy 테스트셋(공개)이 임베딩 평가의 표준 벤치마크가 됐고,
+"King − Man + Woman = Queen"은 표현학습을 대중에게 알린 상징이 됐다.
 
 <hr/> <!-- 수평선 -->
 
@@ -316,7 +357,7 @@ NLP의 표준으로 만들었다. 이 흐름이 ELMo → BERT/GPT([Transformer](
 - [1] Y. Bengio et al., "A Neural Probabilistic Language Model" (JMLR 2003)
 - [2] T. Mikolov, "Statistical Language Models Based on Neural Networks" (PhD Thesis, 2012)
 - [3] T. Mikolov et al., "Linguistic Regularities in Continuous Space Word Representations" (NAACL 2013)
-- [4] F. Morin & Y. Bengio, "Hierarchical Probabilistic Neural Network Language Model" (2005)
-- [5] R. Collobert & J. Weston, "A Unified Architecture for Natural Language Processing" (ICML 2008)
-- [6] J. Dean et al., "Large Scale Distributed Deep Networks" (DistBelief, NIPS 2012)
-- [7] T. Mikolov et al., "Distributed Representations of Words and Phrases and their Compositionality" (NIPS 2013)
+- [4] F. Morin & Y. Bengio, "Hierarchical Probabilistic Neural Network Language Model" (AISTATS 2005)
+- [5] J. Dean et al., "Large Scale Distributed Deep Networks" (DistBelief, NIPS 2012)
+- [6] T. Mikolov et al., "Distributed Representations of Words and Phrases and their Compositionality" (NIPS 2013)
+- [7] G. Zweig & C.J.C. Burges, "The Microsoft Research Sentence Completion Challenge" (MSR-TR-2011-129)
