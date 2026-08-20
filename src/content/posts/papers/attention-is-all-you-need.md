@@ -252,6 +252,30 @@ $$
 | base | 6 | 512 | 2048 | 8 | 64 | 0.1 | 100K | 65M |
 | big | 6 | 1024 | 4096 | 16 | 64 | 0.3 | 300K | 213M |
 
+#### <span style="color: #4682B4">2.9 파라미터가 어디에 있는지 세보기 (base 기준)</span>
+
+- 65M이 어디에 분포하는지 직접 계산해보면 구조가 더 잘 보인다.
+
+| 부품 | 개수 | 파라미터/개 | 소계 |
+|---|---|---|---|
+| MHA ($W^Q,W^K,W^V,W^O$) | 18개 (enc self 6 + dec self 6 + cross 6) | $4 \times 512^2 \approx 1.05M$ | ≈ 18.9M |
+| FFN ($W_1, W_2$) | 12개 (enc 6 + dec 6) | $2 \times 512 \times 2048 \approx 2.1M$ | ≈ 25.2M |
+| Embedding (공유 1벌) | 1개 | $37000 \times 512 \approx 18.9M$ | ≈ 18.9M |
+| LayerNorm 등 기타 | - | - | ≈ 1M 미만 |
+
+- 인상과 달리 **attention(29%)보다 FFN(39%)이 더 크고, embedding도 29%나 된다.**
+"Transformer의 몸통은 FFN"이라는 사실은 이후 스케일링/MoE 연구(FFN만 sparse하게 키우는)의 배경이 된다.
+- weight 공유(2.6)가 없었다면 embedding 계열만 +38M이 됐을 것이다 — 공유가 파라미터 효율에 꽤 기여한다.
+
+#### <span style="color: #4682B4">2.10 Inference — auto-regressive 디코딩</span>
+
+- 학습 때는 정답 시퀀스 전체를 넣고 masking으로 병렬 학습(teacher forcing)하지만,
+**추론은 한 토큰씩 순차 생성**이다: `<bos>`에서 시작해 생성된 토큰을 다시 decoder 입력에 붙인다.
+- 이때 이전 스텝의 Key/Value는 변하지 않으므로 **캐싱(KV cache)** 하면 스텝당 새 토큰의 Q 계산만 하면 된다.
+지금 LLM inference의 KV cache가 바로 이 구조에서 나온 것이다.
+- 즉 "Transformer는 학습은 병렬, 생성은 여전히 순차"라는 비대칭이 있다 — RNN의 순차성을 학습에서만
+제거한 셈이고, 이 생성 병목은 이후 speculative decoding 등의 연구 주제가 된다.
+
 <hr/> <!-- 수평선 -->
 
 ### <span style="color: #ffd33d">[3] Why Self-Attention</span>
@@ -294,6 +318,11 @@ $$
   1. **Residual Dropout** ($P_{drop}=0.1$): 각 sub-layer 출력에, 그리고 embedding + PE 합에도 적용.
   2. **Label Smoothing** ($\epsilon_{ls}=0.1$)[36]: 정답에 $1-\epsilon$, 나머지에 $\epsilon$을 분배한 soft target을 사용.
      perplexity는 나빠지지만(모델이 더 unsure 해짐) **accuracy와 BLEU는 좋아진다.**
+- **Checkpoint Averaging**: 마지막 체크포인트 하나가 아니라 **최근 체크포인트들의 weight를 평균**낸 모델로
+평가한다 (base: 마지막 5개, big: 마지막 20개, 10분 간격 저장). 공짜로 BLEU가 오르는 고전 트릭으로,
+이후 NMT/LLM 학습(가중치 평균, EMA)에서도 계속 쓰인다.
+- **Decoding**: beam search (beam size 4, length penalty $\alpha = 0.6$), 최대 출력 길이는 입력 + 50이되
+가능하면 조기 종료.
 
 <hr/> <!-- 수평선 -->
 
@@ -316,12 +345,29 @@ base 모델조차 이전 single 모델 전부를 EN→DE에서 이긴다.
 
 #### <span style="color: #4682B4">5.2 Ablation (Table 3)</span>
 
-- base 모델에서 하나씩 바꿔가며 EN→DE dev set(newstest2013)의 perplexity/BLEU 변화를 측정한다.
-  - **head 수**: 1개면 BLEU가 0.9 떨어지고, 32개로 너무 늘려도 오히려 하락. ($h=8{\sim}16$ 부근이 최적)
-  - **$d_k$ 축소**: 성능 하락 — 유사도 계산이 그렇게 만만한 문제가 아니라는 의미로 해석.
-  - **모델 크기**: $d_{model}$, $d_{ff}$ 키울수록 좋아짐. (스케일링의 초기 증거)
-  - **dropout 제거**: 명확한 overfitting으로 성능 하락.
-  - **learned positional embedding**: sinusoidal과 거의 동일한 성능.
+- base 모델에서 하나씩 바꿔가며 EN→DE dev set(newstest2013)의 perplexity/BLEU 변화를 측정한다. 주요 행 발췌:
+
+| 변경 내용 | PPL (dev) | BLEU (dev) |
+|---|---|---|
+| **base** ($h=8$) | 4.92 | 25.8 |
+| (A) $h=1$ | 5.29 | 24.9 |
+| (A) $h=4$ | 5.00 | 25.5 |
+| (A) $h=16$ | 4.91 | 25.8 |
+| (A) $h=32$ | 5.01 | 25.4 |
+| (D) dropout 제거 ($P_{drop}=0$) | 5.77 | 24.6 |
+| (D) label smoothing 제거 | **4.67** | 25.3 |
+| (E) learned positional embedding | 4.92 | 25.7 |
+| **big** | 4.33 | **26.4** |
+
+- 행별로 읽어보면:
+  - **head 수 (A)**: 1개면 BLEU가 0.9 떨어지고, 32개로 너무 늘려도 오히려 하락 — $h=8{\sim}16$이 sweet spot.
+head가 "여러 관계를 병렬로 본다"는 가설의 정량 근거다.
+  - **$d_k$ 축소 (B)**: $d_k$를 줄이면 품질 하락 — Q·K 유사도 계산이 그렇게 만만한 문제가 아니라는 해석.
+  - **모델 크기 (C)**: $d_{model}$, $d_{ff}$를 키울수록 일관되게 좋아진다. (스케일링의 초기 증거)
+  - **dropout (D)**: 제거하면 PPL 5.77로 명확한 overfitting.
+  - **label smoothing (D)**: 제거하면 **PPL은 가장 좋아지는데(4.67) BLEU는 떨어진다(25.3)** —
+"PPL과 생성 품질은 다른 지표"임을 보여주는 유명한 행이다.
+  - **learned PE (E)**: sinusoidal과 사실상 동일 (4.92/25.7). 그래서 외삽 가능성을 보고 sinusoidal 선택.
 - 정리하면 Transformer의 성능은 특정 트릭이 아니라 구조 전체에서 나오고, 크기를 키우면 더 좋아진다.
 
 #### <span style="color: #4682B4">5.3 English Constituency Parsing (일반화 확인)</span>
