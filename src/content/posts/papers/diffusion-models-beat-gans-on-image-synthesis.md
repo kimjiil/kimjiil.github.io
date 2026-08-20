@@ -89,7 +89,7 @@ $$
 $$
 
 <details>
-<summary> <span style="color: #ffd33d">$q(x_t|x_0)$ closed form 증명 펼치기/접기</span> </summary>
+<summary> <span style="color: #ffd33d"><code>q(x_t | x_0)</code> closed form 증명 펼치기/접기</span> </summary>
 
 - reparameterization trick으로 한 step을 풀어쓰면 $x_t = \sqrt{\alpha_t}\,x_{t-1} + \sqrt{1-\alpha_t}\,\epsilon_{t-1}$ 이다.
 - $x_{t-1}$을 다시 한 step 풀어서 대입한다.
@@ -152,7 +152,7 @@ $$
 $$
 
 <details>
-<summary> <span style="color: #ffd33d">posterior $q(x_{t-1}|x_t,x_0)$ 유도 (완전제곱식 정리) 펼치기/접기</span> </summary>
+<summary> <span style="color: #ffd33d">posterior <code>q(x_(t-1) | x_t, x_0)</code> 유도 (완전제곱식 정리) 펼치기/접기</span> </summary>
 
 - 베이즈 정리로 posterior를 forward process의 항들로 바꾼다. 세 항 모두 위에서 구한 Gaussian이다.
 
@@ -547,7 +547,7 @@ $$
 $$
 
 <details>
-<summary> <span style="color: #ffd33d">$\epsilon$ ↔ score 관계 유도 펼치기/접기</span> </summary>
+<summary> <span style="color: #ffd33d">ε ↔ score 관계 유도 펼치기/접기</span> </summary>
 
 - Gaussian $q(x_t|x_0)$의 log density를 $x_t$로 미분하면
 

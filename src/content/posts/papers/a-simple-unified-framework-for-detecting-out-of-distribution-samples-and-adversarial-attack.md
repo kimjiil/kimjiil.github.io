@@ -1270,7 +1270,7 @@ width="70%" height="70%">
 ---
 
 <details>
-<summary> 공유 공분산이 아닐 경우($\Sigma_{1} \ne \Sigma_{2}$) 펼치기</summary>
+<summary> 공유 공분산이 아닐 경우(Σ₁ ≠ Σ₂) 펼치기</summary>
 <div markdown="1">
     
 $$  
