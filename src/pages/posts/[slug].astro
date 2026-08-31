@@ -133,7 +133,8 @@ const tocHeadings = headings.filter((h) => h.depth <= 4);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 280px;
     gap: 2.5rem;
-    align-items: start;
+    /* align-items 기본값(stretch) 유지 필수:
+       사이드바 컬럼이 본문 전체 높이로 늘어나야 그 안의 sticky가 스크롤을 따라 이동할 수 있다 */
   }
 
   .post-main {
