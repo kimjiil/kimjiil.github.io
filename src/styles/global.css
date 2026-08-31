@@ -52,6 +52,8 @@ html {
 
 body {
   margin: 0;
+  /* 고정 헤더(64px) 높이만큼 본문을 내림 */
+  padding-top: 64px;
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
   font-family: var(--font-sans);
