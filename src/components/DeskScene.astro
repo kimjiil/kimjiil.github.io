@@ -1,0 +1,1220 @@
+---
+// 홈 화면 인터랙티브 데스크 씬
+// matter.js로 물리 시뮬레이션, 렌더링은 테마에 맞춰 캔버스에 직접 그림.
+// 책상 위 기물(모니터·키보드·머그·오리 등)을 마우스/터치로 잡아 던질 수 있다.
+---
+
+<section class="desk-section">
+  <div class="container">
+    <div class="desk-window">
+      <div class="desk-titlebar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="desk-title mono">~/desk — physics.o</span>
+        <button id="desk-reset" class="desk-reset mono" type="button">$ make clean</button>
+      </div>
+      <canvas id="desk-canvas" aria-label="인터랙티브 책상 — 물건을 잡아서 던져보세요"></canvas>
+    </div>
+  </div>
+</section>
+
+<script>
+  import Matter from "matter-js";
+
+  const { Engine, Bodies, Body, Composite, Constraint, Query, Events } = Matter;
+
+  const canvas = document.getElementById("desk-canvas") as HTMLCanvasElement | null;
+  const resetBtn = document.getElementById("desk-reset");
+
+  type ItemType =
+    | "monitor"
+    | "keyboard"
+    | "mouse"
+    | "mug"
+    | "duck"
+    | "mama"
+    | "duckling"
+    | "plant"
+    | "paper"
+    | "pen"
+    | "sticky"
+    | "lamp"
+    | "tower"
+    | "book"
+    | "holder"
+    | "pencil";
+
+  interface DeskItem {
+    body: Matter.Body;
+    type: ItemType;
+    name: string;
+    w: number;
+    h: number;
+    home: { x: number; y: number };
+    v?: number; // 색상 등 변형 인덱스
+  }
+
+  if (canvas) {
+    const ctx = canvas.getContext("2d")!;
+    const engine = Engine.create({ enableSleeping: true });
+
+    let W = 0;
+    let H = 0;
+    let dpr = 1;
+    let items: DeskItem[] = [];
+    let deskRect = { x: 0, y: 0, w: 0, h: 0 }; // 상판 (그리기용)
+    let interacted = false;
+    let narrowView = false;
+    // 모니터 화면 인트로 애니메이션 시작 시각 (엔진 시계 기준 → 화면 밖이면 일시정지)
+    let animStart = 0;
+
+    // ---- 터미널 로그 (캔버스 좌상단에 표시) ----
+    interface LogLine { text: string; color: string; born: number }
+    const logs: LogLine[] = [];
+    let lastImpactLog = 0;
+    const pushLog = (text: string, color = "#43d6a8") => {
+      logs.push({ text, color, born: performance.now() });
+      if (logs.length > 4) logs.shift();
+    };
+
+    // ---- 월드 구성 ----
+    const build = () => {
+      Composite.clear(engine.world, false);
+      items = [];
+
+      const rect = canvas.getBoundingClientRect();
+      W = Math.max(320, rect.width);
+      H = W < 560 ? 340 : 430;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      canvas.style.height = H + "px";
+
+      // 바닥/벽/천장 (화면 밖까지 두껍게: 터널링 방지)
+      const wallOpt = { isStatic: true, label: "wall" };
+      Composite.add(engine.world, [
+        Bodies.rectangle(W / 2, H + 24, W + 200, 60, { ...wallOpt, label: "floor" }),
+        Bodies.rectangle(-30, H / 2, 60, H * 3, wallOpt),
+        Bodies.rectangle(W + 30, H / 2, 60, H * 3, wallOpt),
+        Bodies.rectangle(W / 2, -H - 30, W + 200, 60, wallOpt),
+      ]);
+
+      // 책상 상판 (정적)
+      const deskW = Math.min(680, W * 0.8);
+      const deskH = 16;
+      const deskTop = H - 104;
+      const deskX = W / 2;
+      deskRect = { x: deskX - deskW / 2, y: deskTop, w: deskW, h: deskH };
+      Composite.add(
+        engine.world,
+        Bodies.rectangle(deskX, deskTop + deskH / 2, deskW, deskH, {
+          isStatic: true,
+          label: "desk",
+          friction: 0.6,
+        }),
+      );
+
+      // 기물 배치 (책상 왼끝~오른끝 비율 좌표)
+      const dx = (f: number) => deskRect.x + deskRect.w * f;
+      const onDesk = (h: number) => deskTop - h / 2 - 1;
+
+      const spawn = (
+        type: ItemType,
+        name: string,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        opt: Matter.IBodyDefinition = {},
+        v = 0,
+      ) => {
+        const isCircle = type === "duck" || type === "mama" || type === "duckling";
+        const body = isCircle
+          ? Bodies.circle(x, y, w / 2, { restitution: 0.55, friction: 0.4, ...opt, label: name })
+          : Bodies.rectangle(x, y, w, h, {
+              restitution: 0.25,
+              friction: 0.45,
+              chamfer: { radius: Math.min(4, h / 3) },
+              ...opt,
+              label: name,
+            });
+        items.push({ body, type, name, w, h, home: { x, y }, v });
+        Composite.add(engine.world, body);
+        return body;
+      };
+
+      const narrow = W < 560;
+      narrowView = narrow;
+      const floorTop = H - 6;
+      const onFloor = (hh: number) => floorTop - hh / 2 - 1;
+      const rightMargin = W - (deskRect.x + deskRect.w);
+
+      // 모니터(센터피스 — 화면에서 인트로 애니메이션 재생) + 그 위의 러버덕
+      // 주의: 스폰 위치끼리 겹치면 물리엔진이 밀어내며 튄다. 간격은 데스크폭 비율로 검산할 것.
+      const monW = narrow ? Math.min(160, deskW * 0.5) : Math.min(260, deskW * 0.42);
+      const monH = Math.round(monW * 0.77);
+      const monX = narrow ? 0.5 : 0.45;
+      spawn("monitor", "monitor.o", dx(monX), onDesk(monH), monW, monH, { density: 0.0012 });
+      spawn("duck", "duck.o", dx(monX), onDesk(monH) - monH / 2 - 15, 28, 28, { density: 0.0008 });
+      // 데스크 왼쪽: 램프 / 종이 2장+펜 / 책 2권+포스트잇
+      if (!narrow) spawn("lamp", "lamp.o", dx(0.035), onDesk(58), 38, 58, { density: 0.0016 });
+      const paperX = narrow ? 0.095 : 0.115;
+      spawn("paper", "paper.o", dx(paperX), onDesk(9), 56, 9);
+      spawn("paper", "paper2.o", dx(paperX + 0.005), onDesk(9) - 9, 56, 9);
+      spawn("pen", "pen.o", dx(paperX + 0.01), onDesk(9) - 18 - 3, 44, 6);
+      if (!narrow) {
+        spawn("book", "book1.o", dx(0.21), onDesk(11), 58, 11, {}, 0);
+        spawn("book", "book2.o", dx(0.205), onDesk(11) - 11, 58, 11, {}, 1);
+        spawn("sticky", "note.o", dx(0.21), onDesk(18) - 22, 20, 18);
+      }
+      // 데스크 오른쪽: 키보드 / 마우스 / 연필꽂이 / 머그
+      if (!narrow) spawn("keyboard", "keyboard.o", dx(0.73), onDesk(13), 100, 13);
+      spawn("mouse", "mouse.o", dx(narrow ? 0.82 : 0.835), onDesk(15), 27, 15);
+      if (!narrow) {
+        // 연필꽂이: 속이 빈 U자 컵(컴파운드) — 연필이 실제로 꽂혀 있고 뽑거나 쏟을 수 있다
+        const cupW = 28;
+        const cupH = 26;
+        const wallT = 3.5;
+        const cupX = dx(0.885);
+        const cupY = deskTop - cupH / 2 - 1;
+        const mkPart = (px: number, py: number, pw: number, ph: number) =>
+          Bodies.rectangle(px, py, pw, ph, {
+            chamfer: { radius: 1 },
+            restitution: 0.2,
+            friction: 0.5,
+          });
+        const cup = Body.create({
+          parts: [
+            mkPart(cupX - cupW / 2 + wallT / 2, cupY, wallT, cupH),
+            mkPart(cupX + cupW / 2 - wallT / 2, cupY, wallT, cupH),
+            mkPart(cupX, cupY + cupH / 2 - wallT / 2, cupW - wallT * 2, wallT),
+          ],
+          label: "cup.o",
+        });
+        items.push({ body: cup, type: "holder", name: "cup.o", w: cupW, h: cupH, home: { x: cupX, y: cupY } });
+        Composite.add(engine.world, cup);
+        // 연필 4자루 (컵 안에 세워서)
+        const floorIn = cupY + cupH / 2 - wallT; // 컵 내부 바닥
+        const pencilDefs = [
+          { ox: -7, len: 36, tilt: -0.07 },
+          { ox: -2.5, len: 40, tilt: 0.04 },
+          { ox: 2.5, len: 34, tilt: -0.03 },
+          { ox: 7, len: 38, tilt: 0.08 },
+        ];
+        pencilDefs.forEach((p, i) => {
+          const b = spawn(
+            "pencil",
+            `pencil${i + 1}.o`,
+            cupX + p.ox,
+            floorIn - p.len / 2,
+            3.6,
+            p.len,
+            {
+              chamfer: { radius: 1 },
+              restitution: 0.1,
+              friction: 0.6,
+              frictionAir: 0.02,
+              density: 0.0008,
+            },
+            i,
+          );
+          Body.setAngle(b, p.tilt);
+        });
+      }
+      spawn("mug", "mug.o", dx(narrow ? 0.93 : 0.945), onDesk(33), 30, 33);
+      // 책상 아래: 컴퓨터 본체 / 바닥 왼쪽: 큰 화분
+      spawn("tower", "tower.o", deskRect.x + (narrow ? 60 : 95), onFloor(78), 46, 78, { density: 0.003 });
+      if (!narrow && deskRect.x > 80) {
+        spawn("plant", "plant.o", deskRect.x - 44, onFloor(58), 46, 58, { density: 0.0018 });
+      }
+      // 바닥 오른쪽: 산책하는 오리 가족 (엄마 + 아기들)
+      if (rightMargin > 90) {
+        const fx = deskRect.x + deskRect.w;
+        spawn("mama", "mama_duck.o", fx + 52, onFloor(40), 40, 40, { density: 0.001 });
+        spawn("duckling", "duckling1.o", fx + 92, onFloor(20), 20, 20, { density: 0.0005 });
+        if (rightMargin > 140) {
+          spawn("duckling", "duckling2.o", Math.min(fx + 122, W - 24), onFloor(20), 20, 20, { density: 0.0005 });
+        }
+      }
+
+      // 인트로 애니메이션 재시작 (리셋 시에도 처음부터 재생)
+      animStart = engine.timing.timestamp;
+
+      // 루프가 꺼져 있어도(화면 밖 등) 첫 프레임은 보이게
+      draw();
+    };
+
+    // ---- 포인터로 잡기/던지기 ----
+    let grab: Matter.Constraint | null = null;
+    let grabbed: DeskItem | null = null;
+    const pointerPos = { x: 0, y: 0 };
+
+    const toLocal = (e: PointerEvent) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    // 정확 판정 → 실패 시 8px 근접 판정 (연필처럼 얇은 물체용). 근접 후보는 작은 것 우선.
+    const pickBody = (pos: { x: number; y: number }) => {
+      const bodies = items.map((i) => i.body);
+      const exact = Query.point(bodies, pos)[0];
+      if (exact) return exact;
+      const r = 8;
+      const cands = Query.region(bodies, {
+        min: { x: pos.x - r, y: pos.y - r },
+        max: { x: pos.x + r, y: pos.y + r },
+      });
+      cands.sort((a, b) => {
+        const areaOf = (bd: Matter.Body) =>
+          (bd.bounds.max.x - bd.bounds.min.x) * (bd.bounds.max.y - bd.bounds.min.y);
+        return areaOf(a) - areaOf(b);
+      });
+      return cands[0] ?? null;
+    };
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const pos = toLocal(e);
+      const hit = pickBody(pos);
+      if (!hit) return;
+      e.preventDefault();
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        /* 합성 이벤트 등 캡처 불가능한 포인터는 무시 */
+      }
+      interacted = true;
+      grabbed = items.find((i) => i.body === hit) ?? null;
+      pointerPos.x = pos.x;
+      pointerPos.y = pos.y;
+      grab = Constraint.create({
+        pointA: { x: pos.x, y: pos.y },
+        bodyB: hit,
+        pointB: { x: pos.x - hit.position.x, y: pos.y - hit.position.y },
+        stiffness: 0.15,
+        damping: 0.08,
+        length: 0,
+      });
+      Composite.add(engine.world, grab);
+      Matter.Sleeping.set(hit, false);
+      if (grabbed) pushLog(`$ grab ${grabbed.name}`, "#fd7318");
+      canvas.style.cursor = "grabbing";
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      const pos = toLocal(e);
+      pointerPos.x = pos.x;
+      pointerPos.y = pos.y;
+      if (grab) {
+        (grab.pointA as Matter.Vector).x = pos.x;
+        (grab.pointA as Matter.Vector).y = pos.y;
+      } else {
+        // 잡을 수 있는 물건 위에서는 grab 커서
+        canvas.style.cursor = pickBody(pos) ? "grab" : "default";
+      }
+    });
+
+    const release = () => {
+      if (!grab) return;
+      Composite.remove(engine.world, grab);
+      if (grabbed) {
+        const v = Math.hypot(grabbed.body.velocity.x, grabbed.body.velocity.y);
+        if (v > 9) pushLog(`$ throw ${grabbed.name} --force=${v.toFixed(1)}`, "#fde471");
+      }
+      grab = null;
+      grabbed = null;
+      canvas.style.cursor = "default";
+    };
+    canvas.addEventListener("pointerup", release);
+    canvas.addEventListener("pointercancel", release);
+
+    // ---- 충돌 로그 ----
+    Events.on(engine, "collisionStart", (ev) => {
+      const now = performance.now();
+      if (now - lastImpactLog < 350) return;
+      for (const pair of ev.pairs) {
+        const a = pair.bodyA;
+        const b = pair.bodyB;
+        const dyn = !a.isStatic ? a : !b.isStatic ? b : null;
+        if (!dyn) continue;
+        const v = Math.hypot(dyn.velocity.x, dyn.velocity.y);
+        if (v < 7) continue;
+        const other = dyn === a ? b : a;
+        pushLog(`[impact] ${dyn.label} → ${other.label} (v=${v.toFixed(1)})`, "#a1a1aa");
+        lastImpactLog = now;
+        break;
+      }
+    });
+
+    // ---- 이탈 복구: 밖으로 나간 물건은 제자리로 ----
+    setInterval(() => {
+      for (const it of items) {
+        const { x, y } = it.body.position;
+        if (x < -120 || x > W + 120 || y > H + 160 || y < -H * 2) {
+          Body.setPosition(it.body, it.home);
+          Body.setVelocity(it.body, { x: 0, y: 0 });
+          Body.setAngularVelocity(it.body, 0);
+          Body.setAngle(it.body, 0);
+          pushLog(`[respawn] ${it.name}`, "#c21829");
+        }
+      }
+    }, 1500);
+
+    // ---- 그리기 ----
+    const C = {
+      bg1: "#0d030f",
+      panel: "#1a0f1c",
+      panel2: "#1e1219",
+      accent: "#fd7318",
+      accentDim: "#fd731866",
+      borderDim: "#fd731833",
+      green: "#43d6a8",
+      yellow: "#fde471",
+      muted: "#a1a1aa",
+      red: "#c21829",
+    };
+
+    const rr = (x: number, y: number, w: number, h: number, r: number) => {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    };
+
+    const drawItem = (it: DeskItem) => {
+      const { body, type, w, h, v } = it;
+
+      // 연필꽂이(U자 컴파운드)는 파트별 월드 좌표(vertices)로 직접 그린다
+      if (type === "holder") {
+        ctx.lineWidth = 1.5;
+        ctx.fillStyle = C.panel2;
+        ctx.strokeStyle = C.accentDim;
+        for (let i = 1; i < body.parts.length; i++) {
+          const vs = body.parts[i]!.vertices;
+          ctx.beginPath();
+          ctx.moveTo(vs[0]!.x, vs[0]!.y);
+          for (let j = 1; j < vs.length; j++) ctx.lineTo(vs[j]!.x, vs[j]!.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(body.position.x, body.position.y);
+      ctx.rotate(body.angle);
+      ctx.lineWidth = 1.5;
+
+      switch (type) {
+        case "monitor": {
+          const sH = h * 0.78; // 스크린(베젤 포함) 높이
+          // 화면이 내는 은은한 빛
+          const glow = ctx.createRadialGradient(0, -h * 0.1, 10, 0, -h * 0.1, w * 0.8);
+          glow.addColorStop(0, "#fd731812");
+          glow.addColorStop(1, "#fd731800");
+          ctx.fillStyle = glow;
+          ctx.fillRect(-w, -h, w * 2, h * 2);
+          // 스탠드
+          ctx.fillStyle = C.panel;
+          ctx.strokeStyle = C.borderDim;
+          rr(-w * 0.05, -h / 2 + sH, w * 0.1, h * 0.15, 2);
+          ctx.fill(); ctx.stroke();
+          rr(-w * 0.2, h / 2 - h * 0.08, w * 0.4, h * 0.08, 3);
+          ctx.fill(); ctx.stroke();
+          // 베젤
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2, -h / 2, w, sH, 6);
+          ctx.fill(); ctx.stroke();
+          // 전원 LED (하단 베젤 오른쪽)
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.arc(w / 2 - 13, -h / 2 + sH - 3, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          // 스크린
+          const x0 = -w / 2 + 6;
+          const y0 = -h / 2 + 6;
+          const sw = w - 12;
+          const sh = sH - 12;
+          ctx.fillStyle = C.bg1;
+          rr(x0, y0, sw, sh, 4);
+          ctx.fill();
+
+          // ---- 화면 속 인트로: 타이핑 → 글리치 → CRT off → dev_log ----
+          ctx.save();
+          rr(x0, y0, sw, sh, 4);
+          ctx.clip();
+          const t = engine.timing.timestamp - animStart;
+          const full = "$ sudo make me_a_better_engineer";
+          const T_START = 600;
+          const CHAR = 55;
+          const typeEnd = T_START + full.length * CHAR;
+          const holdEnd = typeEnd + 800;
+          const glitchEnd = holdEnd + 320;
+          const crtEnd = glitchEnd + 380;
+          const blink = Math.floor(t / 530) % 2 === 0;
+          ctx.textBaseline = "middle";
+
+          if (t < glitchEnd) {
+            // 타이핑 (holdEnd 이후엔 글리치)
+            const n = t < T_START ? 0 : Math.min(full.length, Math.floor((t - T_START) / CHAR));
+            const text = full.slice(0, n);
+            const fs1 = Math.min((sw - 16) / (full.length * 0.62), sh * 0.15);
+            ctx.font = `${fs1}px "JetBrains Mono", monospace`;
+            ctx.textAlign = "left";
+            const tx = x0 + 8;
+            const ty = y0 + sh * 0.24;
+            if (t >= holdEnd) {
+              // 글리치: RGB 분리 + 지터
+              for (const col of ["#c2182999", "#43d6a899", "#fafafacc"]) {
+                ctx.fillStyle = col;
+                ctx.fillText(text, tx + (Math.random() - 0.5) * 5, ty + (Math.random() - 0.5) * 4);
+              }
+            } else if (n === 0) {
+              if (blink) {
+                ctx.fillStyle = C.accent;
+                ctx.fillRect(tx, ty - fs1 / 2, fs1 * 0.55, fs1);
+              }
+            } else {
+              ctx.fillStyle = C.accent;
+              ctx.fillText("$", tx, ty);
+              ctx.fillStyle = "#fafafa";
+              ctx.fillText(text.slice(1), tx + ctx.measureText("$").width, ty);
+              const typing = n < full.length;
+              if (typing || blink) {
+                ctx.fillStyle = C.accent;
+                ctx.fillRect(tx + ctx.measureText(text).width + 2, ty - fs1 / 2, fs1 * 0.55, fs1);
+              }
+            }
+          } else if (t < crtEnd) {
+            // CRT off: 밝은 가로선으로 수축
+            const p = (t - glitchEnd) / 380;
+            const lh = Math.max(1.5, sh * (1 - p) * (1 - p));
+            ctx.fillStyle = `rgba(255, 244, 214, ${0.35 + p * 0.6})`;
+            ctx.fillRect(x0, y0 + (sh - lh) / 2, sw, lh);
+          } else {
+            // 최종: 그라디언트 dev_log + 태그라인 + 깜빡이는 커서
+            const p = Math.min(1, (t - crtEnd) / 450);
+            ctx.globalAlpha = p;
+            const title = "kimjiil.dev_log";
+            const fs2 = Math.min((sw - 20) / (title.length * 0.66), sh * 0.26);
+            ctx.font = `700 ${fs2}px "JetBrains Mono", monospace`;
+            ctx.textAlign = "center";
+            const cy = y0 + sh * 0.42 + (1 - p) * 8;
+            const tw = ctx.measureText(title).width;
+            const grad = ctx.createLinearGradient(-tw / 2, 0, tw / 2, 0);
+            grad.addColorStop(0, "#fd7318");
+            grad.addColorStop(0.6, "#fde471");
+            grad.addColorStop(1, "#ff8a3d");
+            ctx.fillStyle = grad;
+            ctx.fillText(title, 0, cy);
+            if (blink) {
+              ctx.fillStyle = C.accent;
+              ctx.fillText("_", tw / 2 + fs2 * 0.4, cy);
+            }
+            ctx.font = `${Math.max(7, fs2 * 0.34)}px "JetBrains Mono", monospace`;
+            ctx.fillStyle = C.muted;
+            ctx.fillText("AI/ML · Algorithm · 개발 기록", 0, cy + fs2 * 0.95);
+            ctx.globalAlpha = 1;
+          }
+          // CRT 스캔라인
+          ctx.globalAlpha = 0.07;
+          ctx.fillStyle = "#000";
+          for (let yy = y0; yy < y0 + sh; yy += 3) ctx.fillRect(x0, yy, sw, 1);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          break;
+        }
+        case "keyboard": {
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2, -h / 2, w, h, 3);
+          ctx.fill(); ctx.stroke();
+          // 키캡
+          ctx.fillStyle = C.panel;
+          const key = 6, gap = 2.6;
+          for (let kx = -w / 2 + 4; kx < w / 2 - key - 2; kx += key + gap) {
+            rr(kx, -h / 2 + 2.5, key, h - 5, 1.5);
+            ctx.fill();
+          }
+          // 포인트 키캡 (Esc 오렌지 / Enter 그린)
+          ctx.fillStyle = "#fd731877";
+          rr(-w / 2 + 4, -h / 2 + 2.5, key, h - 5, 1.5);
+          ctx.fill();
+          ctx.fillStyle = "#43d6a866";
+          rr(w / 2 - 4 - key * 2 - gap, -h / 2 + 2.5, key, h - 5, 1.5);
+          ctx.fill();
+          break;
+        }
+        case "mouse": {
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2, -h / 2, w, h, 7);
+          ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = C.borderDim;
+          ctx.beginPath();
+          ctx.moveTo(0, -h / 2 + 2);
+          ctx.lineTo(0, -h / 2 + 6);
+          ctx.stroke();
+          // 센서 LED
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.arc(w / 2 - 5, 1, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case "mug": {
+          // 손잡이
+          ctx.strokeStyle = C.accentDim;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(w / 2 + 3, -2, 7, -Math.PI / 2, Math.PI / 2);
+          ctx.stroke();
+          ctx.lineWidth = 1.5;
+          // 몸통
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2, -h / 2, w, h, 3);
+          ctx.fill(); ctx.stroke();
+          // 띠 + 김
+          ctx.fillStyle = C.accent;
+          ctx.fillRect(-w / 2 + 2, -3, w - 4, 5);
+          ctx.strokeStyle = "#a1a1aa55";
+          ctx.beginPath();
+          ctx.moveTo(-4, -h / 2 - 3);
+          ctx.quadraticCurveTo(-7, -h / 2 - 8, -4, -h / 2 - 13);
+          ctx.moveTo(4, -h / 2 - 3);
+          ctx.quadraticCurveTo(1, -h / 2 - 8, 4, -h / 2 - 13);
+          ctx.stroke();
+          break;
+        }
+        case "duck": {
+          const r = w / 2;
+          ctx.fillStyle = C.yellow;
+          // 몸통 + 머리
+          ctx.beginPath();
+          ctx.arc(-r * 0.15, r * 0.25, r * 0.72, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(r * 0.3, -r * 0.35, r * 0.48, 0, Math.PI * 2);
+          ctx.fill();
+          // 부리 / 눈
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.moveTo(r * 0.72, -r * 0.4);
+          ctx.lineTo(r * 1.05, -r * 0.28);
+          ctx.lineTo(r * 0.72, -r * 0.16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = C.bg1;
+          ctx.beginPath();
+          ctx.arc(r * 0.38, -r * 0.45, r * 0.09, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case "plant": {
+          const potH = h * 0.42;
+          // 잎
+          ctx.fillStyle = C.green;
+          for (const [ox, oy, rx, ry, rot] of [
+            [0, -h * 0.28, w * 0.14, h * 0.3, 0],
+            [-w * 0.24, -h * 0.16, w * 0.13, h * 0.24, -0.6],
+            [w * 0.24, -h * 0.16, w * 0.13, h * 0.24, 0.6],
+          ] as const) {
+            ctx.save();
+            ctx.translate(ox, oy);
+            ctx.rotate(rot);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+          // 화분
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          ctx.beginPath();
+          ctx.moveTo(-w / 2, h / 2 - potH);
+          ctx.lineTo(w / 2, h / 2 - potH);
+          ctx.lineTo(w * 0.34, h / 2);
+          ctx.lineTo(-w * 0.34, h / 2);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = C.accent;
+          ctx.fillRect(-w / 2, h / 2 - potH, w, 3.5);
+          break;
+        }
+        case "paper": {
+          ctx.fillStyle = "#16101a";
+          ctx.strokeStyle = "#43d6a855";
+          rr(-w / 2, -h / 2, w, h, 1.5);
+          ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = "#43d6a866";
+          ctx.beginPath();
+          ctx.moveTo(-w / 2 + 5, 0);
+          ctx.lineTo(w / 2 - 14, 0);
+          ctx.stroke();
+          break;
+        }
+        case "pen": {
+          ctx.fillStyle = C.accent;
+          rr(-w / 2, -h / 2, w - 8, h, 2.5);
+          ctx.fill();
+          ctx.fillStyle = C.panel;
+          ctx.beginPath();
+          ctx.moveTo(w / 2 - 8, -h / 2);
+          ctx.lineTo(w / 2, 0);
+          ctx.lineTo(w / 2 - 8, h / 2);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        case "sticky": {
+          ctx.fillStyle = "#fde471dd";
+          rr(-w / 2, -h / 2, w, h, 1.5);
+          ctx.fill();
+          ctx.strokeStyle = "#0d030f88";
+          ctx.beginPath();
+          ctx.moveTo(-w / 2 + 3, -2);
+          ctx.lineTo(w / 2 - 3, -2);
+          ctx.moveTo(-w / 2 + 3, 3);
+          ctx.lineTo(w / 2 - 6, 3);
+          ctx.stroke();
+          break;
+        }
+        case "lamp": {
+          const jx = -w * 0.18; // 관절
+          const jy = -h * 0.05;
+          const hx = w * 0.22; // 헤드
+          const hy = -h / 2 + 10;
+          // 빛 원뿔 (책상 쪽으로)
+          const lg = ctx.createLinearGradient(hx, hy, hx + 40, hy + 66);
+          lg.addColorStop(0, "#fde47128");
+          lg.addColorStop(1, "#fde47100");
+          ctx.fillStyle = lg;
+          ctx.beginPath();
+          ctx.moveTo(hx, hy + 4);
+          ctx.lineTo(hx + 56, hy + 76);
+          ctx.lineTo(hx - 24, hy + 76);
+          ctx.closePath();
+          ctx.fill();
+          // 암
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = "#4a3547";
+          ctx.beginPath();
+          ctx.moveTo(0, h / 2 - 8);
+          ctx.lineTo(jx, jy);
+          ctx.lineTo(hx, hy);
+          ctx.stroke();
+          ctx.lineWidth = 1.5;
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.arc(jx, jy, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          // 베이스
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2 + 3, h / 2 - 8, w - 6, 8, 3);
+          ctx.fill(); ctx.stroke();
+          // 갓 + 전구
+          ctx.save();
+          ctx.translate(hx, hy);
+          ctx.rotate(0.85);
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          ctx.beginPath();
+          ctx.moveTo(-9, 0);
+          ctx.lineTo(9, 0);
+          ctx.lineTo(5, 12);
+          ctx.lineTo(-5, 12);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = C.yellow;
+          ctx.beginPath();
+          ctx.arc(0, 12, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+        case "tower": {
+          ctx.fillStyle = C.panel2;
+          ctx.strokeStyle = C.accentDim;
+          rr(-w / 2, -h / 2, w, h, 4);
+          ctx.fill(); ctx.stroke();
+          // 전원 버튼
+          ctx.strokeStyle = C.accent;
+          ctx.beginPath();
+          ctx.arc(0, -h / 2 + 12, 4.5, 0.35 * Math.PI, 2.65 * Math.PI);
+          ctx.stroke();
+          ctx.fillStyle = C.accent;
+          ctx.fillRect(-0.8, -h / 2 + 5.5, 1.6, 5.5);
+          // 디스크 활동 LED (깜빡)
+          if (Math.floor(engine.timing.timestamp / 450) % 3 !== 0) {
+            ctx.fillStyle = C.green;
+            ctx.beginPath();
+            ctx.arc(w / 2 - 8, -h / 2 + 12, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // 드라이브 베이 슬롯
+          ctx.strokeStyle = "#fd731840";
+          ctx.beginPath();
+          ctx.moveTo(-w / 2 + 6, -h / 2 + 26);
+          ctx.lineTo(w / 2 - 6, -h / 2 + 26);
+          ctx.moveTo(-w / 2 + 6, -h / 2 + 32);
+          ctx.lineTo(w / 2 - 6, -h / 2 + 32);
+          ctx.stroke();
+          // 통풍구
+          ctx.strokeStyle = "#a1a1aa30";
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(-w / 2 + 7, h / 2 - 8 - i * 5);
+            ctx.lineTo(w / 2 - 7, h / 2 - 8 - i * 5);
+            ctx.stroke();
+          }
+          break;
+        }
+        case "book": {
+          const cols = [
+            { f: "#1d3a34", s: "#43d6a866" },
+            { f: "#1e2a44", s: "#5fadfe66" },
+          ];
+          const col = cols[(v ?? 0) % cols.length]!;
+          ctx.fillStyle = col.f;
+          ctx.strokeStyle = col.s;
+          rr(-w / 2, -h / 2, w, h, 2);
+          ctx.fill(); ctx.stroke();
+          // 페이지 단면 (오른쪽)
+          ctx.fillStyle = "#d8d2c4";
+          ctx.fillRect(w / 2 - 7, -h / 2 + 2, 5, h - 4);
+          // 표지 제목 띠
+          ctx.fillStyle = "#fafafa26";
+          ctx.fillRect(-w / 2 + 8, -1, w * 0.38, 2);
+          break;
+        }
+        case "pencil": {
+          const cols = ["#fd7318", "#fde471", "#43d6a8", "#5fadfe"];
+          const col = cols[(v ?? 0) % cols.length]!;
+          // 몸통
+          ctx.fillStyle = col;
+          ctx.fillRect(-w / 2, -h / 2 + 5, w, h - 8);
+          // 깎인 심
+          ctx.fillStyle = "#e8ddc8";
+          ctx.beginPath();
+          ctx.moveTo(-w / 2, -h / 2 + 5);
+          ctx.lineTo(0, -h / 2 + 0.5);
+          ctx.lineTo(w / 2, -h / 2 + 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#1a0f1c";
+          ctx.beginPath();
+          ctx.arc(0, -h / 2 + 1.4, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          // 금속 밴드 + 지우개
+          ctx.fillStyle = "#a1a1aa";
+          ctx.fillRect(-w / 2, h / 2 - 3.2, w, 1.6);
+          ctx.fillStyle = "#d9848a";
+          ctx.fillRect(-w / 2, h / 2 - 1.6, w, 1.6);
+          break;
+        }
+        case "mama": {
+          const r = w / 2;
+          // 발
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, r * 0.95);
+          ctx.lineTo(-r * 0.1, r * 0.55);
+          ctx.lineTo(-r * 0.62, r * 0.55);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(r * 0.3, r * 0.95);
+          ctx.lineTo(r * 0.52, r * 0.55);
+          ctx.lineTo(r * 0.05, r * 0.55);
+          ctx.closePath();
+          ctx.fill();
+          // 꼬리
+          ctx.fillStyle = "#efe9dc";
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.6, r * 0.1);
+          ctx.lineTo(-r * 1.0, -r * 0.28);
+          ctx.lineTo(-r * 0.45, -r * 0.22);
+          ctx.closePath();
+          ctx.fill();
+          // 몸통
+          ctx.beginPath();
+          ctx.ellipse(-r * 0.08, r * 0.15, r * 0.75, r * 0.52, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // 날개
+          ctx.fillStyle = "#ddd4c0";
+          ctx.beginPath();
+          ctx.ellipse(-r * 0.15, r * 0.12, r * 0.42, r * 0.28, -0.25, 0, Math.PI * 2);
+          ctx.fill();
+          // 목/머리
+          ctx.fillStyle = "#efe9dc";
+          ctx.beginPath();
+          ctx.arc(r * 0.48, -r * 0.42, r * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+          // 부리
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.moveTo(r * 0.76, -r * 0.5);
+          ctx.lineTo(r * 1.05, -r * 0.38);
+          ctx.lineTo(r * 0.76, -r * 0.28);
+          ctx.closePath();
+          ctx.fill();
+          // 눈
+          ctx.fillStyle = C.bg1;
+          ctx.beginPath();
+          ctx.arc(r * 0.54, -r * 0.5, r * 0.06, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case "duckling": {
+          const r = w / 2;
+          // 발
+          ctx.strokeStyle = C.accent;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.3, r * 0.5);
+          ctx.lineTo(-r * 0.3, r * 0.95);
+          ctx.moveTo(r * 0.25, r * 0.5);
+          ctx.lineTo(r * 0.25, r * 0.95);
+          ctx.stroke();
+          ctx.lineWidth = 1.5;
+          // 몸통 + 머리
+          ctx.fillStyle = C.yellow;
+          ctx.beginPath();
+          ctx.arc(-r * 0.12, r * 0.22, r * 0.62, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(r * 0.32, -r * 0.32, r * 0.42, 0, Math.PI * 2);
+          ctx.fill();
+          // 부리
+          ctx.fillStyle = C.accent;
+          ctx.beginPath();
+          ctx.moveTo(r * 0.68, -r * 0.42);
+          ctx.lineTo(r * 0.98, -r * 0.3);
+          ctx.lineTo(r * 0.68, -r * 0.18);
+          ctx.closePath();
+          ctx.fill();
+          // 눈
+          ctx.fillStyle = C.bg1;
+          ctx.beginPath();
+          ctx.arc(r * 0.4, -r * 0.42, r * 0.08, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+      }
+      ctx.restore();
+    };
+
+    // 배경 데코 (물리 없음): 러그, 벽 포스터, 벽시계
+    const drawDecor = () => {
+      const ts = engine.timing.timestamp;
+      // 러그
+      const rugW = deskRect.w * 1.12;
+      const rugX = deskRect.x + deskRect.w / 2 - rugW / 2;
+      ctx.fillStyle = "#170b19";
+      ctx.strokeStyle = "#fd731820";
+      ctx.lineWidth = 1.5;
+      rr(rugX, H - 10, rugW, 6, 3);
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#fd731815";
+      ctx.beginPath();
+      ctx.moveTo(rugX + 14, H - 7);
+      ctx.lineTo(rugX + rugW - 14, H - 7);
+      ctx.stroke();
+
+      if (narrowView) return;
+
+      // 벽 포스터: 미니 loss curve 액자
+      const px = deskRect.x + 26;
+      const py = 128;
+      const pw = 66;
+      const ph = 84;
+      ctx.fillStyle = C.panel2;
+      ctx.strokeStyle = C.borderDim;
+      rr(px, py, pw, ph, 3);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = C.bg1;
+      rr(px + 5, py + 5, pw - 10, ph - 10, 2);
+      ctx.fill();
+      ctx.strokeStyle = "#a1a1aa3a";
+      ctx.beginPath();
+      ctx.moveTo(px + 10, py + 12);
+      ctx.lineTo(px + 10, py + ph - 12);
+      ctx.lineTo(px + pw - 10, py + ph - 12);
+      ctx.stroke();
+      ctx.strokeStyle = C.accent;
+      ctx.beginPath();
+      ctx.moveTo(px + 12, py + 20);
+      ctx.quadraticCurveTo(px + 24, py + ph - 18, px + pw - 13, py + ph - 20);
+      ctx.stroke();
+      ctx.strokeStyle = "#43d6a877";
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(px + 10, py + ph - 22);
+      ctx.lineTo(px + pw - 10, py + ph - 22);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 벽시계 (초침은 엔진 시계로 회전)
+      const wx = deskRect.x + deskRect.w - 52;
+      const wy = 158;
+      const cr = 23;
+      ctx.fillStyle = C.panel2;
+      ctx.strokeStyle = C.accentDim;
+      ctx.beginPath();
+      ctx.arc(wx, wy, cr, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#a1a1aa55";
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.moveTo(wx + Math.cos(a) * (cr - 4), wy + Math.sin(a) * (cr - 4));
+        ctx.lineTo(wx + Math.cos(a) * (cr - 8), wy + Math.sin(a) * (cr - 8));
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "#e5e5e5";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(wx, wy);
+      ctx.lineTo(wx + Math.cos(-Math.PI * 0.15) * cr * 0.45, wy + Math.sin(-Math.PI * 0.15) * cr * 0.45);
+      ctx.moveTo(wx, wy);
+      ctx.lineTo(wx + Math.cos(Math.PI * 0.75) * cr * 0.68, wy + Math.sin(Math.PI * 0.75) * cr * 0.68);
+      ctx.stroke();
+      ctx.lineWidth = 1.5;
+      const secA = ((ts / 1000) % 60) / 60 * Math.PI * 2 - Math.PI / 2;
+      ctx.strokeStyle = C.accent;
+      ctx.beginPath();
+      ctx.moveTo(wx - Math.cos(secA) * cr * 0.16, wy - Math.sin(secA) * cr * 0.16);
+      ctx.lineTo(wx + Math.cos(secA) * cr * 0.8, wy + Math.sin(secA) * cr * 0.8);
+      ctx.stroke();
+      ctx.fillStyle = C.accent;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const drawDesk = () => {
+      const { x, y, w, h } = deskRect;
+      const legW = 10;
+      const legH = H - (y + h) - 6;
+      ctx.fillStyle = C.panel;
+      ctx.strokeStyle = C.borderDim;
+      ctx.lineWidth = 1.5;
+      // 다리
+      ctx.fillRect(x + 22, y + h, legW, legH);
+      ctx.strokeRect(x + 22, y + h, legW, legH);
+      ctx.fillRect(x + w - 32, y + h, legW, legH);
+      ctx.strokeRect(x + w - 32, y + h, legW, legH);
+      // 다리 사이 크로스바
+      ctx.fillRect(x + 32, y + h + legH * 0.58, w - 64, 5);
+      ctx.strokeRect(x + 32, y + h + legH * 0.58, w - 64, 5);
+      // 상판
+      ctx.fillStyle = C.panel2;
+      rr(x, y, w, h, 4);
+      ctx.fill();
+      ctx.strokeStyle = C.accentDim;
+      ctx.stroke();
+      // 상판 나뭇결 + 모서리 하이라이트
+      ctx.strokeStyle = "#fd731818";
+      ctx.beginPath();
+      ctx.moveTo(x + 14, y + 6);
+      ctx.lineTo(x + w * 0.44, y + 6);
+      ctx.moveTo(x + w * 0.52, y + 6);
+      ctx.lineTo(x + w - 20, y + 6);
+      ctx.moveTo(x + 30, y + 11);
+      ctx.lineTo(x + w * 0.3, y + 11);
+      ctx.moveTo(x + w * 0.62, y + 11);
+      ctx.lineTo(x + w - 44, y + 11);
+      ctx.stroke();
+      ctx.strokeStyle = "#ffffff14";
+      ctx.beginPath();
+      ctx.moveTo(x + 4, y + 1.5);
+      ctx.lineTo(x + w - 4, y + 1.5);
+      ctx.stroke();
+      // 바닥선
+      ctx.strokeStyle = C.borderDim;
+      ctx.beginPath();
+      ctx.moveTo(12, H - 5);
+      ctx.lineTo(W - 12, H - 5);
+      ctx.stroke();
+    };
+
+    const draw = () => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      drawDecor();
+      drawDesk();
+      for (const it of items) drawItem(it);
+
+      // 잡고 있는 동안 포인터-물체 연결선
+      if (grab && grabbed) {
+        ctx.strokeStyle = "#fd731855";
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath();
+        ctx.moveTo(pointerPos.x, pointerPos.y);
+        ctx.lineTo(grabbed.body.position.x, grabbed.body.position.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 로그
+      ctx.font = '10.5px "JetBrains Mono", monospace';
+      ctx.textBaseline = "top";
+      const now = performance.now();
+      let ly = 12;
+      for (const line of logs) {
+        const age = (now - line.born) / 4000;
+        if (age > 1) continue;
+        ctx.globalAlpha = Math.min(1, (1 - age) * 2.5);
+        ctx.fillStyle = line.color;
+        ctx.fillText(line.text, 14, ly);
+        ly += 15;
+      }
+      ctx.globalAlpha = 1;
+
+      // 힌트 (첫 인터랙션 전까지)
+      if (!interacted) {
+        ctx.fillStyle = "#a1a1aa99";
+        ctx.font = '11px "JetBrains Mono", monospace';
+        ctx.textAlign = "center";
+        ctx.fillText("// 책상 위 물건을 잡아서 던져보세요", W / 2, 16);
+        ctx.textAlign = "left";
+      }
+    };
+
+    // ---- 루프 (보일 때만 실행) ----
+    let running = false;
+    let rafId = 0;
+    let lastT = 0;
+    let acc = 0;
+    // 고정 타임스텝(16.6ms): 주사율과 무관하게 물리 거동·sleeping 판정을 일정하게 유지
+    const STEP = 16.6;
+    const loop = (t: number) => {
+      if (!running) return;
+      const real = lastT ? Math.min(t - lastT, 100) : STEP;
+      lastT = t;
+      acc = Math.min(acc + real, STEP * 3);
+      while (acc >= STEP) {
+        Engine.update(engine, STEP);
+        acc -= STEP;
+      }
+      draw();
+      rafId = requestAnimationFrame(loop);
+    };
+    const setRunning = (on: boolean) => {
+      if (on === running) return;
+      running = on;
+      if (on) {
+        lastT = 0;
+        rafId = requestAnimationFrame(loop);
+      } else {
+        cancelAnimationFrame(rafId);
+      }
+    };
+
+    const io = new IntersectionObserver((entries) => {
+      setRunning(entries[0]!.isIntersecting && !document.hidden);
+    });
+    io.observe(canvas);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) setRunning(false);
+      else {
+        const r = canvas.getBoundingClientRect();
+        setRunning(r.bottom > 0 && r.top < innerHeight);
+      }
+    });
+
+    // ---- 리셋 / 리사이즈 ----
+    resetBtn?.addEventListener("click", () => {
+      release();
+      build();
+      pushLog("$ make clean && make desk", C.green);
+      interacted = true;
+    });
+
+    let resizeTimer = 0;
+    let builtW = 0;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const rect = canvas.getBoundingClientRect();
+        if (Math.abs(rect.width - builtW) > 24) {
+          release();
+          build();
+          builtW = rect.width;
+        }
+      }, 200);
+    });
+
+    build();
+    builtW = canvas.getBoundingClientRect().width;
+    draw();
+  }
+</script>
+
+<style>
+  /* 히어로 역할: 고정 헤더 아래 첫 화면 */
+  .desk-section {
+    padding: 2.5rem 0 1rem;
+  }
+
+  .desk-window {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .desk-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.9rem;
+    background: var(--color-bg-tertiary);
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #c21829; }
+  .dot-yellow { background: #fde471; }
+  .dot-green { background: #43d6a8; }
+
+  .desk-title {
+    margin-left: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+
+  .desk-reset {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    background: none;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-sm);
+    padding: 0.18rem 0.55rem;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .desk-reset:hover {
+    color: var(--color-accent);
+    border-color: var(--color-border-hover);
+  }
+
+  #desk-canvas {
+    display: block;
+    width: 100%;
+    /* 캔버스에서 시작한 터치는 물리 조작으로 사용 (스크롤은 주변 영역에서) */
+    touch-action: none;
+  }
+</style>

@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostCard from "../components/PostCard.astro";
+import DeskScene from "../components/DeskScene.astro";
 import { SECTIONS } from "../consts";
 
 const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
@@ -18,34 +19,8 @@ const previews = [
 ---
 
 <BaseLayout>
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-bg">
-      <div class="glow-orb orb-1"></div>
-      <div class="glow-orb orb-2"></div>
-      <div class="glow-orb orb-3"></div>
-    </div>
-    <div class="container">
-      <div class="hero-content">
-        <!-- Typing Animation Phase -->
-        <div class="typing-phase" id="typing-phase">
-          <div class="terminal-line">
-            <span class="prompt">$</span>
-            <span class="typed-text" id="typed-text"></span>
-            <span class="cursor" id="cursor">_</span>
-          </div>
-        </div>
-
-        <!-- Final Quote Phase -->
-        <div class="quote-phase hidden" id="quote-phase">
-          <p class="quote-text">
-              <span class="gradient-text">kimjiil.dev_log</span>
-            </p>
-            <p class="hero-tagline mono">AI/ML · Algorithm · 개발 기록</p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- Hero: 인터랙티브 데스크 (모니터 화면에서 인트로 애니메이션 재생) -->
+  <DeskScene />
 
   <!-- Section Previews -->
   <div class="container home-sections">
@@ -76,252 +51,10 @@ const previews = [
   </div>
 </BaseLayout>
 
-<script>
-  const typingPhase = document.getElementById("typing-phase");
-  const quotePhase = document.getElementById("quote-phase");
-  const typedText = document.getElementById("typed-text");
-  const cursor = document.getElementById("cursor");
-
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-  function spawnParticles() {
-    if (!cursor) return;
-    const rect = cursor.getBoundingClientRect();
-    const colors = ["#fde471", "#fd7318", "#ff6b6b", "#43d6a8", "#5fadfe"];
-    const chars = ["*", "+", "~", "."];
-    for (let i = 0; i < 4; i++) {
-      const p = document.createElement("span");
-      p.className = "impact-particle";
-      p.textContent = chars[Math.floor(Math.random() * chars.length)]!;
-      p.style.left = rect.left + "px";
-      p.style.top = rect.top + "px";
-      p.style.color = colors[Math.floor(Math.random() * colors.length)]!;
-      p.style.fontSize = 8 + Math.random() * 10 + "px";
-      const angle = (Math.random() - 0.5) * Math.PI;
-      const dist = 15 + Math.random() * 25;
-      p.style.setProperty("--tx", Math.cos(angle) * dist + "px");
-      p.style.setProperty("--ty", Math.sin(angle) * dist - 20 + "px");
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 400);
-    }
-  }
-
-  async function typeText(text: string, delay = 65) {
-    if (!typedText || !cursor) return;
-    for (const ch of text) {
-      cursor.classList.add("solid");
-      typedText.textContent += ch;
-      spawnParticles();
-      await sleep(delay);
-    }
-    cursor.classList.remove("solid");
-  }
-
-  async function run() {
-    await sleep(500);
-    await typeText("sudo make me_a_better_engineer", 60);
-    await sleep(800);
-    cursor?.classList.add("hidden");
-    typingPhase?.classList.add("glitch");
-    await sleep(300);
-    typingPhase?.classList.remove("glitch");
-    typingPhase?.classList.add("crt-off");
-    await sleep(400);
-    typingPhase?.classList.add("hidden");
-    quotePhase?.classList.remove("hidden");
-    await sleep(100);
-    quotePhase?.classList.add("show");
-  }
-
-  run();
-</script>
-
-<style is:global>
-  .impact-particle {
-    position: fixed;
-    z-index: 100;
-    pointer-events: none;
-    font-family: var(--font-mono);
-    animation: particle-fly 0.4s ease-out forwards;
-  }
-
-  @keyframes particle-fly {
-    to {
-      transform: translate(var(--tx), var(--ty));
-      opacity: 0;
-    }
-  }
-</style>
-
 <style>
-  /* ===== Hero ===== */
-  .hero {
-    position: relative;
-    overflow: hidden;
-    padding: 7rem 0 6rem;
-    background: var(--color-bg-primary);
-  }
-
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .glow-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.35;
-  }
-
-  .orb-1 {
-    width: 380px;
-    height: 380px;
-    background: #fd731833;
-    top: -120px;
-    left: -80px;
-  }
-
-  .orb-2 {
-    width: 300px;
-    height: 300px;
-    background: #5fadfe22;
-    bottom: -100px;
-    right: -60px;
-  }
-
-  .orb-3 {
-    width: 240px;
-    height: 240px;
-    background: #43d6a822;
-    top: 40%;
-    left: 60%;
-  }
-
-  .hero-content {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    min-height: 130px;
-    align-items: center;
-  }
-
-  .terminal-line {
-    font-family: var(--font-mono);
-    font-size: clamp(1.1rem, 3.2vw, 1.8rem);
-    color: var(--color-text-primary);
-    white-space: nowrap;
-  }
-
-  .terminal-line .prompt {
-    color: var(--color-accent);
-    margin-right: 0.6rem;
-  }
-
-  .cursor {
-    color: var(--color-accent);
-    animation: blink 1s step-end infinite;
-  }
-
-  .cursor.solid {
-    animation: none;
-  }
-
-  .cursor.hidden {
-    display: none;
-  }
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
-  }
-
-  .typing-phase.glitch {
-    animation: glitch 0.3s steps(2) infinite;
-  }
-
-  @keyframes glitch {
-    0% {
-      transform: translate(0);
-      filter: none;
-    }
-    25% {
-      transform: translate(-3px, 2px);
-      filter: hue-rotate(90deg);
-    }
-    50% {
-      transform: translate(3px, -2px);
-      filter: hue-rotate(-60deg);
-    }
-    75% {
-      transform: translate(-2px, -1px);
-    }
-    100% {
-      transform: translate(0);
-    }
-  }
-
-  .typing-phase.crt-off {
-    animation: crt-off 0.4s ease-in forwards;
-  }
-
-  @keyframes crt-off {
-    to {
-      transform: scaleY(0.01) scaleX(1.2);
-      opacity: 0;
-      filter: brightness(6);
-    }
-  }
-
-  .typing-phase.hidden {
-    display: none;
-  }
-
-  .quote-phase {
-    text-align: center;
-    opacity: 0;
-    transform: translateY(12px);
-    transition:
-      opacity 0.7s ease,
-      transform 0.7s ease;
-  }
-
-  .quote-phase.hidden {
-    display: none;
-  }
-
-  .quote-phase.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-
-  .quote-text {
-    font-size: clamp(1.5rem, 4.5vw, 2.6rem);
-    font-weight: 700;
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  .gradient-text {
-    background: linear-gradient(120deg, #fd7318, #fde471 60%, #ff8a3d);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .hero-tagline {
-    margin-top: 1.1rem;
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    letter-spacing: 0.06em;
-  }
-
   /* ===== Home sections ===== */
   .home-sections {
-    padding: 4rem 1.5rem 5rem;
+    padding: 3rem 1.5rem 5rem;
     display: flex;
     flex-direction: column;
     gap: 4rem;
@@ -355,10 +88,6 @@ const previews = [
   }
 
   @media (max-width: 768px) {
-    .hero {
-      padding: 5rem 0 4rem;
-    }
-
     .card-grid {
       grid-template-columns: 1fr;
     }
