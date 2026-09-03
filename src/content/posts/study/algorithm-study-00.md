@@ -119,11 +119,11 @@ n-gon의 분할에서 정점 $V_{1}$과 $V_{n}$을 지닌 삼각형의 세번째
 >다음의 행렬 연쇄 곱셈의 최소 연산 수는 동일 하다.
 >
 >$$
-  M_{1} \times M_{2} \times ... \times M_{n-2} \times M_{n-1}, \\
-  M_{n} \times M_{1} \times ... \times M_{n-3} \times M_{n-2}, \\
-  \vdots \\
-  M_{2} \times M_{3} \times ... \times M_{n-1} \times M_{n}, 
-$$
+>  M_{1} \times M_{2} \times ... \times M_{n-2} \times M_{n-1}, \\
+>  M_{n} \times M_{1} \times ... \times M_{n-3} \times M_{n-2}, \\
+>  \vdots \\
+>  M_{2} \times M_{3} \times ... \times M_{n-1} \times M_{n}, 
+>$$
 
 여기서 $M_{i}$은 $w_{i} \times w_{i + 1}$의 차원을 가지고 $w_{n+1} \equiv w_{1}$이다. 
 첫번째 수식의 행렬 연쇄 곱의 결과 행렬의 차원은 $w_{1} \times w_{n}$이 된다.

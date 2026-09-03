@@ -78,7 +78,7 @@ $$
     \end{pmatrix}
 $$
 
-$x\_{11}$에 대해서만 계산해보면 다음과 같이 gradient의 합으로 구성되어있다.
+$x_{11}$에 대해서만 계산해보면 다음과 같이 gradient의 합으로 구성되어있다.
 
 $$  
     \begin{split}
@@ -131,7 +131,7 @@ $$
     \end{pmatrix}
 $$
 
-원소 $w\_{11}$에 대한 gradient는 다음과 같이 계산된다.
+원소 $w_{11}$에 대한 gradient는 다음과 같이 계산된다.
 
 $$  
     \begin{split}
@@ -148,7 +148,7 @@ $$
     \end{split}
 $$
 
-계산된 gradient는 $w\_{11}$와 forward convolution 과정에서 한번이라도 연관된 값과 앞선 Layer의 gradient값을 곱한 값의 합과 같다.
+계산된 gradient는 $w_{11}$와 forward convolution 과정에서 한번이라도 연관된 값과 앞선 Layer의 gradient값을 곱한 값의 합과 같다.
 
 X에 대한 gradient를 계산할 때와 마찬가지로 forward의 동일한 순서와 stride를 가지는 convolution으로 weight gradient값이 계산된다.
 

@@ -564,7 +564,7 @@ class myTensor(myModule):
 
 Conv2d의 구현에 관한 증명은 [여기서](https://kimjiil.github.io/ai/ml%20study/Backpropagation-for-convolution-layer/)설명한다.
 
-$(N,C,H\_{in},W\_{in})$ 이미지에서 $(kH,kW)$의 크기를 가지는 kernel window을 움직이면서 convolution 연산을 진행해서 output $(N,C,H\_{out},W\_{out})$를 생성함.
+$(N,C,H_{in},W_{in})$ 이미지에서 $(kH,kW)$의 크기를 가지는 kernel window을 움직이면서 convolution 연산을 진행해서 output $(N,C,H_{out},W_{out})$를 생성함.
 
 $$
    out(N_i, C_{out_j}) = bias(C_{out_j}) + \sum^{C_{in} - 1}_{k=0}{weight(C_{out_j}, k) * input(N_i, k) }
@@ -578,12 +578,12 @@ $$
   - dilation (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - window를 이동시킬 거리를 조절하는 파라미터(감소)
   - bias (<span style="color: #FF7F00">bool</span>, optional) - `True`이면 bias를 추가함. Default: `True`
 
-- Input : $(N,C,H\_{in},W\_{in})$ 
-- Output : $(N,C,H\_{out},W\_{out})$
+- Input : $(N,C,H_{in},W_{in})$ 
+- Output : $(N,C,H_{out},W_{out})$
 
 $$
-  H_{out} = \bigg{\lfloor} \frac{H_{in} + 2 * padding[0] - dilation[0] \times (kernel_size[0] - 1) - 1}{stride[0]} + 1\bigg{\rfloor} \\ 
-  W_{out} = \bigg{\lfloor} \frac{W_{in} + 2 * padding[1] - dilation[1] \times (kernel_size[1] - 1) - 1}{stride[1]} + 1\bigg{\rfloor}
+  H_{out} = \bigg\lfloor \frac{H_{in} + 2 * padding[0] - dilation[0] \times (kernel_size[0] - 1) - 1}{stride[0]} + 1\bigg\rfloor \\ 
+  W_{out} = \bigg\lfloor \frac{W_{in} + 2 * padding[1] - dilation[1] \times (kernel_size[1] - 1) - 1}{stride[1]} + 1\bigg\rfloor
 $$
 
 init하는 부분에서 parameter로 int단일로 들어오면 `self._set_tuple`함수로 tuple로 변경해준다. 
@@ -811,8 +811,8 @@ back gradient는 뒤로 전달하지 않음(Loss를 계산하는데 전혀 영�
 
 $(N,C,H,W)$ 이미지에서 $(kH,kW)$의 크기를 가지는 kernel window을 움직이면서 window 내에서 최대값 1개를 뽑아 output으로 함
 
-- Input : $(N,C,H\_{in},W\_{in})$ 
-- Output : $(N,C,H\_{out},W\_{out})$
+- Input : $(N,C,H_{in},W_{in})$ 
+- Output : $(N,C,H_{out},W_{out})$
 
 - Parameters
   - kernel_size (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - max 값을 추출한 window의 크기
@@ -821,8 +821,8 @@ $(N,C,H,W)$ 이미지에서 $(kH,kW)$의 크기를 가지는 kernel window을 �
   - dilation (<span style="color: #FF7F00">Union[int, Tuple[int, int]]</span>) - window를 이동시킬 거리를 조절하는 파라미터(감소)
 
 $$
-  H_{out} = \bigg{\lfloor} \frac{H_{in} + 2 * padding[0] - dilation[0] \times (kernel_size[0] - 1) - 1}{stride[0]} + 1\bigg{\rfloor} \\ 
-  W_{out} = \bigg{\lfloor} \frac{W_{in} + 2 * padding[1] - dilation[1] \times (kernel_size[1] - 1) - 1}{stride[1]} + 1\bigg{\rfloor}
+  H_{out} = \bigg\lfloor \frac{H_{in} + 2 * padding[0] - dilation[0] \times (kernel_size[0] - 1) - 1}{stride[0]} + 1\bigg\rfloor \\ 
+  W_{out} = \bigg\lfloor \frac{W_{in} + 2 * padding[1] - dilation[1] \times (kernel_size[1] - 1) - 1}{stride[1]} + 1\bigg\rfloor
 $$
 
 init하는 부분에서 parameter로 int단일로 들어오면 `self._set_tuple`함수로 tuple로 변경해준다. 
@@ -942,8 +942,8 @@ Test Code 입니다.
 
 forward는 다음과 같은 shape를 가진 tensor가 들어오면 start, end사이의 shape를 곱한 값으로 합쳐주면 된다.
 
-- Input : $(*,S\_{start}, ... , S\_{i}, ... , S\_{end}, *)$ 여기서 $S\_{i}$는 $i$차원의 size를 뜻하고, *는 차원의 개수과 상관없이 어떤 사이즈가 와도 상관없음을 뜻함.
-- Output : $(*, \prod^{end}\_{i=start} S\_{i}, *)$
+- Input : $(*,S_{start}, ... , S_{i}, ... , S_{end}, *)$ 여기서 $S_{i}$는 $i$차원의 size를 뜻하고, *는 차원의 개수과 상관없이 어떤 사이즈가 와도 상관없음을 뜻함.
+- Output : $(*, \prod^{end}_{i=start} S_{i}, *)$
 
 backward함수에서는 back gradient으로 들어오는 값을 원래 Input x의 shape로 변경해주면 된다.
 
@@ -1056,7 +1056,7 @@ $$
   \theta_{t+1} = \theta_{t} - \frac{\eta}{\sqrt{\hat{v}_{t} + \epsilon}} \cdot \hat{m}_{t}
 $$
 
-$m\_{0}=0, v\_{0}=0$은 $0$으로 초기화 되고 $\beta\_{1}=0.9, \; \beta\_{2}=0.999$의 값을 default로 한다.
+$m_{0}=0, v_{0}=0$은 $0$으로 초기화 되고 $\beta_{1}=0.9, \; \beta_{2}=0.999$의 값을 default로 한다.
 
 ```python
 class Adam(BaseOptimizer):

@@ -55,7 +55,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
     Elastic Weight Consolidation(EWC)는 Google Deep Mind에서 나온 논문으로, 데이터셋을 학습하면서 해당 데이터셋에서 중요한 역할을 하는 
     weight를 찾아 이후 추가 학습에서 이 weight가 변하지 않도록 학습을 진행한다.
     
-    EWC는 다음과 같이 Loss fuction에서 $F\_{i}$(Fisher information matrix)를 활용하여 reluarization을 한다. A는 이전 Task를 B는 새로운 TASK를 의마한다.
+    EWC는 다음과 같이 Loss fuction에서 $F_{i}$(Fisher information matrix)를 활용하여 reluarization을 한다. A는 이전 Task를 B는 새로운 TASK를 의마한다.
     
     $$
       L(\theta) = L_{B}(\theta) + \sum_{i}{\frac{\lambda}{2} F_{i} ( \theta_{i} - \theta^{*}_{A,i} )^{2}}
@@ -69,14 +69,14 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
     
     회색 범위는 이전 Task A에서 Loss가 낮은 Weight parameter 범위를 나타내고 연노랑색은 새로운 Task B에서 Loss가 낮은 Weight parameter의 범위를 나타낸다.
     
-    Task A에 대해 학습한 현재 parameter의 위치가 $\theta\_{A}^{*}$이고 새로운 Task B에 대해 학습을 진행한다고 가정한다.
+    Task A에 대해 학습한 현재 parameter의 위치가 $\theta_{A}^{*}$이고 새로운 Task B에 대해 학습을 진행한다고 가정한다.
     
     파란색 화살표인 Loss function에 어떤 regularization도 없을 경우 weight는 그대로 Task B에 대해 Loss가 가장 적은 중앙 부분으로 학습이 진행된다.
     이 경우 Task A에 대한 Loss가 높아지고 성능이 떨어지므로 catastrophic forgetting 현상이 발생한다.
     
-    반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $l\_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이 둘다 좋지 않게 변한다. 
+    반면에 초록색 화살표는 이러한 Weight parameter의 변화를 막고자 $l_2$ regularization을 적용했지만 weight의 update(변화)가 적어 Task A와 Task B에 대한 성능이 둘다 좋지 않게 변한다. 
     
-    EWC로 학습한 빨간색 화살표는 Weight parameter에서 Task A와 연관도가 높은 부분은 $F\_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
+    EWC로 학습한 빨간색 화살표는 Weight parameter에서 Task A와 연관도가 높은 부분은 $F_{i}$를 통해 제약을 가해 최대한 변하지 않도록 하고 나머지 부분을 Task B에 대한 학습을 진행하여
     두 Task가 겹치는 범위로 최대한 이동한다.
     
 2. Progressive Network [[Rusu et al.(2016)]][13_link]
@@ -120,7 +120,7 @@ lifelong learning에 해한 연구는 catastrophic forgetting, semantic drift를
 ### Method
 
 논문에서 lifelong learning를 연속적인 시간 $t=1,...,t,...,T$에서 시점 t에 들어오는 task $t$의 training dataset인 
-$D\_{t}= \lbrace x\_{i}, y\_{i} \rbrace^{N\_{t}}\_{i=1} $를 학습하는 문제로 생각했다.
+$D_{t}= \lbrace x_{i}, y_{i} \rbrace^{N_{t}}_{i=1} $를 학습하는 문제로 생각했다.
 
 이때, 각각의 task $t$는 single-task이거나 sub-task로 구성된 multi-task가 될 수도 있다. 시점 $t$에서 이전 시점 $t-1$의 weight parameter만 사용이 가능하고
 task $1$ 부터 task $t-1$까지의 dataset은 다시 사용이 불가능하다고 가정했다.
@@ -131,7 +131,7 @@ $$
     \underset{\bf{W}^{t}}{minimize} \; \mathcal{L}(\bf{W}^{t}; \bf{W}^{t-1}, \, \mathcal{D}_{t}) + \lambda \, \Omega(\bf{W}^{t}), \; t=1,...,T
 $$
 
-새로운 task $t$가 들어오면 $t$시점의 dataset $\mathcal{D}\_{t}$와 이전 $t-1$시점의 model parameter $\bf{W}^{t-1}$을 
+새로운 task $t$가 들어오면 $t$시점의 dataset $\mathcal{D}_{t}$와 이전 $t-1$시점의 model parameter $\bf{W}^{t-1}$을 
 이용하여 Loss function $\mathcal{L}$구하고 $t$시점의 model parameter $\bf{W}^{t}$는 regularizer $\Omega$와 $\lambda$를 통해 페널티를 준다.
 
 DEN은 다음과 같이 차례대로 3가지 과정으로 알고리즘이 구성되어 있다. 각각의 과정에서 regularizer는 다르게 적용되고 적용되는 weight 범위도 달라진다.
@@ -146,7 +146,7 @@ DEN은 다음과 같이 차례대로 3가지 과정으로 알고리즘이 구성
     <figcaption align="center"> 논문에서 설명한 3가지 과정에 대한 그림 </figcaption>
 </p>
 
-맨 처음 task 1이 도착하면 3가지 알고리즘을 사용하지 않고 다음과 같이 $l\_{1}$-regularization으로 sparse한 weight가 나오도록 학습을 진행한다.
+맨 처음 task 1이 도착하면 3가지 알고리즘을 사용하지 않고 다음과 같이 $l_{1}$-regularization으로 sparse한 weight가 나오도록 학습을 진행한다.
 
 $$
     \underset{\bf{W}^{t=1}}{minimize} \; \mathcal{L}(\bf{W}^{t=1}; \, \mathcal{D}_{t}) + \mu \, \sum^{L}_{l=1}{ \| \bf{W}^{t=1}_{l} \|_{1}}
@@ -175,9 +175,9 @@ $$
     \underset{\bf{W}^{t}_{L,t}}{minimize} \, {\mathcal{L}( \bf{W}^{t}_{L,t}; \, \bf{W}^{t-1}_{1:L-1}, \, \mathcal{D}_{t} ) + \mu \| \bf{W}^{t}_{L,t} \|_{1} }
 $$  
 
-여기서 $\bf{W}^{t}\_{L,t}$는 $t$시점의 최상단인 L번째 layer의 weight parameter를 뜻한다.  
+여기서 $\bf{W}^{t}_{L,t}$는 $t$시점의 최상단인 L번째 layer의 weight parameter를 뜻한다.  
 
-하단의 layer를 고정하고 classifier를 $l\_1$-regularizer으로 학습시키면 task $t-1$에서 task $t$와 유사한 feature를 가진 부분은 값이 
+하단의 layer를 고정하고 classifier를 $l_1$-regularizer으로 학습시키면 task $t-1$에서 task $t$와 유사한 feature를 가진 부분은 값이 
 올라오고 전혀 관련없는 feature는 값이 올라오지 않아 학습과정에서 현재 task에 관련된 부분의 feature를 제외한 나머지가 0인 sparse matrix가 된다.
 
 classifer에서 현재 task와 관련된(0이 아닌) feature weight와 연결되어 있는 하단 layer의 모든 weight들을 따로 떼어내 sub-network $S$를 구성한다. 
@@ -213,7 +213,7 @@ $$
     + \mu \| \bf{W}^{\mathcal{N}}_{\mathcal{l}} \|_1 + \gamma \sum_{\mathcal{g}} { \| \bf{W}^{\mathcal{N}}_{\mathcal{l,g}} \|_{2} }
 $$
 
-여기서 $\bf{W}^{\mathcal{N}}\_{\mathcal{l}}$는 추가된 weight를 말하고 $g \in \mathcal{G}$는 같은 feature를 묶은 weight 그룹이다.
+여기서 $\bf{W}^{\mathcal{N}}_{\mathcal{l}}$는 추가된 weight를 말하고 $g \in \mathcal{G}$는 같은 feature를 묶은 weight 그룹이다.
 
 weight가 추가되면서 기존 네트워크에서 잡지 못한 task $t$의 새로운 feature를 학습하게 되어 task $t$에 대한 성능이 향상된다.
 그리고 마지막 term에 있는 group sparsity regularization 때문에 학습 도중 불필요한 weight group은 전체적으로 비활성화(0으로 수렴) 된다.
@@ -237,12 +237,12 @@ weight가 추가되면서 기존 네트워크에서 잡지 못한 task $t$의 �
     <figcaption align="center"> split & duplication 과정 </figcaption>
 </p>
 
-weight에서 semantic drift가 발생했는지 여부는 $\rho^{t}\_i = \|\| \bf{w}^{t}\_{i} - \bf{w}^{t-1}\_{i} \|\| \_{2}$을 계산해서 판단한다.
-식에서 알 수 있듯이 기존 $t-1$으로 부터 weight 값이 크게 변한 경우 $\rho^{t}\_i$값이 크게 계산되고 semantic drift가 발생했다고 간주한다.
+weight에서 semantic drift가 발생했는지 여부는 $\rho^{t}_i = \|\| \bf{w}^{t}_{i} - \bf{w}^{t-1}_{i} \|\| _{2}$을 계산해서 판단한다.
+식에서 알 수 있듯이 기존 $t-1$으로 부터 weight 값이 크게 변한 경우 $\rho^{t}_i$값이 크게 계산되고 semantic drift가 발생했다고 간주한다.
 
-`prev_W`와 `cur_W`의 weight로 $\rho^{t}\_i$을 계산하고 그 값이 `threshold` 보다 크면 network에 그림처럼 추가되고 작으면 X표처럼 삭제된다.
+`prev_W`와 `cur_W`의 weight로 $\rho^{t}_i$을 계산하고 그 값이 `threshold` 보다 크면 network에 그림처럼 추가되고 작으면 X표처럼 삭제된다.
 
-$\rho^{t}\_i$가 큰 weight는 재학습과정에서 의미가 변질되어 task $t-1$의 성능을 하락시킬 가능성이 높다. 이렇게 변질된 weight들은 task $t$ 학습전에 저장된
+$\rho^{t}_i$가 큰 weight는 재학습과정에서 의미가 변질되어 task $t-1$의 성능을 하락시킬 가능성이 높다. 이렇게 변질된 weight들은 task $t$ 학습전에 저장된
 이전 weight값들을 복사하여 현재 network에 추가해서 이전 task $t-1$의 지식을 보존한다.
 
 network의 구조가 전체적으로 변경되었기 때문에 다시 연결성을 확보하기 위해 다음식으로 재학습을 한다. 
@@ -266,7 +266,7 @@ $$
     <figcaption align="center"> task 1 - initial </figcaption>
 </p>
 
-처음 task 1에서 $l\_1$-regularization으로 weight를 sparsity하게 만들도록 학습한다. 
+처음 task 1에서 $l_1$-regularization으로 weight를 sparsity하게 만들도록 학습한다. 
 
 이후 새로운 task 2가 들어오면 layer 3(task 1)을 저장하고 layer 3(task 2)를 새로 만들어 교체한다. 
 나머지 layer 1, 2는 고정시켜놓고 layer 3(task 2)만 다음식으로 학습한다.
@@ -328,7 +328,7 @@ selective retraining이후 Loss값이 threshold값보다 높으면 선택된 sub
 </p>
 
 그림처럼 고정된 수(k=10)만큼의 weight를 각 layer에 추가해준다. layer 2 처럼 중간에 있는 layer는 앞선 layer 1의 dim에 맞춰 증가시켜준다.
-추가된 weight에 대해서만 group lasso regularization와 $l\_1$-regularization을 적용해서 학습한다. 
+추가된 weight에 대해서만 group lasso regularization와 $l_1$-regularization을 적용해서 학습한다. 
 
 <p align="center">
     <img src="/images/2022-10-26-lifelong-learning-with-dynamically-expandable-networks/example_06.webp"
@@ -480,9 +480,9 @@ stream으로 들어오는 상황때문에 이를 연구하는데에는 매우 �
 - deep network의 Incremental learning, lifelong learning은 catastrophic forgetting으로 알려진 문제가 발생한다. 
 catastrophic forgetting은 new task에 대해 학습한 network가 이전 task에서 학습한 것을 forgetting하는 상황을 말한다.
 
-- 이러한 문제를 해결하기 위해 $l\_{2}$-regularizer와 같이 이전에 학습된 것으로 부터 모델이 많이 벗어나지 못하도록 regularizer를 통해 제약을 가하는 것이다.
+- 이러한 문제를 해결하기 위해 $l_{2}$-regularizer와 같이 이전에 학습된 것으로 부터 모델이 많이 벗어나지 못하도록 regularizer를 통해 제약을 가하는 것이다.
 
-- 하지만 단순히 $l\_{2}$-regularizer를 사용하는 것은 new task에 대한 new knowledge를 학습하는 것을 막고 이는 차후의 들어오는 
+- 하지만 단순히 $l_{2}$-regularizer를 사용하는 것은 new task에 대한 new knowledge를 학습하는 것을 막고 이는 차후의 들어오는 
 task에 대해 sub optimal한 성능을 가지게 된다.
 
 - 이러한 한계점을 극복하기 위해, [Kirkpatrick et al. (2017)][5_link]은 Elastic Weight Consolidation(EWC)라고 불리는 방법을 제안했다. 
@@ -523,7 +523,7 @@ task에 대해 sub optimal한 성능을 가지게 된다.
 - 연손적인 데이터 흐름에서 모델에 도달하는 학습 데이터의 분포에 대해 알수 없고 몇개의 task가 도달할지도 모르는 lifelong learning scenario에서의 
 deep neural network의 incremental training 문제로 간주했다.
 
-- 특히, 우리의 목표는 $t=1,...,t,...,T$에서 $t$시점에 들어오는 training data를 $D\_{t}=\lbrace x\_{i}, y\_{i} \rbrace^{N\_{t}}\_{i=1}$이라하고 
+- 특히, 우리의 목표는 $t=1,...,t,...,T$에서 $t$시점에 들어오는 training data를 $D_{t}=\lbrace x_{i}, y_{i} \rbrace^{N_{t}}_{i=1}$이라하고 
 한계가 정해지지않은 $T$개의 task가 연속적으로 들어오는 과정에서 모델을 학습하는 것이다.
 
 - 각 task $t$는 single task가 될수도 있고 sub task들로 구성된 복합 task일수도 있다. 
@@ -541,9 +541,9 @@ $$
 $$
 
 - 여기서 $\mathcal{L}$은 특정한 task의 loss 함수, $\bf{W}^{t}$는 task $t$에 대한 parameter 그리고 $\Omega(\bf{W}^{t})$는
-모델 $\bf{W}^{t}$를 적절하게 강화하는 regularization(element-wise $\mathcal{l}\_{2}$ norm)이다.
+모델 $\bf{W}^{t}$를 적절하게 강화하는 regularization(element-wise $\mathcal{l}_{2}$ norm)이다.
 
-- 주로 흥미가 있는 neural network의 case에서 $\bf{W}^{t}=\lbrace \bf{W}\_{l} \rbrace^{L}\_{l=1}$은 weight tensor를 나타내고 $l$은 Layer의 level을 뜻한다.
+- 주로 흥미가 있는 neural network의 case에서 $\bf{W}^{t}=\lbrace \bf{W}_{l} \rbrace^{L}_{l=1}$은 weight tensor를 나타내고 $l$은 Layer의 level을 뜻한다.
 
 - lifelong learning의 이러한 도전 과제들을 해결하기 위해, network가 이전 task로 부터 얻은 knowledge를 최대한 활용하도록 하고 
 현재까지의 축적된 knowledge만으로 new task를 설명하기에 충분하지 않을 때 네트워크의 크기를 유동적으로 확장 할수 있도록 했다.
@@ -554,7 +554,7 @@ $$
 > **Algorithm 1** Incremental Learning of a Dynamically Expandable Network
 > 
 > ---   
-**Input**: Dataset $\mathcal{D}=(\mathcal{D\_{1}}, ..., \mathcal{D}\_{T})$, Thresholds $\tau,\sigma$    
+**Input**: Dataset $\mathcal{D}=(\mathcal{D_{1}}, ..., \mathcal{D}_{T})$, Thresholds $\tau,\sigma$    
 **Output**: $\;\bf{W}^{T}$    
 >
 > ---   
@@ -563,7 +563,7 @@ $$
 > $\quad\quad$Train the network weights $\bf{W}^{1}$ using Eq.2   
 > $\quad$**else**   
 > $\quad\quad \bf{W}^{t}=\it{SelectiveRetraining}(\bf{W}^{t-1})$   {using Algorithm 2}    
-> $\quad\quad$**if** $\;\mathcal{L}\_{t}>\tau$ **then**     
+> $\quad\quad$**if** $\;\mathcal{L}_{t}>\tau$ **then**     
 > $\quad\quad\quad \bf{W}^{t}=\it{DynamicExpansion}(\bf{W}^{t})$ {using Algorithm 3}    
 > $\quad\quad \bf{W}^{t}=\it{Split}(\bf{W}^{t})$ {using Algorithm 4}    
 > 
@@ -580,7 +580,7 @@ $$
 
   - 그러므로 net task에 의해 영향을 받는 weight에 대해서만 재학습하는 모델의 selective retraining 과정을 제안한다.
 
-- 초기(t=1)에, network를 $\mathcal{l}\_{1}$-regularization으로 weight를 sparsity(희소)하게 만들고 이러한 결과로 
+- 초기(t=1)에, network를 $\mathcal{l}_{1}$-regularization으로 weight를 sparsity(희소)하게 만들고 이러한 결과로 
 각 뉴런이 다음층의 layer와 매우 적은 수의 뉴런만 연결된다.
 
 
@@ -589,8 +589,8 @@ $$
 $$
 
 
-- 여기서 $1 \le l \le L$은 netowrk의 $l\_{th}$번째 layer를 말하고 $\bf{W}^{t}\_{l}$은 layer $l$의 $t$시점의 weight parameter이다.
-$\mu$는 weight $\bf{W}$에서 sparsity의 정도를 결정하는 $l\_{1}$ norm의 regularization paramter이다.
+- 여기서 $1 \le l \le L$은 netowrk의 $l_{th}$번째 layer를 말하고 $\bf{W}^{t}_{l}$은 layer $l$의 $t$시점의 weight parameter이다.
+$\mu$는 weight $\bf{W}$에서 sparsity의 정도를 결정하는 $l_{1}$ norm의 regularization paramter이다.
 
   - convolution layer에서는 filter에 (2,1)-norm를 적용해 이전 layer로부터 매우 적은 수의 filter들만 선택한다.
 
@@ -604,23 +604,23 @@ $$
   \underset{\bf{W}^{t}_{L,t}}{minimize} \; \mathcal{L}(\bf{W}^{t}_{L,t} ; \bf{W}^{t-1}_{1:L-1}, \, \mathcal{D}_{t}) + \mu \| \bf{W}^{t}_{L,t} \|_{1}
 $$
 
-- 여기서 $\bf{W}^{t-1}\_{1:L-1}$은 최상단 레이어의 weight $\bf{W}^{t}\_{L,t}$를 제외한 모든 다른 weight parameter를 말한다. 
-즉, layer $L-1$의 hidden unit과 output unit $\omicron\_{t}$ 사이의 연결성(connection)을 얻기 위해 위의 optimization을 풀어야한다.
+- 여기서 $\bf{W}^{t-1}_{1:L-1}$은 최상단 레이어의 weight $\bf{W}^{t}_{L,t}$를 제외한 모든 다른 weight parameter를 말한다. 
+즉, layer $L-1$의 hidden unit과 output unit $\omicron_{t}$ 사이의 연결성(connection)을 얻기 위해 위의 optimization을 풀어야한다.
 (이때, 최상단 layer를 제외한 모든 다른 layer $L-1$까지의 $\bf{W}^{t-1}$는 학습이 되지 않도록 고정한다.)
 
 - 일단 이 layer에서 sparse connection이 구성되면 학습에의해 영향을 받는 network의 모든 weight와 unit들을 구별할수 있게되고 반면에
-$\omicron\_{t}$과 연결되지않은 network의 나머지부분은 변하지 않게 된다.
+$\omicron_{t}$과 연결되지않은 network의 나머지부분은 변하지 않게 된다.
 
-- 특히 $\omicron\_{t}$까지의 경로에 있는 모든 unit을 구별하기 위해 선택된 node로부터 시작하여 network에서 넓이우선탐색(bfs)을 수행한다.
+- 특히 $\omicron_{t}$까지의 경로에 있는 모든 unit을 구별하기 위해 선택된 node로부터 시작하여 network에서 넓이우선탐색(bfs)을 수행한다.
 
-- 다음의 optimization으로 선택된 Sub-network $S$의 weight $\bf{W}^{t}\_{S}$만을 학습한다. 
+- 다음의 optimization으로 선택된 Sub-network $S$의 weight $\bf{W}^{t}_{S}$만을 학습한다. 
 
 $$
   \underset{\bf{W}^{t}_{S}}{minimize} \; \mathcal{L}(\bf{W}^{t}_{S}; \, \bf{W}^{t-1}_{S^{\complement}}, \, \mathcal{D}_{t})
   + \mu \| \bf{W}^{t}_{S} \|_{2}
 $$
 
-- hidden unit 사이에서 이미 sparse connection이 구성되었기 때문에 element-wise $l\_{2}$ regularizer만 사용한다.
+- hidden unit 사이에서 이미 sparse connection이 구성되었기 때문에 element-wise $l_{2}$ regularizer만 사용한다.
 
 - 이러한 부분 재학습은 computational overhead를 낮추고 또한 선택되지 않은 neuron들은 재학습 과정에서 전혀 영향을 받지 않기 떄문에 
 negative transfer(이전 task의 성능을 하락시키는 학습)를 방지하는데 도움을 준다.
@@ -631,17 +631,17 @@ Algorithm 2에 이러한 재학습 과정이 설명되어 있다.
 > 
 > ---     
 > 
-> **Input** :  Dataset $\mathcal{D}\_{t}$, Previous parameter $\bf{W}^{t-1}$       
+> **Input** :  Dataset $\mathcal{D}_{t}$, Previous parameter $\bf{W}^{t-1}$       
 > **Output** :  network parameter $\bf{W}^{t}$    
 > 
 > ---   
 > 
->  Initialize $l \leftarrow L-1, \; S=\lbrace \omicron\_{t} \rbrace$     
->  Solve Eq. 3 to obtain $\bf{W}^{t}\_{L,t}$   
->  Add neuron $i$ to $S$ if the weight between $i$ and $\omicron\_{t}$ in $\bf{W}^{t}\_{L,t}$ is not zero.   
+>  Initialize $l \leftarrow L-1, \; S=\lbrace \omicron_{t} \rbrace$     
+>  Solve Eq. 3 to obtain $\bf{W}^{t}_{L,t}$   
+>  Add neuron $i$ to $S$ if the weight between $i$ and $\omicron_{t}$ in $\bf{W}^{t}_{L,t}$ is not zero.   
 > **for** $l=L-1,...,1$ **do**    
-> $\quad$ Add neuron $i$ to $S$ if there is exists some neuron $j \in S$ such that $\bf{W}^{t-1}\_{l,ij} \neq 0.$    
->  Solve Eq. 4 to obtain $\bf{W}^{t}\_{S}$ 
+> $\quad$ Add neuron $i$ to $S$ if there is exists some neuron $j \in S$ such that $\bf{W}^{t-1}_{l,ij} \neq 0.$    
+>  Solve Eq. 4 to obtain $\bf{W}^{t}_{S}$ 
 > 
 > ---   
 
@@ -661,8 +661,8 @@ selective retraining만 해도 충분할 것이다.
 - 이러한 한계점을 극복하기 위해, 각각의 유닛에서 network의 중복되는 재학습없이 각 task마다 layer에 얼만큼의 neuron을 추가할 것인지 유동적으로 결정하기 위한 효율적인
 방법인 group sparse regularization을 사용한다.
 
-- network의 $l\_{th}$ layer는 k개의 고정된 수의 유닛만큼 확장되고 다음의 2개의 parameter matrices expansion을 유도된다.
-$\bf{W}^{t}\_{l}= \[ \bf{W}^{t-1}\_{l} ; \bf{W}^{\mathcal{N}}\_{l}\]$과 $\bf{W}^{t}\_{l-1}= \[ \bf{W}^{t-1}\_{l-1} ; \bf{W}^{\mathcal{N}\_{l-1}} \]$
+- network의 $l_{th}$ layer는 k개의 고정된 수의 유닛만큼 확장되고 다음의 2개의 parameter matrices expansion을 유도된다.
+$\bf{W}^{t}_{l}= [ \bf{W}^{t-1}_{l} ; \bf{W}^{\mathcal{N}}_{l}]$과 $\bf{W}^{t}_{l-1}= [ \bf{W}^{t-1}_{l-1} ; \bf{W}^{\mathcal{N}_{l-1}} ]$
 이고 여기서 $\bf{W}^{\mathcal{N}}$은 추가 neuron이 속한 확장된 weight matrix이다.
 
 - 여기서 항상 모든 k개의 유닛을 추가하고 싶지 않기때문에 다음과 같은 optimization으로 추가된 parameter에 대해 group sparsity regularization을 수행한다.
@@ -684,7 +684,7 @@ k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한
 
 - Eq.5에 있는 group sparsity regularization 때문에 학습에서 불필요하다고 여겨지는 hidden unit(혹은 convolutional filters)는 전체적으로 비활성화될 것이다.
 
-- 이런 dynamic network expansion process로부터 모델이 $\bf{W}^{t-1}\_{l}$에 의해 표현되지 못하는 새로운 feature를 잡아낼 수 있다고 기대되어지고 
+- 이런 dynamic network expansion process로부터 모델이 $\bf{W}^{t-1}_{l}$에 의해 표현되지 못하는 새로운 feature를 잡아낼 수 있다고 기대되어지고 
 반면에 많은 유닛이 추가되는 것을 방지하면서 network의 크기를 효율적으로 사용할 수 있게 된다.
 
 
@@ -692,7 +692,7 @@ k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한
 > **Algorithm 3** Dynamic Network Expansion   
 > 
 > ---
-> **Input** :  Dataset $\mathcal{D}\_{t}$, Threshold $\tau$  
+> **Input** :  Dataset $\mathcal{D}_{t}$, Threshold $\tau$  
 > 
 > ---
 > 
@@ -701,7 +701,7 @@ k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한
 > $\quad$ Add $k$ units $\mathcal{h}^{\mathcal{N}}$ at all layers   
 > $\quad$ Solve for Eq. 5 at all layers   
 > **for** $l=L-1, ..., ...1$ **do**   
-> $\quad$ Remove useless units in $\mathcal{h}^{\mathcal{N}\_{l}}$  
+> $\quad$ Remove useless units in $\mathcal{h}^{\mathcal{N}_{l}}$  
 > 
 > ---
 
@@ -711,7 +711,7 @@ k개의 neuron만큼 각 layer를 확장하고 Eq.5의 optimization을 진행한
 - lifelong learning에서 가장 중요한 도전 과제는 semantic drift와 catastrophic forgetting 문제이다. 모델이 나중에 들어온 task에 대해
 점진적으로 학습하면서 이전 task에서 학습된 것들을 잊고 전체적인 task에 대한 성능이 떨어지는 것을 말한다. 
 
-- semantic drift를 막는 가장 간단하지만 대중적인 방법은 원래의 parameter의 값으로 부터 크게 벗어나지 않도록 $l\_{2}$-regularization을 
+- semantic drift를 막는 가장 간단하지만 대중적인 방법은 원래의 parameter의 값으로 부터 크게 벗어나지 않도록 $l_{2}$-regularization을 
 사용하여 다음과 같이 제약하는 것이다.
 
 $$
@@ -721,11 +721,11 @@ $$
 - 여기서 $t$는 현재 task를 의미하고 $\bf{W}^{t-1}$는 task $\lbrace 1, ..., t-1\rbrace$ 에서 학습된 network의 weight tensor를 의미한다.
 $\lambda$는 regularization parameter이다. 
 
-- 이 $l\_{2}$ regularization은 optimization에서 $\bf{W}^{t}$가 $\bf{W}^{t-1}$와 근접하는 solution을 찾도록 강제한다. 주어진 $\lambda$의 크기에 따라
+- 이 $l_{2}$ regularization은 optimization에서 $\bf{W}^{t}$가 $\bf{W}^{t-1}$와 근접하는 solution을 찾도록 강제한다. 주어진 $\lambda$의 크기에 따라
 $\lambda$가 작으면 이전 Weight와의 차이가 커도 되므로 이전 task에 대해서 잊는 반면 새로운 task에서 많이 학습할 것이다.
 반면에 $\lambda$가 크면 이전 weight와의 차이가 커지면 안되므로 이전 task에 대해서 가능한한 보존 하려고 노력하면서 학습할 것이다.
 
-- 단순히 $l\_{2}$ regularization을 사용하기 보단 Fisher information([Kirkpaatrick el al.2017][5_link])으로
+- 단순히 $l_{2}$ regularization을 사용하기 보단 Fisher information([Kirkpaatrick el al.2017][5_link])으로
 각 element에 가중치를 주는 것이 가능하다.
 
 - 그럼에도 불구하고, task의 수가 커지거나 이후의 들어오는 task들이 의미적으로 이전 task와 많이 동떨어져 있으면 새로운 task와 이전 task에
@@ -733,10 +733,10 @@ $\lambda$가 작으면 이전 Weight와의 차이가 커도 되므로 이전 tas
 
 - 이러한 상황에서 더 나은 solution은 서로 다른 2개의 task에 대해 optimal한 feature를 가지는 neuron을 분리하는 것이다.
 
-- Eq.6 optimization 이후 시점 t-1와 t의 weight들 사이의 $l\_{2}$-distance을 계산하여 각 hidden unit $i$에 대해서 
-semantic drift된 정도 $\rho^{t}\_{i}$를 측정한다.
+- Eq.6 optimization 이후 시점 t-1와 t의 weight들 사이의 $l_{2}$-distance을 계산하여 각 hidden unit $i$에 대해서 
+semantic drift된 정도 $\rho^{t}_{i}$를 측정한다.
 
-- 만약 $\rho^{t}\_{i} > \sigma$ 이면 학습 과정에서 feature의 의미가 급격하게 변화한 것으로 간주하고 이 neuron $i$를 2개의 
+- 만약 $\rho^{t}_{i} > \sigma$ 이면 학습 과정에서 feature의 의미가 급격하게 변화한 것으로 간주하고 이 neuron $i$를 2개의 
 복사본으로 쪼갠다(복제에 적절한 새로운 edge를 추가한다).
 
   - 이러한 split/duplication 과정은 동시에 모든 hidden unit에서 진행될 수 있다.
@@ -757,8 +757,8 @@ semantic drift된 정도 $\rho^{t}\_{i}$를 측정한다.
 > ---   
 > Perform Eq.6 to obtain $\overline{\bf{W}}^{t}$    
 > **for** all hidden unit $i$ **do**    
-> $\quad \rho^{t}\_{i}=\| w^{t}\_{i} - w^{t-1}\_{i} \|\_{2}$    
-> $\quad$**if** $\rho^{t}\_{i} > \sigma$ **then**    
+> $\quad \rho^{t}_{i}=\| w^{t}_{i} - w^{t-1}_{i} \|_{2}$    
+> $\quad$**if** $\rho^{t}_{i} > \sigma$ **then**    
 > $\quad\quad$Copy $i$ into $i'$ ($w'$ introduction of edges for $i'$)   
 > Perform Eq.6 with the initialization of $\overline{\bf{W}}^{t}$ to obtain $\bf{W}^{t}$    
 > 
@@ -788,7 +788,7 @@ semantic drift된 정도 $\rho^{t}\_{i}$를 측정한다.
 2) DNN-MTL : Base DNN으로 모든 task를 한꺼번에 학습함
 
 3) DNN-L2 : Base DNN으로 각 task t에서 $\bf{W}^{t}$는 $\bf{W}^{t-1}$으로 초기화되고 $\bf{W}^{t-1}$와 $\bf{W}^{t}$사이의 
-$l\_{2}$-regularization으로 연속적으로 학슴함 
+$l_{2}$-regularization으로 연속적으로 학슴함 
 
 4) DNN-EWC : regularization을 위한 Elastic Weight Consolidation([Kirkpatrick et al.2017][5_link])으로 DNN Network를 학습함
 

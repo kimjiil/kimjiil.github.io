@@ -72,7 +72,7 @@ $$
     \end{pmatrix}
 $$
 
-여기서 원소 $\frac{\partial L}{\partial x\_{1,1}}$에 대한 계산식은 다음과 같다.
+여기서 원소 $\frac{\partial L}{\partial x_{1,1}}$에 대한 계산식은 다음과 같다.
 
 $$
     \frac{\partial L}{\partial x_{1,1}} = 
@@ -81,7 +81,7 @@ $$
     = \frac{\partial L}{\partial Y} \frac{\partial Y}{\partial x_{1,1}}
 $$
 
-위 식에서 $\frac{\partial Y}{\partial x\_{1,1}}$를 계산하면 
+위 식에서 $\frac{\partial Y}{\partial x_{1,1}}$를 계산하면 
 
 $$
     \frac{\partial Y}{\partial x_{1,1}} = \begin{pmatrix}
@@ -90,8 +90,8 @@ $$
     \end{pmatrix}
 $$
 
-$\frac{\partial Y}{\partial x\_{1,1}}$ 값과 위의 $\frac{\partial L}{\partial Y}$를 이용해서 
-$\frac{\partial L}{\partial x\_{1,1}}$를 계산하면 다음과 같다.
+$\frac{\partial Y}{\partial x_{1,1}}$ 값과 위의 $\frac{\partial L}{\partial Y}$를 이용해서 
+$\frac{\partial L}{\partial x_{1,1}}$를 계산하면 다음과 같다.
 
 $$
     \begin{split}
@@ -115,7 +115,7 @@ $$
     \end{split}
 $$
 
-마찬가지로 $x\_{1,2}, \; x\_{2,1}, \;  x\_{2,2}$에 대해서도 똑같이 계산하면 다음과 같다.
+마찬가지로 $x_{1,2}, \; x_{2,1}, \;  x_{2,2}$에 대해서도 똑같이 계산하면 다음과 같다.
 
 
 $$
@@ -237,7 +237,7 @@ $$
     \end{pmatrix}
 $$
 
-첫번째 원소 $\frac{\partial L}{\partial w\_{1,1}}$에 대한 계산식은 다음과 같이 체인룰로 표현 가능하다.
+첫번째 원소 $\frac{\partial L}{\partial w_{1,1}}$에 대한 계산식은 다음과 같이 체인룰로 표현 가능하다.
 
 $$
     \frac{\partial L}{\partial w_{1,1}} = 
@@ -246,7 +246,7 @@ $$
     = \frac{\partial L}{\partial Y} \frac{\partial Y}{\partial w_{1,1}}
 $$
 
-여기에 $Y$를 $w\_{1,1}$에 대해 부분 적분한 식을 대입해서 정리하면 다음과 같다.
+여기에 $Y$를 $w_{1,1}$에 대해 부분 적분한 식을 대입해서 정리하면 다음과 같다.
 
 $$  
     \begin{split}

@@ -11,13 +11,13 @@ tags:
 
 ## 문제 정의
 
-데이터는 $\mathcal{X} = \lbrace x\_{1},\, x\_{2} ,\, \ldots,\, x\_{n} \rbrace$ 일때
+데이터는 $\mathcal{X} = \lbrace x_{1},\, x_{2} ,\, \ldots,\, x_{n} \rbrace$ 일때
 
 VAE는 Data $\mathcal{X}$를 잘 표현하는 z의 분포를 찾아서 이 분포로 부터 샘플링한 z값으로 새로운(unseen) 데이터 $x$를 생성하는 것이 목표
 
 가지고 있는 데이터로 x에 대한 z의 분포인 posterior $p(z\|x)$를 찾아야된다.
 
-이때 posterior $p(z\|x)$는 계산하기 어려워 대신 $q(z\|\theta)$로 근사하는 변분추론을 사용하고 $\theta=(f\_\mu(x), f\_\sigma(x)))$는 encoder 함수 $f$에
+이때 posterior $p(z\|x)$는 계산하기 어려워 대신 $q(z\|\theta)$로 근사하는 변분추론을 사용하고 $\theta=(f_\mu(x), f_\sigma(x)))$는 encoder 함수 $f$에
 의해 계산된 값으로 구성된다.
 
 decoder는 $x=y(z\|\theta)$ 함수를 사용하고 예측된 값의 확률 분포는 $p(x\|z)$이다.
@@ -122,12 +122,12 @@ $$
 
 ### Evidence Lower Bound(ELBO) - 변환 
 
-ELBO는 reconstruction error인 $\mathbb{E}\_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$와 $p(z)$에 대한 regularization인 
-$D\_{KL} (q(z\|\theta) \, \|\| \, p(z) )$ 2개의 항으로 구성되어 있다.
+ELBO는 reconstruction error인 $\mathbb{E}_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$와 $p(z)$에 대한 regularization인 
+$D_{KL} (q(z\|\theta) \, \|\| \, p(z) )$ 2개의 항으로 구성되어 있다.
 
 #### (1) Reconstruction Error
 
-$\mathbb{E}\_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$가 reconstruction error인 이유는 $z$를 encoder인 $q(z\|\theta)$으로 부터 
+$\mathbb{E}_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$가 reconstruction error인 이유는 $z$를 encoder인 $q(z\|\theta)$으로 부터 
 샘플링하고 다시 $z$를 decoder인 $p(x\|z)$를 통해 x로 복원하기 때문이다.
 
 먼저 첫번째 항인 Reconstruction Error는 정확한 값을 구하기 위해선 전체 z에 대한 기대값을 적분해야 한다.
@@ -176,7 +176,7 @@ $$
     \frac{1}{N} \sum^{N}_{i=1} \log p(x|z) = \frac{1}{N} \sum^{N}_{i=1} \bigg( - \frac{(x - y(z|\theta))^2}{ 2 \sigma^2 } -log(\sigma \sqrt{2 \pi}) \bigg)
 $$
 
-이를 최대화해야할 값인 $\mathbb{E}\_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$으로 정리하면 다음과 같이 정리가 된다.
+이를 최대화해야할 값인 $\mathbb{E}_{z \sim q(z\|\theta)} [ \log p(x\|z) ]$으로 정리하면 다음과 같이 정리가 된다.
 
 $$
     \begin{split}
@@ -215,7 +215,7 @@ $$
 
 #### (2) Regularization 
 
-두번째 항인 $D\_{KL} (q(z\|\theta) \, \|\| \, p(z) )$는 $q(z\|\theta)$를 $\mathcal{N}(0, 1^2)$인 $p(z)$ 분포에 regularization한다.
+두번째 항인 $D_{KL} (q(z\|\theta) \, \|\| \, p(z) )$는 $q(z\|\theta)$를 $\mathcal{N}(0, 1^2)$인 $p(z)$ 분포에 regularization한다.
 
 gaussian distribution인 $q(z\|\theta), \, p(z)$을 식으로 나타내면 다음과 같다.
 
@@ -346,7 +346,7 @@ $$
 \end{split}
 $$
 
-결국 regularization term인 $D\_{KL} (q(z\|\theta) \, \|\| \, p(z) )$은 각각의 항을 대입해서 정리할 수 있다.
+결국 regularization term인 $D_{KL} (q(z\|\theta) \, \|\| \, p(z) )$은 각각의 항을 대입해서 정리할 수 있다.
 
 $$
     \begin{split}
@@ -356,7 +356,7 @@ $$
     \end{split}
 $$
 
-여기서 $p(z)=\mathcal{N}(\mu\_2, \sigma\_2^2)=\mathcal{N}(0, 1^2)$이므로 대입하면
+여기서 $p(z)=\mathcal{N}(\mu_2, \sigma_2^2)=\mathcal{N}(0, 1^2)$이므로 대입하면
 
 $$
     \begin{split}
@@ -448,7 +448,7 @@ $$
 [//]: # ($\log p&#40;x&#41;$를 직접적으로 계산하기는 어려움으로 대신 lower bound가 있다면 lower bound를 커지게 하면 자동적으로 $\log p&#40;x&#41;$도 커짐)
 
 [//]: # ()
-[//]: # (여기서 $D\_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z\|x&#41; \big&#41;$는 kl divergence의 특성상 항상 0보다 큼)
+[//]: # (여기서 $D_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z\|x&#41; \big&#41;$는 kl divergence의 특성상 항상 0보다 큼)
 
 [//]: # ()
 [//]: # ($$)
@@ -482,13 +482,13 @@ $$
 
 [//]: # ()
 [//]: # ()
-[//]: # (여기서 ELBO 값이 커지면 Variable Inference 부분인 $D\_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z\|x&#41; \big&#41;$의 값이 작아짐.)
+[//]: # (여기서 ELBO 값이 커지면 Variable Inference 부분인 $D_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z\|x&#41; \big&#41;$의 값이 작아짐.)
 
 [//]: # ()
 [//]: # (Loss값은 ELBO값을 크게 만들면 됨)
 
 [//]: # ()
-[//]: # (ELBO 값중 $\mathbb{E}\_{z \sim q&#40;z\|x&#41;} \big\[ \log p&#40;x\|z&#41; \big\]$을 실제 계산값으로 만들어야됨)
+[//]: # (ELBO 값중 $\mathbb{E}_{z \sim q&#40;z\|x&#41;} \big[ \log p&#40;x\|z&#41; \big]$을 실제 계산값으로 만들어야됨)
 
 [//]: # ()
 [//]: # ($$)
@@ -535,7 +535,7 @@ $$
 [//]: # ($$)
 
 [//]: # ()
-[//]: # ($D\_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z&#41; \big&#41;$ 값 계산)
+[//]: # ($D_{KL} \big&#40; q&#40;z\|x&#41; \|\| p&#40;z&#41; \big&#41;$ 값 계산)
 
 [//]: # ()
 [//]: # ($p&#40;z&#41;$ 는 $\sigma = 1, \mu =0$인 gaussian distribution )
@@ -742,7 +742,7 @@ $$
 [//]: # ($$)
 
 [//]: # ()
-[//]: # (여기서 $p&#40;z&#41;$ $\sigma\_2=1, \; \mu\_2=0$인 gaussian 분포 함수임)
+[//]: # (여기서 $p&#40;z&#41;$ $\sigma_2=1, \; \mu_2=0$인 gaussian 분포 함수임)
 
 [//]: # ()
 [//]: # ($$)

@@ -62,7 +62,7 @@ $$
                 {\sum_{c'}{exp(\pmb{\mathbb{w}}_{c'}^{\top} f(x) + b_{c'} )}}
 $$
 
-여기서 $f(x)$은 마지막 layer에서 나온 feature 이고 $w\_c^{\top}$와 $b\_c$은 softmax classifier의 weight와 bias를 뜻한다.
+여기서 $f(x)$은 마지막 layer에서 나온 feature 이고 $w_c^{\top}$와 $b_c$은 softmax classifier의 weight와 bias를 뜻한다.
 
 다음으로 Generative classifier의 Posterior $P(y=c|x)$를 계산해야 하는데
 우리가 현재 아는 정보는 feature space가 class-conditional gaussian distribution을 따른다는 것이다.
@@ -99,7 +99,7 @@ $$
                 {\sum_{c'}{(2\pi)^{-\frac{d}{2}} |\Sigma|^{-\frac{1}{2}} exp(-\frac{1}{2}(x-\mu_{c'})^{\top}\Sigma^{-1} (x-\mu_{c'})) \frac{\beta_{c'}}{\sum_{c'}{\beta_{c'}}}}}
 $$
 
-여기서 공통되는 부분인 $2\pi^{-\frac{d}{2}}$, $\|\Sigma\|^{-\frac{1}{2}}$, $\sum\_{c'}{\beta\_{c'}}$을 약분하고 정리해주면 위에서 봤던
+여기서 공통되는 부분인 $2\pi^{-\frac{d}{2}}$, $\|\Sigma\|^{-\frac{1}{2}}$, $\sum_{c'}{\beta_{c'}}$을 약분하고 정리해주면 위에서 봤던
 softmax classifier의 식과 매우 유사한 공식이 나온다.
 
 $$
@@ -121,7 +121,7 @@ $$
     \end{split}
 $$
 
-이제 사전 학습된 softmax neural classifier로 부터 generative classifier를 추정하기 위해서 parameter인 class mean $\mu\_{c}$와 공유 공분산 $\Sigma$을 구해야 된다.
+이제 사전 학습된 softmax neural classifier로 부터 generative classifier를 추정하기 위해서 parameter인 class mean $\mu_{c}$와 공유 공분산 $\Sigma$을 구해야 된다.
 이 parameter들은 empirical하게 training sample들로 부터 계산한다.
 
 $$
@@ -248,14 +248,14 @@ height="100%" width="100%">
 ${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
 >
 > ---
-> Initialize Score vectors: $M(x)=\[M_{\ell} : \forall \ell \]$   
+> Initialize Score vectors: $M(x)=[M_{\ell} : \forall \ell ]$   
 > **for** each layer $\ell \in 1,...,L$ **do**      
-> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}\_{\ell,c} )^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}_{\ell,c} )^\top \hat{\Sigma}_{\ell}^{-1} (f_{\ell}(x) - \hat{\mu}_{\ell,c})$   
 > $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top}
 > \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
-> $\quad$Computing confidence score: $M\_{\ell}=\max\_{c} - (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Computing confidence score: $M_{\ell}=\max_{c} - (f_{\ell}(x) - \hat{\mu}_{\ell,c})^\top \hat{\Sigma}_{\ell}^{-1} (f_{\ell}(x) - \hat{\mu}_{\ell,c})$   
 > **end for**   
-> **return** Confidence score for test sample $\sum\_{\ell}\alpha\_{\ell}M\_{\ell}$     
+> **return** Confidence score for test sample $\sum_{\ell}\alpha_{\ell}M_{\ell}$     
 > 
 > ---
 
@@ -279,15 +279,15 @@ new class도 OOD class와 마찬가지로 training distribution의 범위 밖에
 > 
 > ---
 > 
-> **Input**: set of samples from a new class ${x\_i: \forall i = 1,...,N\_{C+1}}$, mean and covariance of observed classes
-> ${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
+> **Input**: set of samples from a new class ${x_i: \forall i = 1,...,N_{C+1}}$, mean and covariance of observed classes
+> ${\hat{\mu}_{c}: \forall_{C} = 1,...,C}, \; \hat{\Sigma}$
 > 
 > ---
 > 
-> Compute the new class mean:  $\hat{\mu}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} f(x\_{i}) $      
-> Compute the covariance of the new class: $ \hat{\Sigma}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} (f(x\_{i}) -  \hat{\mu}\_{C+1} )^{\top} $        
-> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}\_{C+1} $       
-> **return** Mean and covariance of all classes ${ \hat{\mu}\_{c} : \forall\_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
+> Compute the new class mean:  $\hat{\mu}_{C+1} \gets \frac{1}{N_{C+1}} \sum_{i} f(x_{i}) $      
+> Compute the covariance of the new class: $ \hat{\Sigma}_{C+1} \gets \frac{1}{N_{C+1}} \sum_{i} (f(x_{i}) -  \hat{\mu}_{C+1} )^{\top} $        
+> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}_{C+1} $       
+> **return** Mean and covariance of all classes ${ \hat{\mu}_{c} : \forall_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
 >
 > ---
 
@@ -619,7 +619,7 @@ $$
 $$
 
 - 위 식에서 
-$\pmb{\mathbb{w}}\_{c} = \mu_{c}^{\top} \Sigma^{-1} , \; b_c=\frac{1}{2}\mu_{c}^{\top} \Sigma^{-1} \mu_{c} + \ln{\beta_{c}}$ 이라하고 치환하면 다음과 같이 softmax classifier의 형태가 된다.
+$\pmb{\mathbb{w}}_{c} = \mu_{c}^{\top} \Sigma^{-1} , \; b_c=\frac{1}{2}\mu_{c}^{\top} \Sigma^{-1} \mu_{c} + \ln{\beta_{c}}$ 이라하고 치환하면 다음과 같이 softmax classifier의 형태가 된다.
 
 $$
     P(y=c|x)=\frac{exp(\pmb{\mathbb{w}}^{\top}_{c}x+b_c)}
@@ -782,14 +782,14 @@ $$
 ${\hat{\mu_{\ell, \, c}} \; \hat{\Sigma_{\ell}} : \forall \ell, \,c }$
 >
 > ---
-> Initialize Score vectors: $M(x)=\[M_{\ell} : \forall \ell \]$   
+> Initialize Score vectors: $M(x)=[M_{\ell} : \forall \ell ]$   
 > **for** each layer $\ell \in 1,...,L$ **do**      
-> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}\_{\ell,c} )^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Find the closest class: $\hat{c}=\underset{c}{arg min}(f(x) - \hat{\mu}_{\ell,c} )^\top \hat{\Sigma}_{\ell}^{-1} (f_{\ell}(x) - \hat{\mu}_{\ell,c})$   
 > $\quad$Add small noise to test sample: $\hat{x}=x-\epsilon sign\big( \nabla\_{x}(f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )^{\top}
 > \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,\hat{c}} )\big)$     
-> $\quad$Computing confidence score: $M\_{\ell}=\max\_{c} - (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})^\top \hat{\Sigma}\_{\ell}^{-1} (f\_{\ell}(x) - \hat{\mu}\_{\ell,c})$   
+> $\quad$Computing confidence score: $M_{\ell}=\max_{c} - (f_{\ell}(x) - \hat{\mu}_{\ell,c})^\top \hat{\Sigma}_{\ell}^{-1} (f_{\ell}(x) - \hat{\mu}_{\ell,c})$   
 > **end for**   
-> **return** Confidence score for test sample $\sum\_{\ell}\alpha\_{\ell}M\_{\ell}$     
+> **return** Confidence score for test sample $\sum_{\ell}\alpha_{\ell}M_{\ell}$     
 > 
 > ---
 
@@ -803,7 +803,7 @@ SVHN[[28][28_link]], LSUN[[32][32_link]], TinyImageNet과 같은 OOD sample과 D
 LSUN, TinyImageNet, DeepFool에서는 final feature와 비교하여 때때로 low-level feature의 성능이 더 나은 경우가 있다.
 그래서 성능 향상을 위해 **Algorithm 1**처럼 모든 layer의 feature를 사용하여 confidence score를 계산하고 각 layer의 score는 weight sum을 통하여 전체적인 confidence score를 계산한다.
 
-- validation sample을 사용한 logistic regression detector를 training하면서 각 layer의 weight ratio $\alpha\_{\ell}$을 선택한다.
+- validation sample을 사용한 logistic regression detector를 training하면서 각 layer의 weight ratio $\alpha_{\ell}$을 선택한다.
 이러한 score weighted averaging은 몇개의 layer로부터 얻은 score가 유효하지 않을 경우 거의 0에 근접한 weight를 주어 전체적인 성능 하락을 방지 한다.
 
 ##### [2.3] Class-Incremental learning using Mahalanobis distance-based score
@@ -828,15 +828,15 @@ $$
 > 
 > ---
 > 
-> **Input**: set of samples from a new class ${x\_i: \forall i = 1,...,N\_{C+1}}$, mean and covariance of observed classes
-> ${\hat{\mu}\_{c}: \forall\_{C} = 1,...,C}, \; \hat{\Sigma}$
+> **Input**: set of samples from a new class ${x_i: \forall i = 1,...,N_{C+1}}$, mean and covariance of observed classes
+> ${\hat{\mu}_{c}: \forall_{C} = 1,...,C}, \; \hat{\Sigma}$
 > 
 > ---
 > 
-> Compute the new class mean:  $\hat{\mu}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} f(x\_{i}) $      
-> Compute the covariance of the new class: $ \hat{\Sigma}\_{C+1} \gets \frac{1}{N\_{C+1}} \sum\_{i} (f(x\_{i}) -  \hat{\mu}\_{C+1} )^{\top} $        
-> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}\_{C+1} $       
-> **return** Mean and covariance of all classes ${ \hat{\mu}\_{c} : \forall\_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
+> Compute the new class mean:  $\hat{\mu}_{C+1} \gets \frac{1}{N_{C+1}} \sum_{i} f(x_{i}) $      
+> Compute the covariance of the new class: $ \hat{\Sigma}_{C+1} \gets \frac{1}{N_{C+1}} \sum_{i} (f(x_{i}) -  \hat{\mu}_{C+1} )^{\top} $        
+> Update the shared covariance: $ \hat{\Sigma} \gets \frac{C}{C+1} \hat{\Sigma} + \frac{1}{C+1} \hat{\Sigma}_{C+1} $       
+> **return** Mean and covariance of all classes ${ \hat{\mu}_{c} : \forall_{C}=1,...,C+1, \; \hat{\Sigma}  }$     
 >
 > ---
 
@@ -1021,7 +1021,7 @@ height="80%" width="80%"> </p>
 #### 1. LDA에 대한 첫번째 접근
 
 - $p$차원의 입력 $vector \; x$가 $\mathbf{w}$라는 축에 사영된다고 할때 축 위에서 사영된 1차원의 스칼라 값을 $y$라고 하고
-두 클래스 $C\_{1}$과 $C\_{2}$ 각각에 대해 $N\_{1}$, $N\_{2}$개의 데이터가 있다고 하자.
+두 클래스 $C_{1}$과 $C_{2}$ 각각에 대해 $N_{1}$, $N_{2}$개의 데이터가 있다고 하자.
 
 $$
     y = \mathbf{\overrightarrow{w}} \cdotp \overrightarrow{x} = 
@@ -1052,15 +1052,15 @@ $$
     C_{2} \; mean : \overrightarrow{m_{2}} = \frac{1}{N_{2}} \sum_{n \in C_{2}} \overrightarrow{x_{n}}
 $$
 
-- 먼저 사영후 두 클래스의 중심인 평균이 서로 멀어야 된다. 이때 $m\_1$과 $m\_2$를 축에 사영하여 $m\_{1}'$과 $m\_{2}'$를 만들고 그 사이의 거리
-$\overline{m\_{1}' m\_{2}'}$가 최대가 되는 축 $\mathbf{w}$를 찾으면 된다.
+- 먼저 사영후 두 클래스의 중심인 평균이 서로 멀어야 된다. 이때 $m_1$과 $m_2$를 축에 사영하여 $m_{1}'$과 $m_{2}'$를 만들고 그 사이의 거리
+$\overline{m_{1}' m_{2}'}$가 최대가 되는 축 $\mathbf{w}$를 찾으면 된다.
 
 <p align="center">
 <img src="/images/2022-09-15-A-Simple-Unified-framework-for-detecting-out-of-distribution-samples-and-adversarial-attack/LDA_02.webp"
 width="40%" height="40%">
 </p>
 
-- 여기서 축 $\mathbf{w}$에 사영된 $\overline{m\_{1}' m\_{2}'}$의 길이는 다음과 같다. 
+- 여기서 축 $\mathbf{w}$에 사영된 $\overline{m_{1}' m_{2}'}$의 길이는 다음과 같다. 
 
 $$
     \overline{m_{2}' m_{1}'}  = m_{2}'-m_{1}' = \overrightarrow{\mathbf{w}}^{\top} (\overrightarrow{m_{2}} - \overrightarrow{m_{1}})
@@ -1068,7 +1068,7 @@ $$
 $$
 
 - 다음으로 사영후 두 클래스 각각의 분산이 작아야 된다. 클래스가 넓은 범위에 걸쳐 사영되면 범위가 겹치는 곳이 많아지므로 클래스를 구분하기 어려워지므로 좁은 범위에 사영되게 하기 위해 분산을 작게한다.
-k class의 사영된 값을 $y\_{k}$, 평균 $m\_{k}$, 분산을 $s\_{k}^{2}$ 라고 한다. 이때 분산은 다음과 같이 계산된다.
+k class의 사영된 값을 $y_{k}$, 평균 $m_{k}$, 분산을 $s_{k}^{2}$ 라고 한다. 이때 분산은 다음과 같이 계산된다.
 
 $$
     s_{k}^{2} = \sum_{n \in C_{k}} (y_{n} - m_{k}')^2
@@ -1152,8 +1152,8 @@ $(S_{W}^{-1} S_{B})$의 고유 vector이다.
 
 #### 2. LDA에 대한 두번째 접근(Bayes rule)
 
-- 클래스 $w\_{1}$, $w\_{2}$가 있고 데이터 x가 있다고 할때 목표인 판별 함수(discriminant function) 
-$p(w\_{1}|x)$와 $p(w\_{2}|x)$ 즉, Posterior를 구해야한다. 하지만 이는 실제로 매우 구하기 힘드므로 베이즈 정리를 사용하여 Likelihood와 Prior로 구해야된다.
+- 클래스 $w_{1}$, $w_{2}$가 있고 데이터 x가 있다고 할때 목표인 판별 함수(discriminant function) 
+$p(w_{1}|x)$와 $p(w_{2}|x)$ 즉, Posterior를 구해야한다. 하지만 이는 실제로 매우 구하기 힘드므로 베이즈 정리를 사용하여 Likelihood와 Prior로 구해야된다.
 베이즈 정리에 의해 Posterior는 다음과 같다.
 
 $$
@@ -1224,7 +1224,7 @@ height="70%" width="70%">
 </p>
 
 - 이제 두 클래스를 판별하는 결정 경계(Decision Boundary)를 정해야 하는데 결정 경계는 위 그림처럼 보통 두 판별 함수의 값이 같은 곳을 기준으로 한다.
- 그러므로 결정 경계의 관한 식은 $\delta\_{1}(x) - \delta\_{2}(x)=0$이 된다.
+ 그러므로 결정 경계의 관한 식은 $\delta_{1}(x) - \delta_{2}(x)=0$이 된다.
 
 $$
     Decision \; Boundary \; : \; \delta_{1}(x) - \delta_{2}(x) = 0 
@@ -1242,7 +1242,7 @@ $$
     \end{split}
 $$
 
-- 여기서 LDA는 공유 공분산을 가지므로 $\Sigma\_{1}=\Sigma\_{2}=\Sigma$이다. $\Sigma$은 대칭 행렬이므로 $A\cdotp\Sigma\cdotp B == B\cdotp\Sigma\cdotp A$ 이 성립한다. 이를 이용하여 정리하면
+- 여기서 LDA는 공유 공분산을 가지므로 $\Sigma_{1}=\Sigma_{2}=\Sigma$이다. $\Sigma$은 대칭 행렬이므로 $A\cdotp\Sigma\cdotp B == B\cdotp\Sigma\cdotp A$ 이 성립한다. 이를 이용하여 정리하면
 
 $$
     \require{cancel}
@@ -1489,7 +1489,7 @@ height="100%" width="100%">
 </p>
 
 Test Sample Batch을 각 layer에 통과시켜 feature map을 추론하고 channel에 대해 평균을 취해 mean feature vector을 계산한다. 
-mean feature vector $x$을 모든 class에 대해 $(x-\mu\_c)^\top \Sigma^{-1} (x-\mu\_c)$을 계산하여 최대값을 가지는 class의 score만 추출하여 모든 batch에 대해 평균을 취하여 Loss를 구한다.
+mean feature vector $x$을 모든 class에 대해 $(x-\mu_c)^\top \Sigma^{-1} (x-\mu_c)$을 계산하여 최대값을 가지는 class의 score만 추출하여 모든 batch에 대해 평균을 취하여 Loss를 구한다.
 Loss를 backward시켜 Image의 gradient를 구하여 Batch Image에 다음과 같은 노이즈를 추가한다.
 
 $$
