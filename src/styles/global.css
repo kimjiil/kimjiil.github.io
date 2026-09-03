@@ -1,27 +1,27 @@
 /* ============ Design Tokens (terminal dark theme) ============ */
 :root {
-  --color-bg-primary: #0d030f;
-  --color-bg-secondary: #110811;
-  --color-bg-tertiary: #1a0f1c;
-  --color-surface: #1e1219;
-  --color-surface-hover: #2a1a24;
+  --color-bg-primary: #060a13;
+  --color-bg-secondary: #0a1020;
+  --color-bg-tertiary: #101a2e;
+  --color-surface: #121e33;
+  --color-surface-hover: #1a2b47;
 
-  --color-accent: #fd7318;
-  --color-accent-hover: #ff8a3d;
-  --color-accent-light: #fd731826;
+  --color-accent: #22d3ee;
+  --color-accent-hover: #67e8f9;
+  --color-accent-light: #22d3ee26;
 
-  --color-border: #fd731833;
-  --color-border-light: #fd73181a;
-  --color-border-hover: #fd731866;
+  --color-border: #22d3ee33;
+  --color-border-light: #22d3ee1a;
+  --color-border-hover: #22d3ee66;
 
   --color-text-primary: #fafafa;
   --color-text-secondary: #e5e5e5;
   --color-text-muted: #a1a1aa;
 
-  --color-green: #43d6a8;
-  --color-blue: #5fadfe;
-  --color-yellow: #fde471;
-  --color-red: #c21829;
+  --color-green: #4ade80;
+  --color-blue: #818cf8;
+  --color-yellow: #fbbf24;
+  --color-red: #fb7185;
 
   --font-sans: "Pretendard", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
@@ -31,7 +31,7 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  --shadow-glow: 0 0 20px #fd731866;
+  --shadow-glow: 0 0 20px #22d3ee66;
   --shadow-lg: 0 10px 25px #0000004d;
 
   --transition-fast: 0.15s ease;
@@ -241,7 +241,7 @@ a.tag:hover {
 }
 
 .prose pre {
-  background: #16101a !important;
+  background: #0d1526 !important;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
   padding: 1.1rem 1.3rem;

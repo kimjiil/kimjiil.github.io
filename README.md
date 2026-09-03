@@ -19,5 +19,6 @@ npm run build    # dist/ 에 정적 빌드
 
 ## Credits
 
-디자인은 [sudoremove.com](https://sudoremove.com) ([sudormrf-run/web](https://github.com/sudormrf-run/web), © 2026 Jong Hyun Park, MIT-NC License)의
-터미널 다크 테마 스타일을 참고/변형했습니다. 이 블로그는 비상업적 개인 블로그입니다.
+초기 구축 시 [sudoremove.com](https://sudoremove.com) ([sudormrf-run/web](https://github.com/sudormrf-run/web), © 2026 Jong Hyun Park)의
+터미널 다크 테마에서 영감을 받았습니다. 이후 컬러 팔레트(네이비+시안)와 레이아웃, 인터랙티브 데스크 씬,
+그래프 뷰 등 디자인·코드 전반을 독자적으로 재구성했으며, 해당 저장소의 코드는 사용하지 않았습니다.

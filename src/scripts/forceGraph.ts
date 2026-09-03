@@ -20,9 +20,9 @@ export interface GraphOptions {
 }
 
 const SECTION_COLORS: Record<string, string> = {
-  papers: "#fd7318",
-  study: "#43d6a8",
-  projects: "#5fadfe",
+  papers: "#22d3ee",
+  study: "#4ade80",
+  projects: "#818cf8",
 };
 
 interface NodeDatum {
@@ -220,7 +220,7 @@ export function initForceGraph(canvas: HTMLCanvasElement, data: GraphData, opts:
       ctx.shadowBlur = 0;
       if (n.kind !== "post" || i === centerIdx) {
         ctx.lineWidth = 1.5 / scale;
-        ctx.strokeStyle = dim ? "rgba(161,161,170,0.1)" : i === centerIdx ? "#fafafa" : "#0d030f";
+        ctx.strokeStyle = dim ? "rgba(161,161,170,0.1)" : i === centerIdx ? "#fafafa" : "#060a13";
         ctx.stroke();
       }
     }
