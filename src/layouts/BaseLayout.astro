@@ -12,6 +12,7 @@ interface Props {
 
 const { title, description = SITE_DESC } = Astro.props;
 const pageTitle = title ? title + " | " + SITE_TITLE : SITE_TITLE;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -25,11 +26,14 @@ const pageTitle = title ? title + " | " + SITE_TITLE : SITE_TITLE;
     <!-- SEO -->
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:site_name" content={SITE_TITLE} />
 
     <!-- Fonts -->
