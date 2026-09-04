@@ -10,6 +10,18 @@ const skills = {
 
 const experiences = [
   {
+    period: "2023. 12 ~ 2024. 05",
+    duration: "5개월",
+    name: "시스윈 로보틱스",
+    role: "AI 연구원",
+    desc: "AMR(자율 이동 로봇) 개발 업체 — 딥러닝 기반 SLAM/Localization 연구",
+    items: [
+      "AMR의 SLAM을 딥러닝으로 수행하기 위한 기술 리서치 및 연구",
+      "LiDAR 포인트 클라우드 기반 end-to-end 위치 추정 모델 PointLoc 구현 및 실험",
+    ],
+    keywords: ["Python", "PyTorch", "SLAM", "LiDAR", "Point Cloud", "AMR", "Localization"],
+  },
+  {
     period: "2020. 08 ~ 2023. 01",
     duration: "2년 5개월",
     name: "펨트론",
@@ -49,6 +61,16 @@ const experiences = [
 ];
 
 const projects = [
+  {
+    period: "2023. 12 ~ 2024. 05",
+    name: "딥러닝 기반 SLAM/Localization (PointLoc)",
+    org: "시스윈 로보틱스",
+    items: [
+      "AMR에 적용할 딥러닝 기반 SLAM/Localization 논문 리서치 및 연구",
+      "LiDAR 포인트 클라우드에서 로봇의 6-DoF 포즈를 직접 회귀하는 PointLoc 모델 구현 및 학습·평가",
+    ],
+    repo: "https://github.com/kimjiil/PointLoc",
+  },
   {
     period: "2022. 05 ~ 2023. 01",
     name: "Chip Counter",
@@ -216,6 +238,13 @@ const awards = [
                     <li>{it}</li>
                   ))}
                 </ul>
+                {
+                  "repo" in p && (
+                    <a class="repo-link mono" href={p.repo} target="_blank" rel="noopener noreferrer">
+                      ↗ {p.repo}
+                    </a>
+                  )
+                }
               </div>
             </div>
           ))
@@ -422,6 +451,20 @@ const awards = [
 
   .tl-body li::marker {
     color: var(--color-accent);
+  }
+
+  .repo-link {
+    display: inline-block;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: 0.25rem 0.7rem;
+  }
+
+  .repo-link:hover {
+    color: var(--color-accent);
+    border-color: var(--color-border-hover);
   }
 
   /* Publications */
