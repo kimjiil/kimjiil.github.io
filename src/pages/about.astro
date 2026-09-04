@@ -13,13 +13,14 @@ const experiences = [
     period: "2023. 12 ~ 2024. 05",
     duration: "5개월",
     name: "시스윈 로보틱스",
-    role: "AI 연구원",
+    role: "대리 (AI 연구/개발)",
     desc: "AMR(자율 이동 로봇) 개발 업체 — 딥러닝 기반 SLAM/Localization 연구",
     items: [
       "AMR의 SLAM을 딥러닝으로 수행하기 위한 기술 리서치 및 연구",
       "LiDAR 포인트 클라우드 기반 end-to-end 위치 추정 모델 PointLoc 구현 및 실험",
     ],
     keywords: ["Python", "PyTorch", "SLAM", "LiDAR", "Point Cloud", "AMR", "Localization"],
+    repo: "https://github.com/kimjiil/PointLoc",
   },
   {
     period: "2020. 08 ~ 2023. 01",
@@ -210,6 +211,13 @@ const awards = [
                     <li>{it}</li>
                   ))}
                 </ul>
+                {
+                  "repo" in e && (
+                    <a class="repo-link mono" href={e.repo} target="_blank" rel="noopener noreferrer">
+                      ↗ {e.repo}
+                    </a>
+                  )
+                }
                 <div class="skill-tags">
                   {e.keywords.map((k) => (
                     <span class="tag">{k}</span>
@@ -455,6 +463,7 @@ const awards = [
 
   .repo-link {
     display: inline-block;
+    margin-bottom: 0.9rem;
     font-size: 0.82rem;
     color: var(--color-text-muted);
     border: 1px solid var(--color-border-light);
