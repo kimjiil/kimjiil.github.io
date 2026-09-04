@@ -10,6 +10,12 @@ permissions:
   pages: write
   id-token: write
 
+# 연속 푸시 시 이전 커밋의 배포가 최신 배포를 덮어쓰는 레이스 방지:
+# 같은 그룹은 한 번에 하나씩 푸시 순서대로 실행 (진행 중 배포는 완주시킴)
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
